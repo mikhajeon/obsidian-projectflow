@@ -1,0 +1,482 @@
+/* ── Base layout ── */
+.pf-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	padding: 0;
+	font-size: var(--font-ui-small);
+}
+
+/* ── Header ── */
+.pf-board-header,
+.pf-backlog-header,
+.pf-sprint-header {
+	padding: 12px 16px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.pf-header-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.pf-project-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	padding: 2px 8px;
+	border-radius: 10px;
+}
+
+.pf-view-title {
+	font-size: var(--font-ui-medium);
+	font-weight: 600;
+	margin: 0;
+	flex: 1;
+}
+
+.pf-header-actions {
+	display: flex;
+	gap: 6px;
+	margin-left: auto;
+}
+
+/* ── Progress bar ── */
+.pf-progress-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 8px;
+}
+
+.pf-sprint-progress {
+	flex: 1;
+	height: 8px;
+	border-radius: 4px;
+	border: none;
+	background: var(--background-modifier-border);
+}
+
+.pf-sprint-progress::-webkit-progress-bar {
+	background: var(--background-modifier-border);
+	border-radius: 4px;
+}
+
+.pf-sprint-progress::-webkit-progress-value {
+	background: var(--interactive-accent);
+	border-radius: 4px;
+}
+
+.pf-progress-label,
+.pf-sprint-progress-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pf-sprint-date {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	white-space: nowrap;
+}
+
+/* ── Kanban board ── */
+.pf-board {
+	display: flex;
+	gap: 12px;
+	padding: 12px 16px;
+	overflow-x: auto;
+	flex: 1;
+	align-items: flex-start;
+}
+
+.pf-column {
+	min-width: 220px;
+	max-width: 260px;
+	flex: 1;
+	background: var(--background-secondary);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	transition: outline 0.1s;
+}
+
+.pf-column.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+}
+
+.pf-column-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-column-title {
+	font-weight: 600;
+	font-size: var(--font-ui-small);
+}
+
+.pf-column-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	padding: 1px 7px;
+	border-radius: 10px;
+}
+
+.pf-column-body {
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	overflow-y: auto;
+	min-height: 60px;
+	flex: 1;
+}
+
+/* ── Ticket cards ── */
+.pf-card {
+	background: var(--background-primary);
+	border-radius: 6px;
+	padding: 10px;
+	border-left: 3px solid transparent;
+	cursor: pointer;
+	transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.pf-card:hover {
+	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.pf-card.pf-dragging {
+	opacity: 0.4;
+}
+
+.pf-priority-border-critical { border-left-color: #e74c3c; }
+.pf-priority-border-high     { border-left-color: #e67e22; }
+.pf-priority-border-medium   { border-left-color: #3498db; }
+.pf-priority-border-low      { border-left-color: var(--background-modifier-border); }
+
+.pf-card-top {
+	display: flex;
+	gap: 4px;
+	margin-bottom: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-card-title {
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+	margin: 0 0 4px;
+	line-height: 1.4;
+}
+
+.pf-card-desc {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* ── Badges ── */
+.pf-badge {
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+}
+
+.pf-type-task    { background: #e8f4fd; color: #2980b9; }
+.pf-type-bug     { background: #fde8e8; color: #c0392b; }
+.pf-type-feature { background: #e8fde8; color: #27ae60; }
+.pf-type-story   { background: #f4e8fd; color: #8e44ad; }
+
+.pf-pri-critical { background: #fde8e8; color: #c0392b; }
+.pf-pri-high     { background: #fdf0e8; color: #d35400; }
+.pf-pri-medium   { background: #e8f0fd; color: #2471a3; }
+.pf-pri-low      { background: var(--background-modifier-hover); color: var(--text-muted); }
+
+/* ── Backlog ── */
+.pf-toolbar {
+	display: flex;
+	gap: 16px;
+	margin-top: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.pf-toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-toolbar-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-count {
+	margin-top: 6px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-list {
+	padding: 8px 16px;
+	overflow-y: auto;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.pf-backlog-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: var(--background-secondary);
+	border-radius: 6px;
+	padding: 8px 12px;
+	border-left: 3px solid transparent;
+	gap: 8px;
+}
+
+.pf-backlog-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+	min-width: 0;
+}
+
+.pf-backlog-title {
+	font-weight: 500;
+	font-size: var(--font-ui-small);
+}
+
+.pf-backlog-desc {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pf-backlog-right {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+
+/* ── Sprint panel ── */
+.pf-sprint-cycle-info {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 4px 0 0;
+}
+
+.pf-sprint-list {
+	padding: 12px 16px;
+	overflow-y: auto;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.pf-sprint-card {
+	background: var(--background-secondary);
+	border-radius: 8px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-sprint-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.pf-sprint-title-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-sprint-name {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	margin: 0;
+}
+
+.pf-sprint-status-badge {
+	font-size: 10px;
+	padding: 2px 7px;
+	border-radius: 10px;
+	font-weight: 500;
+	text-transform: capitalize;
+}
+
+.pf-status-planning  { background: #e8f0fd; color: #2471a3; }
+.pf-status-active    { background: #e8fde8; color: #1e8449; }
+.pf-status-completed { background: var(--background-modifier-hover); color: var(--text-muted); }
+
+.pf-sprint-dates {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-sprint-progress-wrap {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.pf-sprint-summary {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-mini-badge {
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.pf-sprint-actions {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+}
+
+/* ── Buttons ── */
+.pf-btn {
+	padding: 4px 12px;
+	border-radius: 5px;
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	transition: background 0.15s;
+}
+
+.pf-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-btn-primary {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.pf-btn-primary:hover {
+	background: var(--interactive-accent-hover);
+	border-color: var(--interactive-accent-hover);
+}
+
+.pf-btn-danger {
+	background: #e74c3c;
+	color: white;
+	border-color: #c0392b;
+}
+
+.pf-btn-sm {
+	padding: 2px 9px;
+	font-size: var(--font-ui-smaller);
+}
+
+/* ── Selects ── */
+.pf-select {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.pf-select-sm {
+	font-size: 11px;
+	padding: 1px 4px;
+}
+
+/* ── Modals ── */
+.pf-modal h2 {
+	font-size: var(--font-ui-medium);
+	margin-bottom: 14px;
+}
+
+.pf-input-full {
+	width: 100%;
+}
+
+.pf-input-short {
+	width: 80px;
+}
+
+.pf-textarea {
+	width: 100%;
+	min-height: 80px;
+	resize: vertical;
+}
+
+.pf-modal-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 18px;
+	padding-top: 12px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+/* ── Empty states ── */
+.pf-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	padding: 48px 24px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.pf-empty-title {
+	font-size: var(--font-ui-medium);
+	font-weight: 500;
+	margin-bottom: 6px;
+}
+
+.pf-empty-desc {
+	font-size: var(--font-ui-small);
+	margin-bottom: 16px;
+}
+
+/* ── Settings ── */
+.pf-settings-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 8px 0;
+}

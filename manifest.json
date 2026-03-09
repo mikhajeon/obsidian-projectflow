@@ -1,0 +1,10 @@
+{
+  "id": "obsidian-projectflow",
+  "name": "ProjectFlow",
+  "version": "1.0.0",
+  "minAppVersion": "1.4.0",
+  "description": "Personal project management with kanban boards, sprints, and progress tracking.",
+  "author": "mikhajeon",
+  "authorUrl": "https://github.com/mikhajeon",
+  "isDesktopOnly": false
+}
