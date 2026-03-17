@@ -1,9 +1,11 @@
-import { ItemView, Menu, WorkspaceLeaf } from 'obsidian';
+import { ItemView, Menu, Notice, TFile, WorkspaceLeaf } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
 import type { Ticket, TicketPriority, TicketType } from '../types';
 import { PRIORITY_ORDER } from '../types';
 import { TicketModal } from '../modals/TicketModal';
 import { SprintModal } from '../modals/SprintModal';
+import { generateTicketNote, deleteTicketNote, ticketFilePath } from '../ticketNote';
+import { ConfirmModal } from '../modals/ConfirmModal';
 
 export const BACKLOG_VIEW = 'projectflow-backlog';
 
@@ -13,6 +15,7 @@ export class BacklogView extends ItemView {
 	private plugin: ProjectFlowPlugin;
 	private sortKey: SortKey = 'priority';
 	private filterType: TicketType | 'all' = 'all';
+	private lastProjectId: string | null = null;
 
 	constructor(leaf: WorkspaceLeaf, plugin: ProjectFlowPlugin) {
 		super(leaf);
@@ -34,12 +37,18 @@ export class BacklogView extends ItemView {
 	}
 
 	private render(): void {
-		const container = this.containerEl.children[1] as HTMLElement;
+		const container = this.contentEl;
 		container.empty();
 		container.addClass('pf-view');
 
 		const store = this.plugin.store;
 		const projectId = store.getActiveProjectId();
+
+		if (projectId !== this.lastProjectId) {
+			this.filterType = 'all';
+			this.sortKey = 'priority';
+			this.lastProjectId = projectId;
+		}
 
 		if (!projectId) {
 			container.createEl('div', { cls: 'pf-empty-state' })
@@ -82,7 +91,7 @@ export class BacklogView extends ItemView {
 		const filterWrap = toolbar.createEl('div', { cls: 'pf-toolbar-group' });
 		filterWrap.createEl('span', { cls: 'pf-toolbar-label', text: 'Type:' });
 		const filterSel = filterWrap.createEl('select', { cls: 'pf-select' }) as HTMLSelectElement;
-		[['all', 'All'], ['task', 'Task'], ['bug', 'Bug'], ['feature', 'Feature'], ['story', 'Story']].forEach(([val, label]) => {
+		[['all', 'All'], ['task', 'Task'], ['bug', 'Bug'], ['story', 'Story'], ['epic', 'Epic'], ['subtask', 'Subtask']].forEach(([val, label]) => {
 			const opt = filterSel.createEl('option', { text: label });
 			opt.value = val;
 			if (val === this.filterType) opt.selected = true;
@@ -143,10 +152,14 @@ export class BacklogView extends ItemView {
 			addToSprint.addEventListener('change', async () => {
 				if (addToSprint.value) {
 					await this.plugin.store.moveTicket(ticket.id, addToSprint.value, 'todo', ticket.order);
+					await generateTicketNote(this.plugin, ticket.id);
 					this.render();
 				}
 			});
 		}
+
+		right.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Open note' })
+			.addEventListener('click', () => this.openTicketNote(ticket));
 
 		right.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Edit' })
 			.addEventListener('click', () =>
@@ -161,6 +174,11 @@ export class BacklogView extends ItemView {
 				)
 			);
 			menu.addItem(item =>
+				item.setTitle('Open note').setIcon('file-text').onClick(async () =>
+					await this.openTicketNote(ticket)
+				)
+			);
+			menu.addItem(item =>
 				item.setTitle('New sprint for this ticket').setIcon('plus-circle').onClick(() =>
 					new SprintModal(this.app, this.plugin, projectId, null, async (sprintId) => {
 						await this.plugin.store.moveTicket(ticket.id, sprintId ?? null, 'todo', ticket.order);
@@ -170,27 +188,44 @@ export class BacklogView extends ItemView {
 			);
 			menu.addSeparator();
 			menu.addItem(item =>
-				item.setTitle('Delete').setIcon('trash').onClick(async () => {
-					await this.plugin.store.deleteTicket(ticket.id);
-					this.render();
+				item.setTitle('Delete').setIcon('trash').onClick(() => {
+					new ConfirmModal(this.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {
+						await deleteTicketNote(this.plugin, ticket.id);
+						await this.plugin.store.deleteTicket(ticket.id);
+						this.render();
+						this.plugin.refreshAllViews();
+					}).open();
 				})
 			);
 			menu.showAtMouseEvent(e);
 		});
 	}
 
+	private async openTicketNote(ticket: Ticket): Promise<void> {
+		const project = this.plugin.store.getProject(ticket.projectId);
+		if (!project) return;
+		const filePath = ticketFilePath(this.plugin, project.name, ticket);
+		const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile) {
+			const leaf = this.plugin.app.workspace.getLeaf(false);
+			await leaf.openFile(file);
+		} else {
+			new Notice('Note not found. Save the ticket to generate it.');
+		}
+	}
+
 	private sortTickets(tickets: Ticket[]): Ticket[] {
 		if (this.sortKey === 'priority') {
-			return tickets.sort((a, b) =>
+			return tickets.slice().sort((a, b) =>
 				PRIORITY_ORDER.indexOf(a.priority as TicketPriority) -
 				PRIORITY_ORDER.indexOf(b.priority as TicketPriority)
 			);
 		}
 		if (this.sortKey === 'created') {
-			return tickets.sort((a, b) => b.createdAt - a.createdAt);
+			return tickets.slice().sort((a, b) => b.createdAt - a.createdAt);
 		}
 		if (this.sortKey === 'type') {
-			return tickets.sort((a, b) => a.type.localeCompare(b.type));
+			return tickets.slice().sort((a, b) => a.type.localeCompare(b.type));
 		}
 		return tickets;
 	}

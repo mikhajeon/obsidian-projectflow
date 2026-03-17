@@ -2,6 +2,8 @@ import { ItemView, WorkspaceLeaf, Menu } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
 import type { Sprint } from '../types';
 import { SprintModal } from '../modals/SprintModal';
+import { RetroModal } from '../modals/RetroModal';
+import { ConfirmModal } from '../modals/ConfirmModal';
 
 export const SPRINT_VIEW = 'projectflow-sprint';
 
@@ -28,7 +30,7 @@ export class SprintPanelView extends ItemView {
 	}
 
 	private render(): void {
-		const container = this.containerEl.children[1] as HTMLElement;
+		const container = this.contentEl;
 		container.empty();
 		container.addClass('pf-view');
 
@@ -90,12 +92,24 @@ export class SprintPanelView extends ItemView {
 		const dates = cardHeader.createEl('div', { cls: 'pf-sprint-dates' });
 		dates.createEl('span', { text: `${new Date(sprint.startDate).toLocaleDateString()} – ${new Date(sprint.endDate).toLocaleDateString()}` });
 
+		// Sprint goal
+		if (sprint.goal) {
+			card.createEl('p', { cls: 'pf-sprint-goal', text: `Goal: ${sprint.goal}` });
+		}
+
 		// Progress bar
 		const progressWrap = card.createEl('div', { cls: 'pf-sprint-progress-wrap' });
 		const bar = progressWrap.createEl('progress', { cls: 'pf-sprint-progress' }) as HTMLProgressElement;
 		bar.value = progress.percent;
 		bar.max = 100;
 		progressWrap.createEl('span', { cls: 'pf-sprint-progress-label', text: `${progress.done} / ${progress.total} done (${progress.percent}%)` });
+
+		// Velocity (done tickets with points)
+		const doneTickets = tickets.filter(t => t.status === 'done' && t.points !== undefined);
+		if (doneTickets.length > 0) {
+			const velocity = doneTickets.reduce((sum, t) => sum + (t.points ?? 0), 0);
+			card.createEl('p', { cls: 'pf-velocity', text: `Velocity: ${velocity} pts` });
+		}
 
 		// Ticket summary by status
 		if (tickets.length > 0) {
@@ -105,7 +119,7 @@ export class SprintPanelView extends ItemView {
 
 			for (const [status, count] of Object.entries(counts)) {
 				if (count > 0) {
-					summary.createEl('span', { cls: `pf-mini-badge pf-col-${status.replace('-', '')}`, text: `${count} ${status}` });
+					summary.createEl('span', { cls: `pf-mini-badge pf-col-${status.replace(/-/g, '')}`, text: `${count} ${status}` });
 				}
 			}
 		}
@@ -116,23 +130,28 @@ export class SprintPanelView extends ItemView {
 		if (sprint.status === 'planning') {
 			actions.createEl('button', { cls: 'pf-btn pf-btn-primary pf-btn-sm', text: 'Start sprint' })
 				.addEventListener('click', async () => {
-					// Mark any other active sprint complete first
 					const active = store.getActiveSprint(projectId);
 					if (active && active.id !== sprint.id) {
-						await store.updateSprint(active.id, { status: 'completed' });
+						new RetroModal(this.app, this.plugin, active.id, async () => {
+							await store.updateSprint(sprint.id, { status: 'active' });
+							this.render();
+							this.plugin.refreshAllViews();
+						}).open();
+					} else {
+						await store.updateSprint(sprint.id, { status: 'active' });
+						this.render();
+						this.plugin.refreshAllViews();
 					}
-					await store.updateSprint(sprint.id, { status: 'active' });
-					this.render();
-					this.plugin.refreshAllViews();
 				});
 		}
 
 		if (sprint.status === 'active') {
 			actions.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Complete sprint' })
-				.addEventListener('click', async () => {
-					await store.updateSprint(sprint.id, { status: 'completed' });
-					this.render();
-					this.plugin.refreshAllViews();
+				.addEventListener('click', () => {
+					new RetroModal(this.app, this.plugin, sprint.id, () => {
+						this.render();
+						this.plugin.refreshAllViews();
+					}).open();
 				});
 		}
 
@@ -150,10 +169,16 @@ export class SprintPanelView extends ItemView {
 			);
 			menu.addSeparator();
 			menu.addItem(item =>
-				item.setTitle('Delete sprint').setIcon('trash').onClick(async () => {
-					await store.deleteSprint(sprint.id);
-					this.render();
-					this.plugin.refreshAllViews();
+				item.setTitle('Delete sprint').setIcon('trash').onClick(() => {
+					const sprintTickets = store.getTickets({ sprintId: sprint.id });
+					const msg = sprintTickets.length > 0
+						? `Delete "${sprint.name}"? This will move ${sprintTickets.length} ticket(s) back to the backlog.`
+						: `Delete "${sprint.name}"? This cannot be undone.`;
+					new ConfirmModal(this.app, msg, async () => {
+						await store.deleteSprint(sprint.id);
+						this.render();
+						this.plugin.refreshAllViews();
+					}).open();
 				})
 			);
 			menu.showAtMouseEvent(e);

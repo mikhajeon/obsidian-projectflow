@@ -1,6 +1,8 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice, TFile } from 'obsidian';
 import type ProjectFlowPlugin from './main';
 import { ProjectModal } from './modals/ProjectModal';
+import { ConfirmModal } from './modals/ConfirmModal';
+import { ticketFilePath } from './ticketNote';
 
 export class ProjectFlowSettingTab extends PluginSettingTab {
 	plugin: ProjectFlowPlugin;
@@ -14,6 +16,27 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		// ── Storage ──────────────────────────────────────────────────────────
+		new Setting(containerEl).setName('Storage').setHeading();
+
+		new Setting(containerEl)
+			.setName('Base folder')
+			.setDesc('Vault folder that contains all ProjectFlow data. Files are stored under {Base folder}/{Project}/Tickets/ and {Base folder}/{Project}/Sprint Histories/.')
+			.addText(text => {
+				text
+					.setPlaceholder('ProjectFlow')
+					.setValue(this.plugin.store.getBaseFolder());
+				text.inputEl.addClass('pf-input-full');
+				text.inputEl.addEventListener('blur', async () => {
+					const val = text.getValue().trim();
+					if (val) {
+						new Notice('Note: Renaming the base folder does not move existing vault files. You may need to move them manually.');
+						await this.plugin.store.setBaseFolder(val);
+					}
+				});
+			});
+
+		// ── Projects ──────────────────────────────────────────────────────────
 		new Setting(containerEl).setName('Projects').setHeading();
 
 		const projects = this.plugin.store.getProjects();
@@ -73,13 +96,24 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 					btn
 						.setButtonText('Delete')
 						.setWarning()
-						.onClick(async () => {
-							await this.plugin.store.deleteProject(project.id);
-							new Notice(`Project "${project.name}" deleted.`);
-							this.display();
-							this.plugin.refreshAllViews();
+						.onClick(() => {
+							new ConfirmModal(this.app, `Delete project "${project.name}"? All sprints and tickets will be permanently removed.`, async () => {
+								const projectTickets = this.plugin.store.getTickets({ projectId: project.id });
+								for (const ticket of projectTickets) {
+									const tfile = this.app.vault.getAbstractFileByPath(ticketFilePath(this.plugin, project.name, ticket));
+									if (tfile instanceof TFile) {
+										this.plugin.markDeleting(ticket.id);
+										await this.app.fileManager.trashFile(tfile);
+									}
+								}
+								await this.plugin.store.deleteProject(project.id);
+								new Notice(`Project "${project.name}" deleted.`);
+								this.display();
+								this.plugin.refreshAllViews();
+							}).open();
 						})
 				);
 		}
 	}
+
 }

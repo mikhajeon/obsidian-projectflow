@@ -1,4 +1,122 @@
-/* ── Base layout ── */
+/* ── Theme tokens ───────────────────────────────────────────────────────── */
+
+.theme-light {
+	/* Planning banner */
+	--pf-plan-bg:             #e8f0fd;
+	--pf-plan-border:         #bcd0f7;
+	--pf-plan-color:          #2471a3;
+
+	/* Priority border accents */
+	--pf-border-critical:     #e74c3c;
+	--pf-border-high:         #e67e22;
+	--pf-border-medium:       #3498db;
+
+	/* Card hover shadow */
+	--pf-card-shadow:         rgba(0, 0, 0, 0.12);
+
+	/* Type badges */
+	--pf-type-task-bg:        #e8f4fd;
+	--pf-type-task-color:     #2980b9;
+	--pf-type-bug-bg:         #fde8e8;
+	--pf-type-bug-color:      #c0392b;
+	--pf-type-feature-bg:     #e8fde8;
+	--pf-type-feature-color:  #27ae60;
+	--pf-type-story-bg:       #f4e8fd;
+	--pf-type-story-color:    #8e44ad;
+	--pf-type-epic-bg:        #fdf5e8;
+	--pf-type-epic-color:     #b7791f;
+	--pf-type-subtask-bg:     #e8f4f4;
+	--pf-type-subtask-color:  #1a7a7a;
+
+	/* Priority badges */
+	--pf-pri-critical-bg:     #fde8e8;
+	--pf-pri-critical-color:  #c0392b;
+	--pf-pri-high-bg:         #fdf0e8;
+	--pf-pri-high-color:      #d35400;
+	--pf-pri-medium-bg:       #e8f0fd;
+	--pf-pri-medium-color:    #2471a3;
+
+	/* Sprint status badges */
+	--pf-status-planning-bg:  #e8f0fd;
+	--pf-status-planning-color: #2471a3;
+	--pf-status-active-bg:    #e8fde8;
+	--pf-status-active-color: #1e8449;
+
+	/* Danger button */
+	--pf-danger-bg:           #e74c3c;
+	--pf-danger-color:        #ffffff;
+	--pf-danger-border:       #c0392b;
+}
+
+.theme-dark {
+	/* Planning banner */
+	--pf-plan-bg:             rgba(36, 113, 163, 0.18);
+	--pf-plan-border:         rgba(36, 113, 163, 0.40);
+	--pf-plan-color:          #80bdde;
+
+	/* Priority border accents */
+	--pf-border-critical:     #d95f5f;
+	--pf-border-high:         #cc7a35;
+	--pf-border-medium:       #5590c8;
+
+	/* Card hover shadow */
+	--pf-card-shadow:         rgba(0, 0, 0, 0.40);
+
+	/* Type badges */
+	--pf-type-task-bg:        rgba(41, 128, 185, 0.20);
+	--pf-type-task-color:     #80bdde;
+	--pf-type-bug-bg:         rgba(192, 57, 43, 0.22);
+	--pf-type-bug-color:      #de8080;
+	--pf-type-feature-bg:     rgba(39, 174, 96, 0.20);
+	--pf-type-feature-color:  #6dcc8d;
+	--pf-type-story-bg:       rgba(142, 68, 173, 0.22);
+	--pf-type-story-color:    #c07de0;
+	--pf-type-epic-bg:        rgba(183, 121, 31, 0.20);
+	--pf-type-epic-color:     #d4a84b;
+	--pf-type-subtask-bg:     rgba(26, 122, 122, 0.20);
+	--pf-type-subtask-color:  #5aadad;
+
+	/* Priority badges */
+	--pf-pri-critical-bg:     rgba(192, 57, 43, 0.22);
+	--pf-pri-critical-color:  #de8080;
+	--pf-pri-high-bg:         rgba(211, 84, 0, 0.22);
+	--pf-pri-high-color:      #d48a55;
+	--pf-pri-medium-bg:       rgba(36, 113, 163, 0.20);
+	--pf-pri-medium-color:    #80bdde;
+
+	/* Sprint status badges */
+	--pf-status-planning-bg:  rgba(36, 113, 163, 0.20);
+	--pf-status-planning-color: #80bdde;
+	--pf-status-active-bg:    rgba(30, 132, 73, 0.20);
+	--pf-status-active-color: #6dcc8d;
+
+	/* Danger button */
+	--pf-danger-bg:           #b03a2e;
+	--pf-danger-color:        #ffffff;
+	--pf-danger-border:       #922b21;
+}
+
+/* ── Planning banner ─────────────────────────────────────────────────────── */
+
+.pf-planning-banner {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 8px;
+	padding: 6px 10px;
+	background: var(--pf-plan-bg);
+	border-radius: 6px;
+	border: 1px solid var(--pf-plan-border);
+}
+
+.pf-planning-label {
+	flex: 1;
+	font-size: var(--font-ui-smaller);
+	color: var(--pf-plan-color);
+}
+
+/* ── Base layout ─────────────────────────────────────────────────────────── */
+
 .pf-view {
 	display: flex;
 	flex-direction: column;
@@ -8,12 +126,12 @@
 	font-size: var(--font-ui-small);
 }
 
-/* ── Header ── */
+/* ── Header ──────────────────────────────────────────────────────────────── */
+
 .pf-board-header,
 .pf-backlog-header,
 .pf-sprint-header {
-	padding: 12px 16px 8px;
-	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 12px 16px 0;
 	flex-shrink: 0;
 }
 
@@ -22,6 +140,12 @@
 	align-items: center;
 	gap: 10px;
 	flex-wrap: wrap;
+}
+
+.pf-project-area {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .pf-project-label {
@@ -45,7 +169,8 @@
 	margin-left: auto;
 }
 
-/* ── Progress bar ── */
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
 .pf-progress-row {
 	display: flex;
 	align-items: center;
@@ -84,7 +209,8 @@
 	white-space: nowrap;
 }
 
-/* ── Kanban board ── */
+/* ── Kanban board ────────────────────────────────────────────────────────── */
+
 .pf-board {
 	display: flex;
 	gap: 12px;
@@ -109,6 +235,28 @@
 .pf-column.pf-drop-active {
 	outline: 2px solid var(--interactive-accent);
 }
+
+/* ── Column status color accents — driven by --pf-col-color injected per column ── */
+.pf-column { border-top: 3px solid var(--pf-col-color, var(--background-modifier-border)); }
+.pf-column-title { color: var(--pf-col-color, var(--text-muted)); }
+
+/* ── Column body gradient overlay (behind cards, fades top→bottom) ────────── */
+.pf-column-body {
+	position: relative;
+}
+.pf-column-body::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	border-radius: 0 0 8px 8px;
+	z-index: 0;
+	background: linear-gradient(to bottom,
+		color-mix(in srgb, var(--pf-col-color, transparent) 22%, transparent) 0%,
+		color-mix(in srgb, var(--pf-col-color, transparent) 10%, transparent) 100%
+	);
+}
+.pf-column-body > * { position: relative; z-index: 1; }
 
 .pf-column-header {
 	display: flex;
@@ -141,7 +289,35 @@
 	flex: 1;
 }
 
-/* ── Ticket cards ── */
+/* ── Column add button (hover-reveal at bottom) ──────────────────────────── */
+
+.pf-column-add {
+	width: 100%;
+	padding: 5px 8px;
+	font-size: var(--font-ui-smaller);
+	text-align: center;
+	cursor: pointer;
+	border: none;
+	border-top: 1px dashed transparent;
+	border-radius: 0 0 8px 8px;
+	background: transparent;
+	color: transparent;
+	transition: color 0.15s, border-color 0.15s, background 0.15s;
+	flex-shrink: 0;
+}
+
+.pf-column:hover .pf-column-add {
+	border-top-color: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.pf-column-add:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* ── Ticket cards ────────────────────────────────────────────────────────── */
+
 .pf-card {
 	background: var(--background-primary);
 	border-radius: 6px;
@@ -152,16 +328,16 @@
 }
 
 .pf-card:hover {
-	box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+	box-shadow: 0 2px 8px var(--pf-card-shadow);
 }
 
 .pf-card.pf-dragging {
 	opacity: 0.4;
 }
 
-.pf-priority-border-critical { border-left-color: #e74c3c; }
-.pf-priority-border-high     { border-left-color: #e67e22; }
-.pf-priority-border-medium   { border-left-color: #3498db; }
+.pf-priority-border-critical { border-left-color: var(--pf-border-critical); }
+.pf-priority-border-high     { border-left-color: var(--pf-border-high); }
+.pf-priority-border-medium   { border-left-color: var(--pf-border-medium); }
 .pf-priority-border-low      { border-left-color: var(--background-modifier-border); }
 
 .pf-card-top {
@@ -188,7 +364,8 @@
 	overflow: hidden;
 }
 
-/* ── Badges ── */
+/* ── Badges ──────────────────────────────────────────────────────────────── */
+
 .pf-badge {
 	font-size: 10px;
 	padding: 2px 6px;
@@ -198,17 +375,20 @@
 	letter-spacing: 0.3px;
 }
 
-.pf-type-task    { background: #e8f4fd; color: #2980b9; }
-.pf-type-bug     { background: #fde8e8; color: #c0392b; }
-.pf-type-feature { background: #e8fde8; color: #27ae60; }
-.pf-type-story   { background: #f4e8fd; color: #8e44ad; }
+.pf-type-task    { background: var(--pf-type-task-bg);    color: var(--pf-type-task-color); }
+.pf-type-bug     { background: var(--pf-type-bug-bg);     color: var(--pf-type-bug-color); }
+.pf-type-feature { background: var(--pf-type-feature-bg); color: var(--pf-type-feature-color); }
+.pf-type-story   { background: var(--pf-type-story-bg);   color: var(--pf-type-story-color); }
+.pf-type-epic    { background: var(--pf-type-epic-bg);    color: var(--pf-type-epic-color); font-weight: 600; }
+.pf-type-subtask { background: var(--pf-type-subtask-bg); color: var(--pf-type-subtask-color); }
 
-.pf-pri-critical { background: #fde8e8; color: #c0392b; }
-.pf-pri-high     { background: #fdf0e8; color: #d35400; }
-.pf-pri-medium   { background: #e8f0fd; color: #2471a3; }
+.pf-pri-critical { background: var(--pf-pri-critical-bg); color: var(--pf-pri-critical-color); }
+.pf-pri-high     { background: var(--pf-pri-high-bg);     color: var(--pf-pri-high-color); }
+.pf-pri-medium   { background: var(--pf-pri-medium-bg);   color: var(--pf-pri-medium-color); }
 .pf-pri-low      { background: var(--background-modifier-hover); color: var(--text-muted); }
 
-/* ── Backlog ── */
+/* ── Backlog ──────────────────────────────────────────────────────────────── */
+
 .pf-toolbar {
 	display: flex;
 	gap: 16px;
@@ -235,23 +415,28 @@
 }
 
 .pf-backlog-list {
-	padding: 8px 16px;
+	padding: 0;
 	overflow-y: auto;
 	flex: 1;
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+	display: block;
 }
 
 .pf-backlog-row {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	background: var(--background-secondary);
+	background: var(--background-primary);
 	border-radius: 6px;
 	padding: 8px 12px;
 	border-left: 3px solid transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
 	gap: 8px;
+	transition: background 0.12s;
+}
+
+.pf-backlog-row:hover {
+	background: var(--background-modifier-hover);
 }
 
 .pf-backlog-left {
@@ -282,7 +467,8 @@
 	flex-shrink: 0;
 }
 
-/* ── Sprint panel ── */
+/* ── Sprint panel ────────────────────────────────────────────────────────── */
+
 .pf-sprint-cycle-info {
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
@@ -334,8 +520,8 @@
 	text-transform: capitalize;
 }
 
-.pf-status-planning  { background: #e8f0fd; color: #2471a3; }
-.pf-status-active    { background: #e8fde8; color: #1e8449; }
+.pf-status-planning  { background: var(--pf-status-planning-bg);  color: var(--pf-status-planning-color); }
+.pf-status-active    { background: var(--pf-status-active-bg);    color: var(--pf-status-active-color); }
 .pf-status-completed { background: var(--background-modifier-hover); color: var(--text-muted); }
 
 .pf-sprint-dates {
@@ -369,7 +555,8 @@
 	justify-content: flex-end;
 }
 
-/* ── Buttons ── */
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
 .pf-btn {
 	padding: 4px 12px;
 	border-radius: 5px;
@@ -397,9 +584,13 @@
 }
 
 .pf-btn-danger {
-	background: #e74c3c;
-	color: white;
-	border-color: #c0392b;
+	background: var(--pf-danger-bg);
+	color: var(--pf-danger-color);
+	border-color: var(--pf-danger-border);
+}
+
+.pf-btn-danger:hover {
+	filter: brightness(1.1);
 }
 
 .pf-btn-sm {
@@ -407,7 +598,26 @@
 	font-size: var(--font-ui-smaller);
 }
 
-/* ── Selects ── */
+.pf-btn-icon {
+	padding: 2px 8px;
+	font-size: 16px;
+	line-height: 1;
+	letter-spacing: 1px;
+}
+
+/* ── Selects ─────────────────────────────────────────────────────────────── */
+
+.pf-project-switcher {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	padding: 3px 8px;
+	border-radius: 5px;
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
 .pf-select {
 	font-size: var(--font-ui-smaller);
 	padding: 2px 6px;
@@ -422,10 +632,99 @@
 	padding: 1px 4px;
 }
 
-/* ── Modals ── */
-.pf-modal h2 {
-	font-size: var(--font-ui-medium);
-	margin-bottom: 14px;
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+
+/* Remove modal padding — we control all spacing ourselves */
+.modal-content:has(.pf-modal) {
+	padding: 0;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.pf-modal {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.pf-modal-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+	padding: 12px 16px;
+	background: var(--background-primary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-modal-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+}
+
+.pf-modal-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.pf-modal-ticket-key {
+	font-size: var(--font-ui-smaller);
+	font-family: var(--font-monospace);
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 2px 6px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.pf-modal-title-input {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	background: none;
+	border: none;
+	border-bottom: 1px solid transparent;
+	outline: none;
+	color: var(--text-normal);
+	padding: 2px 4px;
+	min-width: 0;
+}
+
+.pf-modal-title-input:focus {
+	border-bottom-color: var(--interactive-accent);
+}
+
+.pf-modal-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 18px;
+	line-height: 1;
+	color: var(--text-muted);
+	border-radius: 4px;
+	flex-shrink: 0;
+	padding: 0;
+}
+
+.pf-modal-close:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
 }
 
 .pf-input-full {
@@ -438,20 +737,155 @@
 
 .pf-textarea {
 	width: 100%;
-	min-height: 80px;
-	resize: vertical;
+	min-height: 450px;
+	resize: vertical !important;
+	box-sizing: border-box;
 }
 
-.pf-modal-footer {
+.pf-desc-block {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px 0;
+}
+
+.pf-desc-label-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-desc-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* Match Setting labels (Work type, Priority, Status, Story points) to the same style */
+.pf-modal-body .setting-item-name {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* Tighten spacing between Work type, Priority, Status, Story points */
+.pf-ticket-info-pane .setting-item {
+	padding: 4px 0 !important;
+	border-top: none !important;
+	border-bottom: none !important;
+}
+
+
+
+/* ── Ticket modal two-pane layout ───────────────────────────────────────── */
+
+.pf-ticket-panes {
+	display: flex;
+	gap: 0;
+	align-items: flex-start;
+}
+
+.pf-ticket-form-pane {
+	flex: 1 1 0;
+	min-width: 0;
+	padding-right: 20px;
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+.pf-ticket-info-pane {
+	flex: 0 0 220px;
+	padding-left: 20px;
+}
+
+.pf-info-pane-heading {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 12px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-info-row {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-bottom: 12px;
+}
+
+.pf-info-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.pf-info-value {
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	word-break: break-all;
+}
+
+.pf-info-row-tags {
+	margin-top: 4px;
+}
+
+.pf-info-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.pf-info-tag {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 7px;
+	border-radius: 10px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.pf-info-pane-empty .pf-info-row {
+	opacity: 0.4;
+}
+
+.pf-info-value-empty {
+	font-style: italic;
+}
+
+.pf-btn-open-note {
+	margin-left: 8px;
+	padding: 1px 7px;
+	font-size: var(--font-ui-smaller);
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	cursor: pointer;
+	vertical-align: middle;
+}
+.pf-btn-open-note:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-modal .pf-modal-footer {
 	display: flex;
 	justify-content: flex-end;
 	gap: 8px;
-	margin-top: 18px;
-	padding-top: 12px;
+	flex-shrink: 0;
+	padding: 12px 16px;
 	border-top: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
 }
 
-/* ── Empty states ── */
+/* ── Empty states ────────────────────────────────────────────────────────── */
+
 .pf-empty-state {
 	display: flex;
 	flex-direction: column;
@@ -474,9 +908,1335 @@
 	margin-bottom: 16px;
 }
 
-/* ── Settings ── */
+/* ── Settings ────────────────────────────────────────────────────────────── */
+
 .pf-settings-empty {
 	color: var(--text-muted);
 	font-style: italic;
 	padding: 8px 0;
+}
+
+/* ── View mode tabs ──────────────────────────────────────────────────────── */
+
+.pf-view-tabs {
+	display: flex;
+	gap: 0;
+	padding: 8px 0 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	margin-top: 8px;
+}
+
+.pf-tab {
+	padding: 5px 16px;
+	font-size: var(--font-ui-small);
+	cursor: grab;
+	border: none;
+	border-bottom: 2px solid transparent;
+	background: transparent;
+	color: var(--text-muted);
+	border-radius: 0;
+	margin-bottom: -1px;
+	transition: color 0.15s, border-color 0.15s;
+}
+
+.pf-tab:hover {
+	color: var(--text-normal);
+}
+
+.pf-tab-active {
+	color: var(--text-normal);
+	border-bottom-color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+.pf-tab-dragging {
+	opacity: 0.4;
+	cursor: grabbing;
+}
+
+.pf-tab-drop-before,
+.pf-tab-drop-after {
+	position: relative;
+}
+
+.pf-tab-drop-before::before,
+.pf-tab-drop-after::after {
+	content: '';
+	position: absolute;
+	top: 4px;
+	bottom: 4px;
+	width: 2px;
+	background: var(--interactive-accent);
+	border-radius: 1px;
+	pointer-events: none;
+}
+
+.pf-tab-drop-before::before {
+	left: 0;
+}
+
+.pf-tab-drop-after::after {
+	right: 0;
+}
+
+
+/* ── Story points badge ──────────────────────────────────────────────────── */
+
+.pf-points {
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+/* ── Velocity ────────────────────────────────────────────────────────────── */
+
+.pf-velocity {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 0;
+}
+
+/* ── Sprint goal ─────────────────────────────────────────────────────────── */
+
+.pf-sprint-goal {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 4px 0 0;
+}
+
+/* ── Filter button + dropdown ────────────────────────────────────────────── */
+
+.pf-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.pf-filter-btn {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.pf-filter-btn-active {
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+}
+
+.pf-filter-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	flex-shrink: 0;
+}
+
+.pf-filter-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 180px;
+}
+
+.pf-filter-clear {
+	align-self: flex-start;
+	margin-top: 2px;
+}
+
+/* ── Filter bar (used inside dropdown) ───────────────────────────────────── */
+
+.pf-filter-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.pf-filter-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-filter-label-check {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	padding: 2px 0;
+	color: var(--text-normal);
+}
+
+.pf-filter-select {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.pf-filter-select:not([value='all']) {
+	border-color: var(--interactive-accent);
+}
+
+/* ── Sort dropdown ───────────────────────────────────────────────────────── */
+
+.pf-sort-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 160px;
+}
+
+.pf-sort-option {
+	background: none;
+	border: none;
+	border-radius: 4px;
+	padding: 6px 10px;
+	text-align: left;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	cursor: pointer;
+	width: 100%;
+}
+
+.pf-sort-option:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-sort-option-active {
+	color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+/* ── Column width dropdown ───────────────────────────────────────────────── */
+
+.pf-col-width-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 220px;
+}
+
+.pf-col-width-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.pf-col-width-slider {
+	width: 100%;
+	accent-color: var(--interactive-accent);
+	cursor: pointer;
+}
+
+/* ── Checklist editor (in TicketModal) ───────────────────────────────────── */
+
+.pf-setting-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 600;
+	color: var(--text-muted);
+	margin: 14px 0 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.pf-checklist-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.pf-checklist-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-checklist-text {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	padding: 3px 7px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.pf-btn-icon-sm {
+	padding: 1px 7px;
+	border-radius: 4px;
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+}
+
+.pf-btn-icon-sm:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-input-points {
+	width: 80px;
+}
+
+/* ── Checklist progress on cards ─────────────────────────────────────────── */
+
+.pf-checklist-progress {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 4px 0 0;
+}
+
+/* ── Retro modal ─────────────────────────────────────────────────────────── */
+
+.pf-retro-intro {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.pf-retro-notes {
+	min-height: 120px;
+}
+
+/* ── Table layout (Epics + Backlog views) ────────────────────────────────── */
+
+.pf-tbl-container {
+	--pf-col-handle: 24px;
+	--pf-col-check: 28px;
+	--pf-col-name: 320px;
+	--pf-col-priority: 100px;
+	--pf-col-status: 110px;
+	--pf-col-extra: 90px;
+	--pf-col-actions: 80px;
+}
+
+/* Grid template shared by header and all rows */
+.pf-tbl-header,
+.pf-tbl-row {
+	display: grid;
+	grid-template-columns:
+		var(--pf-col-handle)
+		var(--pf-col-check)
+		var(--pf-col-name)
+		var(--pf-col-priority)
+		var(--pf-col-status)
+		var(--pf-col-extra)
+		var(--pf-col-actions);
+	align-items: center;
+	min-width: 0;
+}
+
+/* Backlog view: no actions column */
+.pf-backlog-list .pf-tbl-header,
+.pf-backlog-list .pf-tbl-row {
+	grid-template-columns:
+		var(--pf-col-handle)
+		var(--pf-col-check)
+		var(--pf-col-name)
+		var(--pf-col-priority)
+		var(--pf-col-status)
+		var(--pf-col-extra);
+}
+
+/* Header row */
+.pf-tbl-header {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	background: var(--background-primary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.pf-tbl-th {
+	position: relative;
+	display: flex;
+	align-items: center;
+	padding: 0 8px;
+	height: 28px;
+	user-select: none;
+	overflow: hidden;
+	box-shadow: inset -1px 0 0 var(--background-modifier-border);
+}
+
+.pf-tbl-th:last-child {
+	box-shadow: none;
+}
+
+.pf-tbl-th-label {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
+	color: var(--text-faint);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1;
+}
+
+/* Resize handle */
+.pf-tbl-resize-handle {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 5px;
+	cursor: col-resize;
+	z-index: 2;
+}
+
+.pf-tbl-resize-handle:hover,
+.pf-tbl-resize-handle:active {
+	background: var(--interactive-accent);
+	opacity: 0.5;
+}
+
+/* Data rows */
+.pf-tbl-row {
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: background 0.1s;
+	height: 34px;
+}
+
+.pf-tbl-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-tbl-row-epic {
+	background: var(--background-secondary);
+	font-weight: 500;
+}
+
+.pf-tbl-row-epic:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* Cells */
+.pf-tbl-cell {
+	display: flex;
+	align-items: center;
+	padding: 0 8px;
+	min-width: 0;
+	overflow: hidden;
+	box-shadow: inset -1px 0 0 var(--background-modifier-border);
+}
+
+.pf-tbl-cell:last-child {
+	box-shadow: none;
+}
+
+.pf-tbl-cell-name {
+	padding: 6px 4px;
+}
+
+.pf-tbl-cell-actions {
+	justify-content: flex-end;
+	padding-right: 8px;
+}
+
+/* Name cell inner layout: indent + toggle + icon + title */
+.pf-tbl-name-inner {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	width: 100%;
+}
+
+.pf-tbl-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	font-size: var(--font-ui-small);
+}
+
+.pf-tbl-title-epic {
+	font-weight: 600;
+}
+
+.pf-tbl-empty-text {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	padding-left: 40px;
+}
+
+.pf-tbl-sprint-name {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Type icons */
+.pf-type-icon {
+	font-size: 13px;
+	flex-shrink: 0;
+	width: 22px;
+	text-align: center;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-type-icon-epic    { color: #8b5cf6; font-size: 20px; }
+.pf-type-icon-task    { color: #3b82f6; }
+.pf-type-icon-bug     { color: #ef4444; font-size: 20.7px; }
+.pf-type-icon-story   { color: #10b981; font-size: 18px; }
+.pf-type-icon-subtask { color: #3b82f6; }
+
+/* Section headers (sprint groups, unparented group) — full-width, not a grid row */
+.pf-tbl-section-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	user-select: none;
+	font-weight: 500;
+	margin-bottom: 2px;
+}
+
+.pf-tbl-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-tbl-section-header.pf-section-drop-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	outline: 2px solid var(--interactive-accent);
+}
+
+/* ── Backlog sections ────────────────────────────────────────────────────── */
+
+.pf-backlog-section {
+	margin-bottom: 12px;
+}
+
+.pf-backlog-section-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	user-select: none;
+	font-weight: 500;
+}
+
+.pf-backlog-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-backlog-section-title {
+	font-weight: 600;
+	flex: 1;
+}
+
+.pf-backlog-section-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-empty {
+	padding: 8px 12px 8px 32px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* ── Epics view ──────────────────────────────────────────────────────────── */
+
+.pf-epics-list {
+	overflow-y: auto;
+	flex: 1;
+	padding: 0;
+	position: relative;
+}
+
+.pf-epic-section {
+	margin-bottom: 0;
+}
+
+.pf-epic-progress {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pf-epic-add-child {
+	opacity: 0;
+	transition: opacity 0.15s;
+	flex-shrink: 0;
+}
+
+.pf-tbl-row:hover .pf-epic-add-child {
+	opacity: 1;
+}
+
+.pf-epic-toggle {
+	font-size: 20px;
+	width: 22px;
+	text-align: center;
+	flex-shrink: 0;
+	cursor: pointer;
+	color: var(--text-muted);
+	line-height: 1;
+}
+
+.pf-epic-toggle:hover {
+	color: var(--text-normal);
+}
+
+.pf-epic-toggle-placeholder {
+	width: 22px;
+	flex-shrink: 0;
+}
+
+.pf-tbl-row.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.pf-draggable-row {
+	cursor: default;
+}
+
+.pf-drag-handle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 100%;
+	cursor: grab;
+	color: var(--text-muted);
+	opacity: 0;
+	font-size: 14px;
+	letter-spacing: -1px;
+	user-select: none;
+	transition: opacity 0.1s;
+}
+
+.pf-tbl-row:hover .pf-drag-handle {
+	opacity: 1;
+}
+
+.pf-drag-handle:active {
+	cursor: grabbing;
+}
+
+/* ── Row checkbox ────────────────────────────────────────────────────────── */
+
+.pf-row-checkbox-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-row-checkbox {
+	opacity: 0;
+	cursor: pointer;
+	width: 14px;
+	height: 14px;
+	accent-color: var(--interactive-accent);
+	transition: opacity 0.1s;
+}
+
+.pf-tbl-row:hover .pf-row-checkbox,
+.pf-tbl-row.pf-row-selected .pf-row-checkbox,
+.pf-epics-list.pf-has-selection .pf-row-checkbox {
+	opacity: 1;
+}
+
+.pf-tbl-row.pf-row-selected {
+	background: var(--background-modifier-active-hover);
+}
+
+/* ── Multi-select action bar ─────────────────────────────────────────────── */
+
+.pf-selection-bar {
+	position: sticky;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+	z-index: 10;
+}
+
+.pf-selection-bar-count {
+	font-size: 12px;
+	color: var(--text-muted);
+	flex: 1;
+}
+
+.pf-selection-bar-locked {
+	font-size: 11px;
+	color: var(--text-error);
+}
+
+/* ── Drop indicator line ─────────────────────────────────────────────────── */
+
+.pf-drop-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--interactive-accent);
+	pointer-events: none;
+	display: none;
+	z-index: 10;
+	border-radius: 1px;
+}
+
+.pf-drop-line.pf-drop-line-visible {
+	display: block;
+}
+
+.pf-drop-line.pf-drop-line-indented {
+	left: 32px;
+}
+
+.pf-drop-line.pf-drop-line-indented-2 {
+	left: 56px;
+}
+
+/* ── Board grouping (by-parent) ─────────────────────────────────────────── */
+
+.pf-column-body-grouped {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-board-group {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.pf-board-group-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+}
+
+.pf-board-group-title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-normal);
+}
+
+.pf-board-group-count {
+	color: var(--text-muted);
+	font-size: 11px;
+	min-width: 14px;
+	text-align: right;
+}
+
+.pf-board-group-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 6px 8px 4px;
+	min-height: 36px;
+}
+
+.pf-board-group-empty {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	padding: 4px 2px 2px;
+	font-style: italic;
+}
+
+.pf-board-group.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: -2px;
+}
+
+.pf-group-add {
+	width: 100%;
+	border-radius: 0;
+	border-top: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	padding: 5px 10px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.pf-group-add:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+/* ── Subtasks-only board: parent label on card ───────────────────────────── */
+
+.pf-card-parent-label {
+	font-size: 10px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100px;
+	flex-shrink: 1;
+}
+
+/* ── Group dropdown (reuses .pf-sort-option styles) ─────────────────────── */
+
+.pf-group-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	padding: 4px;
+	min-width: 180px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+/* ── By-parent board: vertical stack of parent blocks ───────────────────── */
+
+/* ── By-Parent view ───────────────────────────────────────────────────────── */
+
+.pf-subtasks-wrapper {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: auto;
+	padding: 12px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-subtasks-block {
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	min-width: max-content;
+}
+
+.pf-subtasks-block-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 12px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-subtasks-toggle {
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 20px;
+	width: 22px;
+	text-align: center;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.pf-subtasks-toggle:hover {
+	color: var(--text-normal);
+}
+
+.pf-subtasks-block-title {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pf-subtasks-block-progress {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.pf-subtasks-backlog-badge {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	white-space: nowrap;
+	font-style: italic;
+}
+
+.pf-subtasks-card-list {
+	padding: 4px 0;
+}
+
+.pf-subtasks-no-subtasks {
+	padding: 8px 12px;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.pf-subtasks-card {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 7px 10px;
+	cursor: pointer;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-left-width: 3px;
+	border-radius: 5px;
+}
+.pf-subtasks-card.pf-priority-border-critical { border-left-color: var(--pf-border-critical); }
+.pf-subtasks-card.pf-priority-border-high     { border-left-color: var(--pf-border-high); }
+.pf-subtasks-card.pf-priority-border-medium   { border-left-color: var(--pf-border-medium); }
+.pf-subtasks-card.pf-priority-border-low      { border-left-color: var(--background-modifier-border); }
+
+.pf-subtasks-card:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border-hover);
+}
+
+.pf-subtasks-status {
+	flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 2px 6px;
+	border-radius: 3px;
+	cursor: pointer;
+	white-space: nowrap;
+	text-transform: uppercase;
+}
+.pf-subtasks-status-todo        { background: rgba(139,139,139,0.18); color: #9a9a9a; }
+.pf-subtasks-status-inprogress  { background: rgba(76,155,232,0.18);  color: #4c9be8; }
+.pf-subtasks-status-inreview    { background: rgba(232,162,76,0.18);  color: #e8a24c; }
+.pf-subtasks-status-done        { background: rgba(76,175,125,0.18);  color: #4caf7d; }
+
+.pf-subtasks-card-title {
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pf-subtasks-card-meta {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.pf-subtasks-empty {
+	padding: 20px 16px;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* By Parent — dynamic-column grid, column count + gap set inline in BoardByParentPanelView.ts */
+.pf-subtasks-grid {
+	display: grid;
+	padding: 12px 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	align-items: flex-start;
+}
+
+.pf-subtasks-col {
+	display: flex;
+	flex-direction: column;
+	/* width is driven by inline grid-template-columns from BoardByParentPanelView.ts */
+	overflow: hidden;
+	background: var(--background-secondary);
+	border-radius: 8px;
+}
+
+.pf-subtasks-col { border-top: 3px solid var(--pf-col-color, var(--background-modifier-border)); }
+
+.pf-subtasks-col-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 5px 10px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-subtasks-col-title {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-normal);
+}
+
+.pf-subtasks-col-count {
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+.pf-subtasks-col-body {
+	flex: 1;
+	padding: 6px 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-height: 50px;
+	position: relative;
+}
+.pf-subtasks-col-body::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 0;
+}
+.pf-subtasks-col-body > * { position: relative; z-index: 1; }
+
+.pf-subtasks-col-body::before {
+	background: linear-gradient(to bottom,
+		color-mix(in srgb, var(--pf-col-color, transparent) 10%, transparent) 0%,
+		color-mix(in srgb, var(--pf-col-color, transparent) 5%, transparent) 100%
+	);
+}
+
+.pf-subtasks-col-empty {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 2px;
+}
+
+.pf-subtasks-col-add {
+	width: 100%;
+	padding: 4px 8px;
+	font-size: var(--font-ui-smaller);
+	border: none;
+	background: transparent;
+	color: transparent;
+	cursor: pointer;
+	text-align: left;
+}
+
+.pf-subtasks-col:hover .pf-subtasks-col-add {
+	color: var(--text-muted);
+}
+
+.pf-subtasks-col-drop-active > .pf-subtasks-col-body {
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+	border-radius: 4px;
+	background: var(--background-modifier-hover);
+}
+
+.pf-subtasks-card-dragging {
+	opacity: 0.4;
+}
+
+/* ── Status settings UI ──────────────────────────────────────────────────── */
+.pf-status-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+
+.pf-status-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+}
+
+.pf-status-swatch-btn {
+	width: 22px;
+	height: 22px;
+	min-width: 22px;
+	border-radius: 4px;
+	border: 2px solid rgba(255,255,255,0.15);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.1s;
+}
+.pf-status-swatch-btn:hover { transform: scale(1.1); }
+
+.pf-status-label-input {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	background: transparent;
+	border: none;
+	color: var(--text-normal);
+	padding: 2px 4px;
+	border-radius: 3px;
+}
+.pf-status-label-input:focus {
+	outline: none;
+	background: var(--background-primary);
+	box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.pf-status-map-sel {
+	font-size: var(--font-ui-smaller);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 2px 6px;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.pf-status-default-badge {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pf-status-drag-handle {
+	cursor: grab;
+	color: var(--text-faint);
+	font-size: 16px;
+	padding: 0 2px;
+	user-select: none;
+	line-height: 1;
+	flex-shrink: 0;
+}
+.pf-status-drag-handle:active { cursor: grabbing; }
+
+.pf-status-row-dragging { opacity: 0.4; }
+
+.pf-status-row-over {
+	border-color: var(--interactive-accent);
+	box-shadow: 0 0 0 1px var(--interactive-accent);
+}
+
+.pf-status-delete-btn {
+	font-size: 16px;
+	line-height: 1;
+	padding: 0 5px;
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+.pf-status-delete-btn:hover { background: var(--background-modifier-error); color: #fff; }
+
+/* ── Color picker popover ────────────────────────────────────────────────── */
+.pf-color-picker-popover {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: fit-content;
+}
+
+.pf-cp-palette {
+	display: grid;
+	grid-template-columns: repeat(6, 24px);
+	gap: 5px;
+}
+
+.pf-cp-swatch {
+	width: 24px;
+	height: 24px;
+	border-radius: 4px;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: transform 0.1s;
+}
+.pf-cp-swatch:hover { transform: scale(1.15); }
+.pf-cp-swatch-active { border-color: #fff; box-shadow: 0 0 0 1px #888; }
+
+.pf-cp-wheel-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-cp-wheel, .pf-cp-sl {
+	border-radius: 4px;
+	cursor: crosshair;
+	display: block;
+}
+
+.pf-cp-hex-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-cp-hex-input {
+	flex: 1;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+}
+.pf-cp-hex-input:focus { outline: none; box-shadow: 0 0 0 2px var(--interactive-accent); }
+
+.pf-cp-preview {
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+}
+
+/* ── Sprint settings toggles ─────────────────────────────────────────────── */
+
+.pf-sprint-setting-note {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}
+
+/* ── Multi-drag ghost ────────────────────────────────────────────────────── */
+
+.pf-multi-drag-ghost {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: var(--font-ui-small);
+    font-weight: 500;
+    color: var(--text-normal);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 9999;
+}
+
+/* ── No-sprint backlog dual-list ─────────────────────────────────────────── */
+
+.pf-backlog-section-desc {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-faint);
+    font-style: italic;
+    margin-left: 6px;
+    margin-right: 4px;
+}
+
+/* Board/backlog badge (clickable toggle in no-sprint backlog) */
+.pf-board-badge {
+    cursor: pointer;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: opacity 0.15s;
+}
+.pf-board-badge:hover { opacity: 0.75; }
+
+.pf-board-badge-on {
+    background: rgba(76,175,125,0.18);
+    color: #4caf7d;
+    border-color: rgba(76,175,125,0.3);
+}
+.pf-board-badge-off {
+    background: rgba(139,139,139,0.12);
+    color: var(--text-muted);
+    border-color: rgba(139,139,139,0.2);
+}
+
+/* ── RetroModal spillover/auto-create checkboxes ─────────────────────────── */
+
+.pf-retro-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: 10px;
+}
+.pf-retro-option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-ui-small);
+}
+.pf-retro-option-note {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-left: 22px;
 }

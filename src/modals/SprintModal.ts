@@ -14,6 +14,9 @@ export class SprintModal extends Modal {
 	private startDate = '';
 	private endDate = '';
 	private status: SprintStatus = 'planning';
+	private goal = '';
+	private startInputEl: HTMLInputElement | null = null;
+	private endInputEl: HTMLInputElement | null = null;
 
 	constructor(
 		app: App,
@@ -35,6 +38,7 @@ export class SprintModal extends Modal {
 			this.startDate = this.toDateString(sprint.startDate);
 			this.endDate = this.toDateString(sprint.endDate);
 			this.status = sprint.status;
+			this.goal = sprint.goal ?? '';
 		} else {
 			const project = plugin.store.getProject(projectId);
 			const cycleDays = project?.cycleDays ?? 14;
@@ -53,9 +57,10 @@ export class SprintModal extends Modal {
 		contentEl.empty();
 		contentEl.addClass('pf-modal');
 
-		contentEl.createEl('h2', { text: this.sprint ? 'Edit sprint' : 'New sprint' });
+		const body = contentEl.createEl('div', { cls: 'pf-modal-body' });
+		body.createEl('h2', { text: this.sprint ? 'Edit sprint' : 'New sprint', cls: 'pf-modal-title' });
 
-		new Setting(contentEl)
+		new Setting(body)
 			.setName('Sprint name')
 			.addText(text => {
 				text.setPlaceholder('Sprint 1').setValue(this.name);
@@ -64,38 +69,50 @@ export class SprintModal extends Modal {
 				setTimeout(() => text.inputEl.focus(), 50);
 			});
 
-		let endInputEl: HTMLInputElement | null = null;
-
-		new Setting(contentEl)
+		new Setting(body)
 			.setName('Start date')
 			.addText(text => {
 				text.inputEl.type = 'date';
 				text.inputEl.value = this.startDate;
-				text.inputEl.addEventListener('change', () => {
-					this.startDate = text.inputEl.value;
+				this.startInputEl = text.inputEl;
+				const onStartChange = () => {
+					const val = text.inputEl.value;
+					if (!val) return;
+					this.startDate = val;
 					// Recalculate end date from cycle
 					const project = this.plugin.store.getProject(this.projectId);
-					if (project && !this.sprint && endInputEl) {
-						const start = new Date(this.startDate);
-						const end = new Date(start);
-						end.setDate(end.getDate() + project.cycleDays);
-						this.endDate = this.toDateString(end.getTime());
-						endInputEl.value = this.endDate;
+					if (project && this.endInputEl) {
+						const [y, mo, d] = val.split('-').map(Number);
+						const start = new Date(y, mo - 1, d);
+						start.setDate(start.getDate() + project.cycleDays);
+						const newEnd = this.toDateString(start.getTime());
+						this.endDate = newEnd;
+						this.endInputEl.value = newEnd;
 					}
-				});
+				};
+				text.inputEl.addEventListener('change', onStartChange);
 			});
 
-		new Setting(contentEl)
+		new Setting(body)
 			.setName('End date')
 			.addText(text => {
 				text.inputEl.type = 'date';
 				text.inputEl.value = this.endDate;
-				endInputEl = text.inputEl as HTMLInputElement;
-				text.inputEl.addEventListener('change', () => { this.endDate = text.inputEl.value; });
+				this.endInputEl = text.inputEl;
+				const onEndChange = () => { if (text.inputEl.value) this.endDate = text.inputEl.value; };
+				text.inputEl.addEventListener('change', onEndChange);
+			});
+
+		new Setting(body)
+			.setName('Sprint goal')
+			.addTextArea(area => {
+				area.setPlaceholder('Optional goal for this sprint').setValue(this.goal);
+				area.inputEl.addClass('pf-textarea');
+				area.onChange(val => { this.goal = val; });
 			});
 
 		if (this.sprint) {
-			new Setting(contentEl)
+			new Setting(body)
 				.setName('Status')
 				.addDropdown(drop => {
 					drop.addOption('planning', 'Planning');
@@ -105,6 +122,13 @@ export class SprintModal extends Modal {
 					drop.onChange(val => { this.status = val as SprintStatus; });
 				});
 		}
+
+		contentEl.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+				e.preventDefault();
+				this.submit();
+			}
+		});
 
 		const footer = contentEl.createEl('div', { cls: 'pf-modal-footer' });
 
@@ -124,13 +148,23 @@ export class SprintModal extends Modal {
 			new Notice('Sprint name is required.');
 			return;
 		}
-		if (!this.startDate || !this.endDate) {
+
+		// Read directly from inputs as source of truth, fall back to stored values
+		const startDateVal = this.startInputEl?.value || this.startDate;
+		const endDateVal = this.endInputEl?.value || this.endDate;
+
+		if (!startDateVal || !endDateVal) {
 			new Notice('Start and end dates are required.');
 			return;
 		}
 
-		const startTs = new Date(this.startDate).getTime();
-		const endTs = new Date(this.endDate).getTime();
+		const startTs = this.parseDateAsLocal(startDateVal);
+		const endTs = this.parseDateAsLocal(endDateVal);
+
+		if (isNaN(startTs) || isNaN(endTs)) {
+			new Notice('Invalid date format.');
+			return;
+		}
 
 		if (endTs <= startTs) {
 			new Notice('End date must be after start date.');
@@ -143,6 +177,7 @@ export class SprintModal extends Modal {
 				startDate: startTs,
 				endDate: endTs,
 				status: this.status,
+				goal: this.goal.trim() || undefined,
 			});
 			new Notice('Sprint updated.');
 			this.close();
@@ -154,6 +189,7 @@ export class SprintModal extends Modal {
 				startDate: startTs,
 				endDate: endTs,
 				status: 'planning',
+				goal: this.goal.trim() || undefined,
 			});
 			new Notice('Sprint created.');
 			this.close();
@@ -164,5 +200,10 @@ export class SprintModal extends Modal {
 	private toDateString(ts: number): string {
 		const d = new Date(ts);
 		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+	}
+
+	private parseDateAsLocal(dateStr: string): number {
+		const [year, month, day] = dateStr.split('-').map(Number);
+		return new Date(year, month - 1, day).getTime();
 	}
 }
