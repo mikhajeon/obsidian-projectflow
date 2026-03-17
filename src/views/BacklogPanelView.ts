@@ -247,16 +247,23 @@ export class BacklogPanelView {
 			const destSectionId = this.dropSectionId;
 			const beforeId = this.dropBeforeId;
 
-			// Reset drag state
-			this.draggedId = null;
-			this.draggedIds = [];
+			// Clear UI state immediately; keep draggedIds until after onDrop
+			// so that resolveDraggedTickets() can still read them.
 			this.draggedFromSectionId = null;
 			this.dropSectionId = null;
 			this.dropBeforeId = null;
 
-			if (!destSectionId) return;
+			if (!destSectionId) {
+				this.draggedId = null;
+				this.draggedIds = [];
+				return;
+			}
 
 			await onDrop(destSectionId, beforeId);
+
+			// Reset only after onDrop has consumed the IDs
+			this.draggedId = null;
+			this.draggedIds = [];
 		});
 	}
 
