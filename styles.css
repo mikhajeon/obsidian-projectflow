@@ -737,7 +737,7 @@
 
 .pf-textarea {
 	width: 100%;
-	min-height: 450px;
+	min-height: 80px;
 	resize: vertical !important;
 	box-sizing: border-box;
 }
@@ -745,7 +745,7 @@
 .pf-desc-block {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 0;
 	padding: 8px 0;
 }
 
@@ -753,6 +753,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
+	margin-bottom: 6px;
 }
 
 .pf-desc-label {
@@ -761,6 +762,114 @@
 	color: var(--text-muted);
 	text-transform: uppercase;
 	letter-spacing: 0.04em;
+	flex: 1; /* push tab-group and open-note btn to the right */
+}
+
+/* ── Description editor: Write / Preview tabs ─────────────────────────── */
+
+.pf-desc-tab-group {
+	display: flex;
+	gap: 2px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 2px;
+}
+
+.pf-desc-tab {
+	background: none;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: var(--font-ui-smaller);
+	padding: 2px 10px;
+	line-height: 1.6;
+	transition: background 0.1s, color 0.1s;
+}
+
+.pf-desc-tab:hover {
+	color: var(--text-normal);
+}
+
+.pf-desc-tab-active {
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font-weight: 500;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+/* ── Markdown toolbar ─────────────────────────────────────────────────── */
+
+.pf-desc-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1px;
+	padding: 4px 6px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-bottom: none;
+	border-radius: 6px 6px 0 0;
+}
+
+.pf-desc-toolbar-btn {
+	background: none;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 12px;
+	font-weight: 600;
+	padding: 2px 6px;
+	min-width: 26px;
+	line-height: 1.5;
+	transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.pf-desc-toolbar-btn:hover {
+	background: var(--background-modifier-hover);
+	border-color: var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.pf-desc-toolbar-sep {
+	width: 1px;
+	height: 16px;
+	background: var(--background-modifier-border);
+	margin: 0 3px;
+	align-self: center;
+	flex-shrink: 0;
+}
+
+/* Textarea sitting directly below toolbar — remove top radius */
+.pf-desc-editor {
+	border-top-left-radius: 0 !important;
+	border-top-right-radius: 0 !important;
+	font-family: var(--font-monospace);
+	font-size: var(--font-text-size);
+	line-height: 1.6;
+	min-height: 140px;
+	resize: none; /* auto-grow handles this */
+}
+
+/* ── Preview pane ─────────────────────────────────────────────────────── */
+
+.pf-desc-preview {
+	min-height: 140px;
+	padding: 10px 14px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow-y: auto;
+	/* Match Obsidian's default note font */
+	font-family: var(--font-text);
+	font-size: var(--font-text-size);
+	line-height: var(--line-height-normal);
+}
+
+.pf-desc-preview-empty {
+	color: var(--text-faint);
+	font-style: italic;
 }
 
 /* Match Setting labels (Work type, Priority, Status, Story points) to the same style */

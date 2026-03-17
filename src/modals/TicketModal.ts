@@ -1,4 +1,4 @@
-import { App, Modal, Setting, Notice, TFile } from 'obsidian';
+import { App, Modal, Setting, Notice, TFile, MarkdownRenderer, Component } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
 import type { Ticket, TicketPriority, TicketStatus, TicketType } from '../types';
 import { generateTicketNote, deleteTicketNote, ticketFilePath } from '../ticketNote';
@@ -133,9 +133,149 @@ export class TicketModal extends Modal {
 			});
 		}
 
-		const descTextarea = descBlock.createEl('textarea', { cls: 'pf-textarea', placeholder: 'Optional description' });
+		// ── Write / Preview tabs in the label row ──────────────────────────────
+		const tabGroup = descLabelRow.createDiv({ cls: 'pf-desc-tab-group' });
+		const writeTab   = tabGroup.createEl('button', { cls: 'pf-desc-tab pf-desc-tab-active', text: 'Write' });
+		const previewTab = tabGroup.createEl('button', { cls: 'pf-desc-tab', text: 'Preview' });
+
+		// ── Toolbar (appears above textarea) ─────────────────────────────────────
+		const toolbar = descBlock.createEl('div', { cls: 'pf-desc-toolbar' });
+
+		// ── Textarea ─────────────────────────────────────────────────────────────
+		const descTextarea = descBlock.createEl('textarea', {
+			cls: 'pf-textarea pf-desc-editor',
+			attr: { placeholder: 'Supports Markdown — Ctrl+B bold, Ctrl+I italic, Ctrl+K link…' },
+		});
 		descTextarea.value = this.description;
-		descTextarea.addEventListener('input', () => { this.description = descTextarea.value; });
+
+		// ── Preview pane ─────────────────────────────────────────────────────────
+		const previewEl = descBlock.createDiv({ cls: 'pf-desc-preview' });
+		previewEl.style.display = 'none';
+
+		// ── Helpers ──────────────────────────────────────────────────────────────
+		const wrapSel = (before: string, after: string) => {
+			const s = descTextarea.selectionStart, e = descTextarea.selectionEnd;
+			const sel = descTextarea.value.slice(s, e);
+			descTextarea.setRangeText(before + sel + after, s, e);
+			descTextarea.selectionStart = s + before.length;
+			descTextarea.selectionEnd   = s + before.length + sel.length;
+			descTextarea.dispatchEvent(new Event('input'));
+			descTextarea.focus();
+		};
+
+		const prependToLine = (prefix: string) => {
+			const s = descTextarea.selectionStart;
+			const lineStart = descTextarea.value.lastIndexOf('\n', s - 1) + 1;
+			descTextarea.setRangeText(prefix, lineStart, lineStart);
+			descTextarea.selectionStart = descTextarea.selectionEnd = s + prefix.length;
+			descTextarea.dispatchEvent(new Event('input'));
+			descTextarea.focus();
+		};
+
+		const insertLink = () => {
+			const s = descTextarea.selectionStart, e = descTextarea.selectionEnd;
+			const sel = descTextarea.value.slice(s, e) || 'text';
+			descTextarea.setRangeText(`[${sel}](url)`, s, e);
+			// Highlight the placeholder "url" so the user can type over it
+			descTextarea.selectionStart = s + sel.length + 3;
+			descTextarea.selectionEnd   = s + sel.length + 6;
+			descTextarea.dispatchEvent(new Event('input'));
+			descTextarea.focus();
+		};
+
+		// ── Toolbar buttons ───────────────────────────────────────────────────────
+		// Use mousedown so the textarea never loses its selection before the handler fires.
+		const addBtn = (title: string, label: string, fn: () => void) => {
+			const btn = toolbar.createEl('button', { cls: 'pf-desc-toolbar-btn', title, text: label });
+			btn.addEventListener('mousedown', (e) => { e.preventDefault(); fn(); });
+		};
+		const sep = () => toolbar.createEl('span', { cls: 'pf-desc-toolbar-sep' });
+
+		addBtn('Bold (Ctrl+B)',    'B',   () => wrapSel('**', '**'));
+		addBtn('Italic (Ctrl+I)', 'I',   () => wrapSel('*', '*'));
+		addBtn('Strikethrough',   'S',   () => wrapSel('~~', '~~'));
+		addBtn('Inline code',     '`',   () => wrapSel('`', '`'));
+		sep();
+		addBtn('Heading 1',       'H1',  () => prependToLine('# '));
+		addBtn('Heading 2',       'H2',  () => prependToLine('## '));
+		addBtn('Heading 3',       'H3',  () => prependToLine('### '));
+		sep();
+		addBtn('Bullet list',     '•',   () => prependToLine('- '));
+		addBtn('Numbered list',   '1.',  () => prependToLine('1. '));
+		addBtn('Task checkbox',   '☐',   () => prependToLine('- [ ] '));
+		sep();
+		addBtn('Link (Ctrl+K)',   '⊞',   insertLink);
+		addBtn('Code block',      '</>',  () => wrapSel('\n```\n', '\n```\n'));
+		addBtn('Blockquote',      '❝',   () => prependToLine('> '));
+		addBtn('Horizontal rule', '—',   () => {
+			const s = descTextarea.selectionStart;
+			descTextarea.setRangeText('\n\n---\n\n', s, s);
+			descTextarea.selectionStart = descTextarea.selectionEnd = s + 7;
+			descTextarea.dispatchEvent(new Event('input'));
+			descTextarea.focus();
+		});
+
+		// ── Auto-grow ─────────────────────────────────────────────────────────────
+		const autoGrow = () => {
+			descTextarea.style.height = 'auto';
+			descTextarea.style.height = Math.max(140, descTextarea.scrollHeight) + 'px';
+		};
+		requestAnimationFrame(autoGrow);
+		descTextarea.addEventListener('input', () => {
+			this.description = descTextarea.value;
+			autoGrow();
+		});
+
+		// ── Keyboard shortcuts ────────────────────────────────────────────────────
+		descTextarea.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (e.ctrlKey || e.metaKey) {
+				if (e.key === 'b') { e.preventDefault(); wrapSel('**', '**'); return; }
+				if (e.key === 'i') { e.preventDefault(); wrapSel('*', '*');   return; }
+				if (e.key === 'k') { e.preventDefault(); insertLink();         return; }
+			}
+			if (e.key === 'Tab') {
+				e.preventDefault();
+				const s = descTextarea.selectionStart, en = descTextarea.selectionEnd;
+				if (e.shiftKey) {
+					const lineStart = descTextarea.value.lastIndexOf('\n', s - 1) + 1;
+					if (descTextarea.value.slice(lineStart).startsWith('  ')) {
+						descTextarea.setRangeText('', lineStart, lineStart + 2);
+						descTextarea.selectionStart = descTextarea.selectionEnd = Math.max(lineStart, s - 2);
+						descTextarea.dispatchEvent(new Event('input'));
+					}
+				} else {
+					descTextarea.setRangeText('  ', s, en);
+					descTextarea.selectionStart = descTextarea.selectionEnd = s + 2;
+					descTextarea.dispatchEvent(new Event('input'));
+				}
+			}
+		});
+
+		// ── Write / Preview switching ─────────────────────────────────────────────
+		const showWrite = () => {
+			writeTab.addClass('pf-desc-tab-active');
+			previewTab.removeClass('pf-desc-tab-active');
+			toolbar.style.display = '';
+			descTextarea.style.display = '';
+			previewEl.style.display = 'none';
+			descTextarea.focus();
+		};
+		const showPreview = async () => {
+			previewTab.addClass('pf-desc-tab-active');
+			writeTab.removeClass('pf-desc-tab-active');
+			toolbar.style.display = 'none';
+			descTextarea.style.display = 'none';
+			previewEl.style.display = '';
+			previewEl.empty();
+			const md = this.description.trim();
+			if (md) {
+				await MarkdownRenderer.render(this.app, md, previewEl, '', this as unknown as Component);
+			} else {
+				previewEl.createEl('p', { cls: 'pf-desc-preview-empty', text: 'Nothing to preview.' });
+			}
+		};
+		writeTab.addEventListener('click',   showWrite);
+		previewTab.addEventListener('click', () => { showPreview().catch(() => { /* silent */ }); });
 
 		// Compute which types are selectable.
 		// Hierarchy: epic → story/task/bug → subtask
