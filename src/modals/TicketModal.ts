@@ -10,6 +10,7 @@ interface NewTicketContext {
 	status?: TicketStatus;
 	parentId?: string;
 	defaultType?: TicketType;
+	showOnBoard?: boolean; // no-sprint mode: pre-set board-list membership
 }
 
 interface EditTicketContext {
@@ -345,6 +346,7 @@ export class TicketModal extends Modal {
 				status: this.status,
 				points: this.points,
 				parentId: ctx.parentId ?? null,
+				...(ctx.showOnBoard !== undefined ? { showOnBoard: ctx.showOnBoard } : {}),
 			});
 
 			this.close();

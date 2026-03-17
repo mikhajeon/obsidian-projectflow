@@ -83,6 +83,9 @@ export class BoardPanelView {
 					projectId,
 					sprintId: currentSprint ? currentSprint.id : null,
 					status: col.id,
+					// In no-sprint mode every ticket created from the board should
+					// immediately appear in the Board list, not Product Backlog.
+					...(useSprints ? {} : { showOnBoard: true }),
 				}, () => this.view.render()).open()
 			);
 		}
