@@ -4,13 +4,33 @@ import type { TicketStatus, TicketPriority } from './types';
 import { generateTicketNote, ticketFilePath } from './ticketNote';
 
 /**
- * Registers vault event listeners that sync ticket note changes back into
- * the ProjectStore. Meant to be instantiated once in onload() and discarded
- * in onunload() (Obsidian auto-cleans registered events on plugin unload).
+ * How the deferred-merge strategy works
+ * ──────────────────────────────────────
+ * When a ticket note is modified externally (user typing in the Obsidian editor)
+ * we do NOT merge immediately. Instead we start a 10-second idle countdown.
+ * The countdown is reset on every subsequent `modify` event for the same file.
+ *
+ * The sync fires early (before 10 s) if any of these happen:
+ *   • The user switches to a different note/leaf (active-leaf-change)
+ *   • The document/tab becomes hidden (visibilitychange → hidden)
+ *   • The Obsidian window loses focus (window blur)
+ *
+ * This prevents mid-keystroke merges that would interrupt the user while they
+ * are still editing the note.
  */
 export class NoteSyncWatcher {
 	private plugin: ProjectFlowPlugin;
-	private syncDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+	/** Per-path idle timers (10 s countdown). */
+	private idleTimers   = new Map<string, ReturnType<typeof setTimeout>>();
+	/** Per-path pending-sync flags (set after first modify, cleared after sync). */
+	private pendingPaths = new Set<string>();
+
+	/** Cached path of the note that was open when a modify was registered. */
+	private activeNotePath: string | null = null;
+
+	/** Unregistration callbacks for document/window listeners we add manually. */
+	private cleanupListeners: (() => void)[] = [];
 
 	constructor(plugin: ProjectFlowPlugin) {
 		this.plugin = plugin;
@@ -19,7 +39,7 @@ export class NoteSyncWatcher {
 	register(): void {
 		const { plugin } = this;
 
-		// Watch ticket notes for edits made directly in Obsidian
+		// ── 1. vault:modify — queue the file and (re)start idle countdown ─────
 		plugin.registerEvent(
 			plugin.app.vault.on('modify', (file) => {
 				if (!(file instanceof TFile) || file.extension !== 'md') return;
@@ -27,31 +47,41 @@ export class NoteSyncWatcher {
 				if (!file.path.startsWith(baseFolder + '/')) return;
 				if (plugin.writingPaths.has(file.path)) return;
 
-				// Debounce: wait 1.5s after the last keystroke before syncing
-				const existing = this.syncDebounceTimers.get(file.path);
-				if (existing) clearTimeout(existing);
-				const timer = setTimeout(() => {
-					this.syncDebounceTimers.delete(file.path);
-					this.syncNoteToStore(file).catch(() => { /* silent */ });
-				}, 1500);
-				this.syncDebounceTimers.set(file.path, timer);
+				// Remember which note is being edited so we can flush on leaf change
+				this.activeNotePath = file.path;
+				this.scheduleIdleSync(file.path);
 			})
 		);
 
-		// Watch for ticket note moves made directly in Obsidian (file explorer drag/rename)
+		// ── 2. workspace:active-leaf-change — flush if user left the note ─────
+		plugin.registerEvent(
+			plugin.app.workspace.on('active-leaf-change', () => {
+				const openFile = plugin.app.workspace.getActiveFile();
+				const newPath  = openFile?.path ?? null;
+
+				// If the newly active file is different from the one being edited,
+				// immediately flush any pending sync for the old note.
+				if (this.activeNotePath && newPath !== this.activeNotePath) {
+					this.flushPath(this.activeNotePath);
+					this.activeNotePath = newPath;
+				} else {
+					this.activeNotePath = newPath;
+				}
+			})
+		);
+
+		// ── 3. vault:rename ──────────────────────────────────────────────────
 		plugin.registerEvent(
 			plugin.app.vault.on('rename', (file, oldPath) => {
 				if (!(file instanceof TFile) || file.extension !== 'md') return;
 				const baseFolder = plugin.store.getBaseFolder();
 				const prefix = baseFolder + '/';
 
-				// Skip plugin-initiated renames (markWriting is set on both paths)
 				if (plugin.writingPaths.has(file.path) || plugin.writingPaths.has(oldPath)) return;
 
 				const movedInto = file.path.startsWith(prefix);
 				const movedFrom = oldPath.startsWith(prefix);
 
-				// File moved out of base folder entirely — treat as deletion
 				if (movedFrom && !movedInto) {
 					const fm = plugin.app.metadataCache.getCache(oldPath)?.frontmatter;
 					if (!fm?.id) return;
@@ -59,58 +89,137 @@ export class NoteSyncWatcher {
 					if (plugin.deletingIds.has(ticketId)) return;
 					const ticket = plugin.store.getTicket(ticketId);
 					if (!ticket) return;
-					plugin.store.deleteTicket(ticketId).then(() => plugin.refreshAllViews()).catch(() => { /* silent */ });
+					plugin.store.deleteTicket(ticketId)
+						.then(() => plugin.refreshAllViews())
+						.catch(() => { /* silent */ });
 					return;
 				}
 
-				if (!movedInto) return; // neither path is in base folder
+				if (!movedInto) return;
 
-				// Debounce: metadataCache may not have updated yet for the new path
-				const existing = this.syncDebounceTimers.get(file.path);
+				// Short debounce for renames (metadataCache may not have updated yet)
+				const existing = this.idleTimers.get(file.path);
 				if (existing) clearTimeout(existing);
 				const timer = setTimeout(() => {
-					this.syncDebounceTimers.delete(file.path);
+					this.idleTimers.delete(file.path);
 					this.syncRenameToStore(file, oldPath).catch(() => { /* silent */ });
 				}, 500);
-				this.syncDebounceTimers.set(file.path, timer);
+				this.idleTimers.set(file.path, timer);
 			})
 		);
 
-		// Watch for ticket note deletions made directly in Obsidian
+		// ── 4. vault:delete ──────────────────────────────────────────────────
 		plugin.registerEvent(
 			plugin.app.vault.on('delete', (file) => {
 				if (!(file instanceof TFile) || file.extension !== 'md') return;
 				const baseFolder = plugin.store.getBaseFolder();
 				if (!file.path.startsWith(baseFolder + '/')) return;
 
-				// metadataCache still has the entry at delete time
 				const fm = plugin.app.metadataCache.getCache(file.path)?.frontmatter;
 				if (!fm?.id) return;
-
 				const ticketId = String(fm.id);
-				if (plugin.deletingIds.has(ticketId)) return; // plugin-initiated delete, skip
+				if (plugin.deletingIds.has(ticketId)) return;
 
 				const ticket = plugin.store.getTicket(ticketId);
 				if (!ticket) return;
 
-				plugin.store.deleteTicket(ticketId).then(() => {
-					plugin.refreshAllViews();
-				}).catch(() => { /* silent */ });
+				// Cancel any pending sync for this file — it no longer exists
+				this.cancelPath(file.path);
+
+				plugin.store.deleteTicket(ticketId)
+					.then(() => plugin.refreshAllViews())
+					.catch(() => { /* silent */ });
 			})
 		);
+
+		// ── 5. Document/window listeners for "user left the page" ────────────
+		const onVisibility = () => {
+			if (document.visibilityState === 'hidden') this.flushAll();
+		};
+		const onBlur = () => this.flushAll();
+
+		document.addEventListener('visibilitychange', onVisibility);
+		window.addEventListener('blur', onBlur);
+
+		this.cleanupListeners.push(
+			() => document.removeEventListener('visibilitychange', onVisibility),
+			() => window.removeEventListener('blur', onBlur),
+		);
 	}
+
+	/** Call from onunload() to remove the manually-added listeners. */
+	unregister(): void {
+		this.flushAll();
+		for (const fn of this.cleanupListeners) fn();
+		this.cleanupListeners = [];
+	}
+
+	// ── Private helpers ────────────────────────────────────────────────────────
+
+	/**
+	 * (Re)start the 10-second idle timer for a given path.
+	 * Each new modify event resets the clock.
+	 */
+	private scheduleIdleSync(filePath: string): void {
+		this.pendingPaths.add(filePath);
+
+		const existing = this.idleTimers.get(filePath);
+		if (existing) clearTimeout(existing);
+
+		const timer = setTimeout(() => {
+			this.idleTimers.delete(filePath);
+			this.pendingPaths.delete(filePath);
+			const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
+			if (file instanceof TFile) {
+				this.syncNoteToStore(file).catch(() => { /* silent */ });
+			}
+		}, 10_000); // 10 seconds of user idleness
+
+		this.idleTimers.set(filePath, timer);
+	}
+
+	/** Immediately cancel the idle timer and run the sync for one path. */
+	private flushPath(filePath: string): void {
+		if (!this.pendingPaths.has(filePath)) return;
+
+		const timer = this.idleTimers.get(filePath);
+		if (timer) clearTimeout(timer);
+		this.idleTimers.delete(filePath);
+		this.pendingPaths.delete(filePath);
+
+		const file = this.plugin.app.vault.getAbstractFileByPath(filePath);
+		if (file instanceof TFile) {
+			this.syncNoteToStore(file).catch(() => { /* silent */ });
+		}
+	}
+
+	/** Flush all pending syncs (used on visibility/blur). */
+	private flushAll(): void {
+		for (const filePath of [...this.pendingPaths]) {
+			this.flushPath(filePath);
+		}
+	}
+
+	/** Cancel a pending sync without running it (used on delete). */
+	private cancelPath(filePath: string): void {
+		const timer = this.idleTimers.get(filePath);
+		if (timer) clearTimeout(timer);
+		this.idleTimers.delete(filePath);
+		this.pendingPaths.delete(filePath);
+	}
+
+	// ── Sync logic (unchanged from original) ──────────────────────────────────
 
 	private async syncNoteToStore(file: TFile): Promise<void> {
 		const { plugin } = this;
 		const cache = plugin.app.metadataCache.getFileCache(file);
 		const fm = cache?.frontmatter;
-		if (!fm?.id) return; // not a ProjectFlow ticket note
+		if (!fm?.id) return;
 
 		const ticketId = String(fm.id);
 		const ticket = plugin.store.getTicket(ticketId);
 		if (!ticket) return;
 
-		// Title comes from frontmatter; description is body text before the first ## section
 		const newTitle: string = typeof fm.title === 'string' && fm.title.trim()
 			? fm.title.trim()
 			: ticket.title;
@@ -122,35 +231,32 @@ export class NoteSyncWatcher {
 		const nextSection = body.search(/^##\s/m);
 		const newDescription = (nextSection === -1 ? body : body.slice(0, nextSection)).trim();
 
-		// Parse editable frontmatter fields
-		const validStatuses = new Set(['todo', 'in-progress', 'in-review', 'done']);
+		const validStatuses  = new Set(['todo', 'in-progress', 'in-review', 'done']);
 		const validPriorities = new Set(['low', 'medium', 'high', 'critical']);
-		const newStatus: TicketStatus = validStatuses.has(fm.status) ? fm.status : ticket.status;
-		const newPriority: TicketPriority = validPriorities.has(fm.priority) ? fm.priority : ticket.priority;
+		const newStatus: TicketStatus     = validStatuses.has(fm.status)     ? fm.status     : ticket.status;
+		const newPriority: TicketPriority = validPriorities.has(fm.priority) ? fm.priority   : ticket.priority;
 		const rawPoints = fm.points;
 		const newPoints: number | undefined = typeof rawPoints === 'number' && rawPoints >= 0
 			? Math.round(rawPoints)
 			: ticket.points;
 
-		// Only update if something actually changed
 		const changed =
-			newTitle !== ticket.title ||
+			newTitle       !== ticket.title       ||
 			newDescription !== ticket.description ||
-			newStatus !== ticket.status ||
-			newPriority !== ticket.priority ||
-			newPoints !== ticket.points;
+			newStatus      !== ticket.status      ||
+			newPriority    !== ticket.priority    ||
+			newPoints      !== ticket.points;
 
 		if (!changed) return;
 
 		await plugin.store.updateTicket(ticketId, {
-			title: newTitle,
+			title:       newTitle,
 			description: newDescription,
-			status: newStatus,
-			priority: newPriority,
-			points: newPoints,
+			status:      newStatus,
+			priority:    newPriority,
+			points:      newPoints,
 		});
 
-		// Re-generate the note to keep frontmatter consistent, suppressing the feedback loop
 		plugin.markWriting(file.path);
 		await generateTicketNote(plugin, ticketId);
 		plugin.refreshAllViews();
@@ -165,17 +271,13 @@ export class NoteSyncWatcher {
 		const ticket = plugin.store.getTicket(ticketId);
 		if (!ticket) return;
 
-		// Infer intended hierarchy from the new path
 		const newPath = file.path;
 		const inTicketsFolder = /\/Tickets\/[^/]+\.md$/.test(newPath);
 
 		if (inTicketsFolder && (ticket.parentId ?? null) !== null) {
-			// User moved to Tickets/ — unparent the ticket
 			await plugin.store.updateTicket(ticketId, { parentId: null });
 		}
-		// For all other moves (within Epics/ subtree), leave parentId unchanged.
-		// The canonical path may now differ from where the user moved it,
-		// so regenerate to move the file back to the correct canonical location.
+
 		plugin.markWriting(newPath);
 		plugin.markWriting(oldPath);
 		const canonicalPath = this.getCanonicalPath(ticketId);
