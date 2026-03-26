@@ -117,6 +117,47 @@ export class ProjectStore {
 		await this.updateProject(projectId, { statuses });
 	}
 
+	async setAllTicketsShowOnBoard(projectId: string, showOnBoard: boolean): Promise<void> {
+		const now = Date.now();
+		this.data.tickets = this.data.tickets.map(t =>
+			t.projectId === projectId && !t.archived && t.sprintId != null
+				? { ...t, showOnBoard, updatedAt: now }
+				: t
+		);
+		await this.save();
+	}
+
+	/**
+	 * Called when switching a project from sprint mode to no-sprint mode.
+	 * Sprint tickets (sprintId != null) get showOnBoard: true and are unassigned
+	 * from their sprint so they appear in board and backlog views.
+	 * Product-backlog tickets (sprintId === null) are left untouched.
+	 */
+	async migrateTicketsToNoSprint(projectId: string): Promise<void> {
+		const now = Date.now();
+		this.data.tickets = this.data.tickets.map(t =>
+			t.projectId === projectId && !t.archived && t.sprintId != null
+				? { ...t, showOnBoard: true, sprintId: null, updatedAt: now }
+				: t
+		);
+		await this.save();
+	}
+
+	/**
+	 * Restores a complete ticket object directly into the store (used for
+	 * startup recapture of orphaned note files). Does not auto-generate id
+	 * or ticketNumber — those come from the note's frontmatter.
+	 */
+	async restoreTicketRaw(ticket: Ticket): Promise<void> {
+		this.data.tickets.push(ticket);
+		// Ensure ticketCounter never falls below a restored ticket's number
+		const projIdx = this.data.projects.findIndex(p => p.id === ticket.projectId);
+		if (projIdx !== -1 && (ticket.ticketNumber ?? 0) > this.data.projects[projIdx].ticketCounter) {
+			this.data.projects[projIdx].ticketCounter = ticket.ticketNumber;
+		}
+		await this.save();
+	}
+
 	async deleteProject(id: string): Promise<void> {
 		this.data.projects = this.data.projects.filter(p => p.id !== id);
 		this.data.sprints = this.data.sprints.filter(s => s.projectId !== id);

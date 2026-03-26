@@ -172,6 +172,7 @@ export class BoardPanelView {
 					projectId,
 					sprintId: currentSprint ? currentSprint.id : null,
 					status: col.id,
+					showOnBoard: !useSprints,
 				}, () => this.view.render()).open()
 			);
 		}
