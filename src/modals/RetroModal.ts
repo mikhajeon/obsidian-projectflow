@@ -137,6 +137,11 @@ export class RetroModal extends Modal {
 		});
 		await generateSprintReport(this.plugin, this.sprintId);
 
+		// Auto-archive done tickets if project setting is on
+		if (projectId && store.getProjectAutoArchiveDone(projectId)) {
+			await store.archiveDoneTicketsInSprint(this.sprintId);
+		}
+
 		// Auto-create next sprint if requested
 		if (this.autoCreate && projectId) {
 			const project = store.getProject(projectId);

@@ -169,7 +169,7 @@ export class ProjectStore {
 	// ── Tickets ───────────────────────────────────────────────────────────────
 
 	getTickets(filter?: { projectId?: string; sprintId?: string | null }): Ticket[] {
-		let tickets = this.data.tickets;
+		let tickets = this.data.tickets.filter(t => !t.archived);
 		if (filter?.projectId !== undefined) {
 			tickets = tickets.filter(t => t.projectId === filter.projectId);
 		}
@@ -177,6 +177,59 @@ export class ProjectStore {
 			tickets = tickets.filter(t => t.sprintId === filter.sprintId);
 		}
 		return tickets.sort((a, b) => a.order - b.order);
+	}
+
+	getArchivedTickets(projectId: string): Ticket[] {
+		return this.data.tickets
+			.filter(t => t.archived && t.projectId === projectId)
+			.sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0));
+	}
+
+	async archiveTicket(id: string): Promise<void> {
+		this.snapshotTickets();
+		const now = Date.now();
+		// Archive the ticket and all its descendants
+		const toArchive = new Set([id, ...this.getDescendantIds(id)]);
+		this.data.tickets = this.data.tickets.map(t =>
+			toArchive.has(t.id) ? { ...t, archived: true, archivedAt: now, updatedAt: now } : t
+		);
+		await this.save();
+	}
+
+	async unarchiveTicket(id: string): Promise<void> {
+		this.snapshotTickets();
+		const now = Date.now();
+		// Unarchive only this ticket (not descendants — they have their own archived state)
+		const idx = this.data.tickets.findIndex(t => t.id === id);
+		if (idx !== -1) {
+			const t = this.data.tickets[idx];
+			this.data.tickets[idx] = { ...t, archived: false, archivedAt: undefined, updatedAt: now };
+		}
+		await this.save();
+	}
+
+	async bulkArchiveTickets(ids: string[]): Promise<void> {
+		this.snapshotTickets();
+		const now = Date.now();
+		const toArchive = new Set<string>();
+		for (const id of ids) {
+			toArchive.add(id);
+			for (const descId of this.getDescendantIds(id)) toArchive.add(descId);
+		}
+		this.data.tickets = this.data.tickets.map(t =>
+			toArchive.has(t.id) ? { ...t, archived: true, archivedAt: now, updatedAt: now } : t
+		);
+		await this.save();
+	}
+
+	async archiveDoneTicketsInSprint(sprintId: string): Promise<void> {
+		const done = this.data.tickets.filter(t => t.sprintId === sprintId && t.status === 'done' && !t.archived);
+		if (done.length === 0) return;
+		await this.bulkArchiveTickets(done.map(t => t.id));
+	}
+
+	getProjectAutoArchiveDone(projectId: string): boolean {
+		return this.getProject(projectId)?.autoArchiveDone === true;
 	}
 
 	getTicket(id: string): Ticket | undefined {
@@ -327,21 +380,21 @@ export class ProjectStore {
 		await this.save();
 	}
 
-	getChildTickets(parentId: string): Ticket[] {
+	getChildTickets(parentId: string, includeArchived = false): Ticket[] {
 		return this.data.tickets
-			.filter(t => t.parentId === parentId)
+			.filter(t => t.parentId === parentId && (includeArchived || !t.archived))
 			.sort((a, b) => a.order - b.order);
 	}
 
 	getEpics(projectId: string): Ticket[] {
 		return this.data.tickets
-			.filter(t => t.projectId === projectId && t.type === 'epic')
+			.filter(t => t.projectId === projectId && t.type === 'epic' && !t.archived)
 			.sort((a, b) => a.order - b.order);
 	}
 
 	getDescendantIds(parentId: string): string[] {
 		const ids: string[] = [];
-		const children = this.getChildTickets(parentId);
+		const children = this.getChildTickets(parentId, true); // include archived for cascade ops
 		for (const child of children) {
 			ids.push(child.id);
 			ids.push(...this.getDescendantIds(child.id));
@@ -351,7 +404,7 @@ export class ProjectStore {
 
 	getUnparentedTickets(projectId: string): Ticket[] {
 		return this.data.tickets
-			.filter(t => t.projectId === projectId && t.type !== 'epic' && t.type !== 'subtask' && !t.parentId)
+			.filter(t => t.projectId === projectId && t.type !== 'epic' && t.type !== 'subtask' && !t.parentId && !t.archived)
 			.sort((a, b) => a.order - b.order);
 	}
 

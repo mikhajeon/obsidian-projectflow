@@ -279,6 +279,14 @@ export class BacklogPanelView {
 	private renderSelectionBar(scrollArea: HTMLElement, store: ProjectStore): void {
 		const bar = scrollArea.createEl('div', { cls: 'pf-selection-bar' });
 		bar.createEl('span', { cls: 'pf-selection-bar-count', text: `${this.view.selectedIds.size} selected` });
+		const archiveBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Archive selected' });
+		archiveBtn.addEventListener('click', async () => {
+			const ids = [...this.view.selectedIds];
+			await store.bulkArchiveTickets(ids);
+			this.view.selectedIds.clear();
+			this.view.lastSelectedId = null;
+			this.view.render();
+		});
 		const deleteBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Delete selected' });
 		deleteBtn.addEventListener('click', async () => {
 			const ids = [...this.view.selectedIds];
@@ -535,6 +543,12 @@ export class BacklogPanelView {
 				);
 			}
 			menu.addSeparator();
+			menu.addItem(item =>
+				item.setTitle('Archive').setIcon('archive').onClick(async () => {
+					await store.archiveTicket(ticket.id);
+					this.view.render();
+				})
+			);
 			menu.addItem(item =>
 				item.setTitle('Delete').setIcon('trash').onClick(() => {
 					new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {

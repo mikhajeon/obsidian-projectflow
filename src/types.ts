@@ -15,6 +15,7 @@ export interface Project {
 	useSprints?: boolean;       // default true
 	autoCreateSprint?: boolean; // default false
 	autoSpillover?: boolean;    // default false
+	autoArchiveDone?: boolean;  // default false — auto-archive 'done' tickets on sprint complete
 }
 
 export interface Sprint {
@@ -52,6 +53,8 @@ export interface Ticket {
 	parentId?: string | null;
 	completedAt?: number;  // unix ms timestamp, set when status transitions to 'done'
 	showOnBoard?: boolean; // no-sprint mode: true = ticket appears on Board/Subtasks views
+	archived?: boolean;    // true = hidden from all active views, visible only in Archive tab
+	archivedAt?: number;   // unix ms timestamp, set when ticket is archived
 }
 
 export interface AppData {

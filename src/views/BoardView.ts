@@ -15,6 +15,7 @@ import { SubtasksPanelView } from './SubtasksPanelView';
 import { BoardSubtasksPanelView } from './BoardSubtasksPanelView';
 import { BacklogPanelView } from './BacklogPanelView';
 import { ListPanelView } from './ListPanelView';
+import { ArchivePanelView } from './ArchivePanelView';
 
 export const BOARD_VIEW = 'projectflow-board';
 
@@ -27,7 +28,7 @@ const TYPE_FILTER_OPTIONS_BACKLOG: [string, string][] = [
 	['all', 'All types'], ['task', 'Task'], ['bug', 'Bug'], ['story', 'Story'],
 ];
 
-type ViewMode = 'board' | 'backlog' | 'list' | 'parent';
+type ViewMode = 'board' | 'backlog' | 'list' | 'parent' | 'archive';
 
 interface DropTarget {
 	parentId: string | null;
@@ -65,7 +66,7 @@ export class BoardView extends ItemView {
 	collapsedSections: Set<string> = new Set();
 	selectedIds: Set<string> = new Set();
 	lastSelectedId: string | null = null;
-	private tabOrder: string[] = ['board', 'parent', 'backlog', 'list'];
+	private tabOrder: string[] = ['board', 'parent', 'backlog', 'list', 'archive'];
 
 	// Panel delegates
 	private boardPanel: BoardPanelView;
@@ -73,6 +74,7 @@ export class BoardView extends ItemView {
 	private boardSubtasksPanel: BoardSubtasksPanelView;
 	private backlogPanel: BacklogPanelView;
 	private listPanel: ListPanelView;
+	private archivePanel: ArchivePanelView;
 
 	// Shared icon map (accessed by panel classes)
 	readonly TYPE_ICONS: Record<string, string> = {
@@ -91,6 +93,7 @@ export class BoardView extends ItemView {
 		this.boardSubtasksPanel = new BoardSubtasksPanelView(this);
 		this.backlogPanel = new BacklogPanelView(this);
 		this.listPanel = new ListPanelView(this);
+		this.archivePanel = new ArchivePanelView(this);
 	}
 
 	getViewType(): string { return BOARD_VIEW; }
@@ -264,10 +267,11 @@ export class BoardView extends ItemView {
 					new TicketModal(this.app, this.plugin, { projectId, sprintId: null, defaultType: 'task' }, () => this.render()).open()
 				);
 		}
+		// archive tab: no action button
 
 		// ── Row 2: view mode tabs (draggable to reorder) ──────────────────────
 		const tabs = header.createEl('div', { cls: 'pf-view-tabs' });
-		const tabLabelMap: Record<string, string> = { board: 'Board', parent: 'Subtasks', backlog: 'Backlog', list: 'List' };
+		const tabLabelMap: Record<string, string> = { board: 'Board', parent: 'Subtasks', backlog: 'Backlog', list: 'List', archive: 'Archive' };
 		let tabDragSrcIdx: number | null = null;
 		const renderTabs = () => {
 			tabs.empty();
@@ -347,7 +351,8 @@ export class BoardView extends ItemView {
 			}
 		}
 
-		// ── Filter + Sort row ────────────────────────────────────────────────
+		// ── Filter + Sort row (hidden on archive tab) ────────────────────────
+		if (this.viewMode !== 'archive') {
 		{
 			const hasActiveFilters = this.filterType !== 'all' || this.filterPriority !== 'all' || this.filterStatus !== 'all' || this.filterHasSubtasks;
 			const filterRow = header.createEl('div', { cls: 'pf-filter-row' });
@@ -544,6 +549,7 @@ export class BoardView extends ItemView {
 		}
 
 		}
+		} // end if (this.viewMode !== 'archive')
 
 		// ── Render active tab content ─────────────────────────────────────────
 		switch (this.viewMode) {
@@ -576,6 +582,9 @@ export class BoardView extends ItemView {
 				break;
 			case 'list':
 				this.listPanel.render(container, store, projectId);
+				break;
+			case 'archive':
+				this.archivePanel.render(container, store, projectId);
 				break;
 		}
 	}
