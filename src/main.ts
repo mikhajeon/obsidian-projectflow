@@ -7,7 +7,7 @@ import { ProjectFlowSettingTab } from './settings';
 import { ProjectModal } from './modals/ProjectModal';
 import { generateTicketNote, ticketFilePath } from './ticketNote';
 import { NoteSyncWatcher } from './noteSyncWatcher';
-import type { Ticket } from './types';
+import type { Ticket, TicketPriority, TicketType } from './types';
 
 export default class ProjectFlowPlugin extends Plugin {
 	store!: ProjectStore;
@@ -83,6 +83,10 @@ export default class ProjectFlowPlugin extends Plugin {
 		this.addSettingTab(new ProjectFlowSettingTab(this.app, this));
 
 		new NoteSyncWatcher(this).register();
+
+		this.app.workspace.onLayoutReady(() => {
+			this.recaptureOrphanedNotes().catch(() => { /* silent */ });
+		});
 	}
 
 	async onunload(): Promise<void> {
@@ -138,6 +142,96 @@ export default class ProjectFlowPlugin extends Plugin {
 				this.markWriting(path);
 				await this.app.fileManager.trashFile(file).catch(() => { /* silent */ });
 			}
+		}
+	}
+
+	/**
+	 * On startup, scan all markdown files under the project base folder.
+	 * Any file whose frontmatter `id` is not found in the store is re-imported
+	 * as a ticket. This recovers tickets whose store entry was lost while their
+	 * note file survived (e.g. after a data.json reset or partial migration).
+	 */
+	private async recaptureOrphanedNotes(): Promise<void> {
+		const { vault, metadataCache } = this.app;
+		const baseFolder = this.store.getBaseFolder();
+		const prefix = baseFolder + '/';
+
+		const files = vault.getMarkdownFiles().filter(f => f.path.startsWith(prefix));
+
+		const validStatuses  = new Set(['todo', 'in-progress', 'in-review', 'done']);
+		const validPriorities = new Set<TicketPriority>(['low', 'medium', 'high', 'critical']);
+		const validTypes      = new Set<TicketType>(['task', 'bug', 'story', 'epic', 'subtask']);
+
+		let restored = 0;
+
+		for (const file of files) {
+			const fm = metadataCache.getFileCache(file)?.frontmatter;
+			if (!fm?.id) continue;
+
+			const ticketId = String(fm.id);
+			if (this.store.getTicket(ticketId)) continue;  // already in store
+
+			// Resolve project by name
+			const projectName = typeof fm.project === 'string' ? fm.project.trim() : '';
+			if (!projectName) continue;
+			const project = this.store.getProjects().find(p => p.name === projectName);
+			if (!project) continue;
+
+			// Parse ticket number from key field (e.g. "DBA-42" → 42)
+			const keyMatch = typeof fm.key === 'string' ? /^[^-]+-(\d+)$/.exec(fm.key) : null;
+			const ticketNumber = keyMatch ? parseInt(keyMatch[1], 10) : 0;
+			if (!ticketNumber) continue;
+
+			// Resolve sprint by name (null = product backlog)
+			let sprintId: string | null = null;
+			if (typeof fm.sprint === 'string' && fm.sprint !== 'Backlog') {
+				const sprint = this.store.getSprints(project.id).find(s => s.name === fm.sprint);
+				if (sprint) sprintId = sprint.id;
+			}
+
+			// Parse body for description
+			let description = '';
+			try {
+				const content = await vault.read(file);
+				const fmEnd = content.indexOf('\n---\n', content.indexOf('---')) + 5;
+				const body = fmEnd > 4 ? content.slice(fmEnd) : '';
+				const nextSection = body.search(/^##\s/m);
+				description = (nextSection === -1 ? body : body.slice(0, nextSection)).trim();
+			} catch { /* silent */ }
+
+			const status     = validStatuses.has(fm.status)     ? fm.status     : 'todo';
+			const priority   = validPriorities.has(fm.priority) ? fm.priority as TicketPriority : 'medium';
+			const type       = validTypes.has(fm.type)          ? fm.type as TicketType : 'task';
+			const points: number | undefined =
+				typeof fm.points === 'number' && fm.points >= 0 ? Math.round(fm.points) : undefined;
+
+			const createdAt = fm.created ? new Date(String(fm.created)).getTime() || Date.now() : Date.now();
+			const updatedAt = fm.updated ? new Date(String(fm.updated)).getTime() || Date.now() : Date.now();
+
+			const ticket: Ticket = {
+				id: ticketId,
+				projectId: project.id,
+				sprintId,
+				title: typeof fm.title === 'string' && fm.title.trim() ? fm.title.trim() : file.basename,
+				description,
+				status,
+				priority,
+				type,
+				createdAt,
+				updatedAt,
+				order: ticketNumber,
+				backlogOrder: ticketNumber,
+				ticketNumber,
+				points,
+			};
+
+			await this.store.restoreTicketRaw(ticket);
+			restored++;
+		}
+
+		if (restored > 0) {
+			new Notice(`ProjectFlow: recaptured ${restored} ticket${restored !== 1 ? 's' : ''} from notes.`);
+			this.refreshAllViews();
 		}
 	}
 

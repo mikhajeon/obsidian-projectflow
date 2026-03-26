@@ -182,7 +182,7 @@ export class BoardView extends ItemView {
 				// No-sprint mode: show + Ticket only
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ Ticket' })
 					.addEventListener('click', () =>
-						new TicketModal(this.app, this.plugin, { projectId, sprintId: null }, () => this.render()).open()
+						new TicketModal(this.app, this.plugin, { projectId, sprintId: null, showOnBoard: true }, () => this.render()).open()
 					);
 			} else if (!currentSprint) {
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ New sprint' })
@@ -248,7 +248,7 @@ export class BoardView extends ItemView {
 				// No-sprint mode: hide subtasks tab handled below; still show + Ticket
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ Ticket' })
 					.addEventListener('click', () =>
-						new TicketModal(this.app, this.plugin, { projectId, sprintId: null }, () => this.render()).open()
+						new TicketModal(this.app, this.plugin, { projectId, sprintId: null, showOnBoard: true }, () => this.render()).open()
 					);
 			} else if (currentSprint) {
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ Ticket' })
@@ -667,7 +667,11 @@ export class BoardView extends ItemView {
 			this.lastSelectedId = ticketId;
 			const epicsList = row.closest<HTMLElement>('.pf-epics-list');
 			if (epicsList) epicsList.classList.toggle('pf-has-selection', this.selectedIds.size > 0);
+			const scrollEl = this.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			const scrollTop = scrollEl?.scrollTop ?? 0;
 			this.render();
+			const newScrollEl = this.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
 	}
 

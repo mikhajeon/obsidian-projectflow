@@ -1,7 +1,7 @@
 import { App, Modal, Setting, Notice, TFolder, normalizePath } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
 import type { Project } from '../types';
-import { safeFileName } from '../ticketNote';
+import { safeFileName, generateTicketNote } from '../ticketNote';
 import { defaultTagFromName } from '../store';
 
 export class ProjectModal extends Modal {
@@ -195,6 +195,9 @@ export class ProjectModal extends Modal {
 				}
 			}
 
+			const wasUsingSprints = this.project.useSprints !== false;
+			const switchingToNoSprint = wasUsingSprints && !this.useSprints;
+
 			await this.plugin.store.updateProject(this.project.id, {
 				name: newName,
 				description: this.description.trim(),
@@ -205,6 +208,17 @@ export class ProjectModal extends Modal {
 				autoSpillover: this.autoSpillover,
 				autoArchiveDone: this.autoArchiveDone,
 			});
+
+			if (switchingToNoSprint) {
+				await this.plugin.store.migrateTicketsToNoSprint(this.project.id);
+				// Only regenerate notes for tickets that were migrated (now showOnBoard)
+				const boardTickets = this.plugin.store.getTickets({ projectId: this.project.id })
+					.filter(t => t.showOnBoard === true);
+				for (const ticket of boardTickets) {
+					generateTicketNote(this.plugin, ticket.id).catch(() => { /* silent */ });
+				}
+			}
+
 			new Notice(`Project "${newName}" updated.`);
 		} else {
 			await this.plugin.store.createProject({
