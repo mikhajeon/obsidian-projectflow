@@ -8,6 +8,8 @@ import { generateTicketNote, deleteTicketNote } from '../ticketNote';
 
 export class BoardPanelView {
 	private view: BoardView;
+	private dropBeforeId: string | null | '__end__' = null;
+	private dropColStatus: string | null = null;
 
 	constructor(view: BoardView) {
 		this.view = view;
@@ -49,6 +51,7 @@ export class BoardPanelView {
 			colHead.createEl('span', { cls: 'pf-column-count', text: String(allTickets.length) });
 
 			const colBody = colEl.createEl('div', { cls: 'pf-column-body' });
+			const dropLineEl = colBody.createEl('div', { cls: 'pf-board-drop-line' });
 
 			for (const ticket of tickets) {
 				this.renderCard(colBody, ticket, currentSprint);
@@ -56,25 +59,111 @@ export class BoardPanelView {
 
 			colBody.addEventListener('dragover', (e) => {
 				e.preventDefault();
-				colEl.addClass('pf-drop-active');
+				if (!this.view.draggedTicketId) return;
+
+				this.dropColStatus = col.id;
+
+				const card = (e.target as HTMLElement).closest<HTMLElement>('.pf-card[data-id]');
+
+				// Hovering over the dragged card itself — hide the line
+				if (card && card.dataset.id === this.view.draggedTicketId) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					return;
+				}
+
+				const cards = Array.from(colBody.querySelectorAll<HTMLElement>('.pf-card[data-id]'))
+					.filter(c => c.dataset.id !== this.view.draggedTicketId);
+
+				// Determine the dragged card's current next sibling in this column
+				// so we can suppress the line when the drop would be a no-op
+				const allCardsInCol = Array.from(colBody.querySelectorAll<HTMLElement>('.pf-card[data-id]'));
+				const draggedIdx = allCardsInCol.findIndex(c => c.dataset.id === this.view.draggedTicketId);
+				const nextAdjacentId: string | '__end__' =
+					draggedIdx !== -1 && draggedIdx + 1 < allCardsInCol.length
+						? (allCardsInCol[draggedIdx + 1].dataset.id ?? '__end__')
+						: '__end__';
+
+				let lineTop: number;
+
+				if (card) {
+					const rect = card.getBoundingClientRect();
+					const insertBefore = (e.clientY - rect.top) / rect.height < 0.5;
+					const cardIdx = cards.indexOf(card);
+
+					if (insertBefore) {
+						this.dropBeforeId = card.dataset.id ?? '__end__';
+						lineTop = card.offsetTop;
+					} else {
+						const next = cards[cardIdx + 1];
+						this.dropBeforeId = next?.dataset.id ?? '__end__';
+						lineTop = card.offsetTop + card.offsetHeight;
+					}
+				} else {
+					this.dropBeforeId = '__end__';
+					const lastCard = cards[cards.length - 1];
+					lineTop = lastCard ? lastCard.offsetTop + lastCard.offsetHeight : 0;
+				}
+
+				// Hide line if the drop would leave the card in its current position
+				if (draggedIdx !== -1 && this.dropBeforeId === nextAdjacentId) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					return;
+				}
+
+				dropLineEl.style.top = lineTop + 'px';
+				dropLineEl.classList.add('pf-drop-line-visible');
 			});
-			colBody.addEventListener('dragleave', () => colEl.removeClass('pf-drop-active'));
+
+			colBody.addEventListener('dragleave', (e) => {
+				if (!colBody.contains(e.relatedTarget as Node)) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					if (this.dropColStatus === col.id) {
+						this.dropColStatus = null;
+						this.dropBeforeId = null;
+					}
+				}
+			});
+
 			colBody.addEventListener('drop', async (e) => {
 				e.preventDefault();
-				colEl.removeClass('pf-drop-active');
-				if (this.view.draggedTicketId) {
-					const droppedId = this.view.draggedTicketId;
-					const sprintId = currentSprint ? currentSprint.id : null;
-					const colTickets = (sprintId
-						? store.getTickets({ sprintId })
-						: store.getTickets({ projectId })
-					).filter(t => t.status === col.id && t.id !== droppedId);
-					const maxOrder = colTickets.length > 0 ? Math.max(...colTickets.map(t => t.order)) : -1;
-					await store.moveTicket(droppedId, sprintId, col.id, maxOrder + 1);
-					this.view.draggedTicketId = null;
-					this.view.render();
-					generateTicketNote(this.view.plugin, droppedId).catch(() => { /* silent */ });
+				dropLineEl.classList.remove('pf-drop-line-visible');
+
+				if (!this.view.draggedTicketId) return;
+
+				const droppedId = this.view.draggedTicketId;
+				const sprintId = currentSprint ? currentSprint.id : null;
+				const beforeId = this.dropColStatus === col.id ? this.dropBeforeId : '__end__';
+
+				this.dropColStatus = null;
+				this.dropBeforeId = null;
+				this.view.draggedTicketId = null;
+
+				const colTickets = (sprintId
+					? store.getTickets({ sprintId })
+					: store.getTickets({ projectId })
+				).filter(t => t.status === col.id && t.id !== droppedId)
+				 .sort((a, b) => a.order - b.order);
+
+				let insertIdx = colTickets.length;
+				if (beforeId !== '__end__' && beforeId !== null) {
+					const idx = colTickets.findIndex(t => t.id === beforeId);
+					if (idx !== -1) insertIdx = idx;
 				}
+
+				let newOrder: number;
+				if (colTickets.length === 0) {
+					newOrder = 0;
+				} else if (insertIdx === 0) {
+					newOrder = colTickets[0].order - 1;
+				} else if (insertIdx >= colTickets.length) {
+					newOrder = colTickets[colTickets.length - 1].order + 1;
+				} else {
+					newOrder = (colTickets[insertIdx - 1].order + colTickets[insertIdx].order) / 2;
+				}
+
+				await store.moveTicket(droppedId, sprintId, col.id, newOrder);
+				this.view.render();
+				generateTicketNote(this.view.plugin, droppedId).catch(() => { /* silent */ });
 			});
 
 			const addBtn = colEl.createEl('button', { cls: 'pf-column-add', text: '+ Ticket' });
@@ -115,7 +204,12 @@ export class BoardPanelView {
 			this.view.draggedTicketId = ticket.id;
 			card.addClass('pf-dragging');
 		});
-		card.addEventListener('dragend', () => card.removeClass('pf-dragging'));
+		card.addEventListener('dragend', () => {
+			card.removeClass('pf-dragging');
+			document.querySelectorAll('.pf-board-drop-line').forEach(el => el.classList.remove('pf-drop-line-visible'));
+			this.dropColStatus = null;
+			this.dropBeforeId = null;
+		});
 
 		card.addEventListener('click', () => {
 			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.render()).open();
@@ -141,6 +235,14 @@ export class BoardPanelView {
 				})
 			);
 			menu.addSeparator();
+			menu.addItem(item =>
+				item.setTitle('Archive').setIcon('archive').onClick(() => {
+					new ConfirmModal(this.view.app, `Archive "${ticket.title}"? It will be hidden from active views and can be restored later.`, async () => {
+						await this.view.plugin.store.archiveTicket(ticket.id);
+						this.view.render();
+					}, 'Archive').open();
+				})
+			);
 			menu.addItem(item =>
 				item.setTitle('Delete ticket').setIcon('trash').onClick(() => {
 					new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {

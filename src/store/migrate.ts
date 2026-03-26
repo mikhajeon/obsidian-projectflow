@@ -70,11 +70,15 @@ export function migrateAppData(saved: RawData | null): AppData {
 
 	// Migrate 'epics' view key to 'list' in tabOrder and colWidths
 	// Add 'parent' tab for existing users who don't have it yet
+	// Add 'archive' tab for existing users who don't have it yet
 	const rawTabOrder: string[] = saved?.tabOrder ?? ['board', 'parent', 'backlog', 'epics'];
 	const migratedTabOrder = rawTabOrder.map(t => t === 'epics' ? 'list' : t);
-	const tabOrder = migratedTabOrder.includes('parent')
+	const withParent = migratedTabOrder.includes('parent')
 		? migratedTabOrder
 		: ['board', 'parent', ...migratedTabOrder.filter(t => t !== 'board')];
+	const tabOrder = withParent.includes('archive')
+		? withParent
+		: [...withParent, 'archive'];
 
 	const rawColWidths: Record<string, Record<string, number>> = saved?.colWidths ?? {};
 	const colWidths = { ...rawColWidths };

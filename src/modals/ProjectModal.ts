@@ -17,6 +17,7 @@ export class ProjectModal extends Modal {
 	private useSprints = true;
 	private autoCreateSprint = false;
 	private autoSpillover = false;
+	private autoArchiveDone = false;
 
 	constructor(app: App, plugin: ProjectFlowPlugin, project: Project | null, onSave: () => void) {
 		super(app);
@@ -33,6 +34,7 @@ export class ProjectModal extends Modal {
 			this.useSprints = project.useSprints !== false;
 			this.autoCreateSprint = project.autoCreateSprint === true;
 			this.autoSpillover = project.autoSpillover === true;
+			this.autoArchiveDone = project.autoArchiveDone === true;
 		}
 	}
 
@@ -136,6 +138,14 @@ export class ProjectModal extends Modal {
 				toggle.onChange(val => { this.autoSpillover = val; });
 			});
 
+		new Setting(body)
+			.setName('Auto-archive done tickets on sprint complete')
+			.setDesc('Automatically archive tickets with "done" status when a sprint is completed.')
+			.addToggle(toggle => {
+				toggle.setValue(this.autoArchiveDone);
+				toggle.onChange(val => { this.autoArchiveDone = val; });
+			});
+
 		contentEl.addEventListener('keydown', (e: KeyboardEvent) => {
 			if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
 				e.preventDefault();
@@ -193,6 +203,7 @@ export class ProjectModal extends Modal {
 				useSprints: this.useSprints,
 				autoCreateSprint: this.autoCreateSprint,
 				autoSpillover: this.autoSpillover,
+				autoArchiveDone: this.autoArchiveDone,
 			});
 			new Notice(`Project "${newName}" updated.`);
 		} else {
@@ -204,6 +215,7 @@ export class ProjectModal extends Modal {
 				useSprints: this.useSprints,
 				autoCreateSprint: this.autoCreateSprint,
 				autoSpillover: this.autoSpillover,
+				autoArchiveDone: this.autoArchiveDone,
 			});
 			new Notice(`Project "${this.name.trim()}" created.`);
 		}

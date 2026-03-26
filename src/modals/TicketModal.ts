@@ -265,6 +265,30 @@ export class TicketModal extends Modal {
 		const footer = contentEl.createEl('div', { cls: 'pf-modal-footer' });
 
 		if (isEdit) {
+			const ticket = (this.context as EditTicketContext).ticket;
+			const isArchived = ticket.archived === true;
+
+			if (isArchived) {
+				footer.createEl('button', { cls: 'pf-btn', text: 'Restore from archive' })
+					.addEventListener('click', async () => {
+						await this.plugin.store.unarchiveTicket(ticket.id);
+						this.close();
+						this.onSave();
+						new Notice('Ticket restored.');
+						generateTicketNote(this.plugin, ticket.id).catch(() => { /* silent */ });
+					});
+			} else {
+				footer.createEl('button', { cls: 'pf-btn', text: 'Archive' })
+					.addEventListener('click', () => {
+						new ConfirmModal(this.app, `Archive "${ticket.title}"? It will be hidden from active views and can be restored later.`, async () => {
+							await this.plugin.store.archiveTicket(ticket.id);
+							this.close();
+							this.onSave();
+							new Notice('Ticket archived.');
+						}, 'Archive').open();
+					});
+			}
+
 			footer.createEl('button', { cls: 'pf-btn pf-btn-danger', text: 'Delete' })
 				.addEventListener('click', () => {
 					const ticketId = (this.context as EditTicketContext).ticket.id;
