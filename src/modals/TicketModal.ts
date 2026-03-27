@@ -10,6 +10,7 @@ interface NewTicketContext {
 	status?: TicketStatus;
 	parentId?: string;
 	defaultType?: TicketType;
+	showOnBoard?: boolean;
 }
 
 interface EditTicketContext {
@@ -369,6 +370,7 @@ export class TicketModal extends Modal {
 				status: this.status,
 				points: this.points,
 				parentId: ctx.parentId ?? null,
+				showOnBoard: ctx.showOnBoard,
 			});
 
 			this.close();

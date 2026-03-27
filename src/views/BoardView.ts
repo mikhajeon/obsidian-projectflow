@@ -182,7 +182,7 @@ export class BoardView extends ItemView {
 				// No-sprint mode: show + Ticket only
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ Ticket' })
 					.addEventListener('click', () =>
-						new TicketModal(this.app, this.plugin, { projectId, sprintId: null }, () => this.render()).open()
+						new TicketModal(this.app, this.plugin, { projectId, sprintId: null, showOnBoard: true }, () => this.render()).open()
 					);
 			} else if (!currentSprint) {
 				actions.createEl('button', { cls: 'pf-btn pf-btn-primary', text: '+ New sprint' })
