@@ -88,7 +88,6 @@ export class SubtasksPanelView {
 			});
 
 			blockHeader.createSpan({ cls: `pf-badge pf-type-${parent.type}`, text: parent.type });
-			blockHeader.createSpan({ cls: `pf-badge pf-pri-${parent.priority}`, text: parent.priority });
 			blockHeader.createSpan('pf-subtasks-block-title').setText(parent.title);
 			blockHeader.createSpan('pf-subtasks-block-progress').setText(`${doneCount}/${allChildren.length}`);
 
@@ -142,6 +141,20 @@ export class SubtasksPanelView {
 				const colTickets = allChildren.filter(t => t.status === col.id);
 				colHead.createSpan('pf-subtasks-col-count').setText(String(colTickets.length));
 
+				const addHeaderBtn = colHead.createEl('button', { cls: 'pf-subtasks-col-add-btn' });
+				addHeaderBtn.createSpan({ text: '⧉' });
+				addHeaderBtn.createSpan({ text: '+' });
+				addHeaderBtn.addEventListener('click', (e) => {
+					e.stopPropagation();
+					new TicketModal(this.view.app, this.view.plugin, {
+						projectId,
+						sprintId: currentSprint ? currentSprint.id : null,
+						status: col.id,
+						defaultType: 'subtask',
+						parentId: parent.id,
+					}, () => this.view.render()).open();
+				});
+
 				const colBody = colEl.createDiv('pf-subtasks-col-body');
 
 				const filtered = colTickets
@@ -185,17 +198,7 @@ export class SubtasksPanelView {
 					}
 				});
 
-				const addSubBtn = colEl.createEl('button', { cls: 'pf-subtasks-col-add', text: '+ Subtask' });
-				addSubBtn.addEventListener('click', () =>
-					new TicketModal(this.view.app, this.view.plugin, {
-						projectId,
-						sprintId: currentSprint ? currentSprint.id : null,
-						status: col.id,
-						defaultType: 'subtask',
-						parentId: parent.id,
-					}, () => this.view.render()).open()
-				);
-			}
+				}
 		}
 	}
 
@@ -213,13 +216,19 @@ export class SubtasksPanelView {
 			card.removeClass('pf-subtasks-card-dragging');
 		});
 
-		const titleEl = card.createSpan('pf-subtasks-card-title');
-		titleEl.setText(ticket.title);
+		// Match board view card layout: title, description, top row
+		card.createEl('p', { cls: 'pf-card-title', text: ticket.title });
 
-		const meta = card.createSpan('pf-subtasks-card-meta');
-		meta.createSpan({ cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
+		if (ticket.description) {
+			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });
+		}
+
+		const top = card.createEl('div', { cls: 'pf-card-top' });
+		const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
+		typeIcon.title = ticket.type;
+		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
 		if (ticket.points !== undefined) {
-			meta.createSpan({ cls: 'pf-badge pf-points', text: String(ticket.points) });
+			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
 		}
 
 		card.addEventListener('click', () => {

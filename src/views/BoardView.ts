@@ -389,14 +389,17 @@ export class BoardView extends ItemView {
 					});
 				};
 
-				const typeLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Type' });
-				const typeSel = typeLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
-				const typeOpts = this.viewMode === 'backlog' ? TYPE_FILTER_OPTIONS_BACKLOG : TYPE_FILTER_OPTIONS_BOARD;
-				for (const opt of typeOpts) {
-					const o = typeSel.createEl('option', { text: opt[1], value: opt[0] });
-					if (opt[0] === this.filterType) o.selected = true;
+				// Type filter: hide for subtask view (everything is a subtask)
+				if (this.viewMode !== 'parent') {
+					const typeLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Type' });
+					const typeSel = typeLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
+					const typeOpts = this.viewMode === 'backlog' ? TYPE_FILTER_OPTIONS_BACKLOG : TYPE_FILTER_OPTIONS_BOARD;
+					for (const opt of typeOpts) {
+						const o = typeSel.createEl('option', { text: opt[1], value: opt[0] });
+						if (opt[0] === this.filterType) o.selected = true;
+					}
+					typeSel.addEventListener('change', async () => { this.filterType = typeSel.value; await persist(); dropdown.remove(); this.render(); });
 				}
-				typeSel.addEventListener('change', async () => { this.filterType = typeSel.value; await persist(); dropdown.remove(); this.render(); });
 
 				const priLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Priority' });
 				const priSel = priLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
@@ -406,15 +409,18 @@ export class BoardView extends ItemView {
 				}
 				priSel.addEventListener('change', async () => { this.filterPriority = priSel.value; await persist(); dropdown.remove(); this.render(); });
 
-				const statusLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Status' });
-				const statusSel = statusLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
-				{ const o = statusSel.createEl('option', { text: 'All statuses', value: 'all' }); if (this.filterStatus === 'all') o.selected = true; }
-				const activeStatuses = store.getProjectStatuses(projectId ?? '');
-				for (const st of activeStatuses) {
-					const o = statusSel.createEl('option', { text: st.label, value: st.id });
-					if (st.id === this.filterStatus) o.selected = true;
+				// Status filter: hide for subtask view (columns represent status)
+				if (this.viewMode !== 'parent') {
+					const statusLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Status' });
+					const statusSel = statusLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
+					{ const o = statusSel.createEl('option', { text: 'All statuses', value: 'all' }); if (this.filterStatus === 'all') o.selected = true; }
+					const activeStatuses = store.getProjectStatuses(projectId ?? '');
+					for (const st of activeStatuses) {
+						const o = statusSel.createEl('option', { text: st.label, value: st.id });
+						if (st.id === this.filterStatus) o.selected = true;
+					}
+					statusSel.addEventListener('change', async () => { this.filterStatus = statusSel.value; await persist(); dropdown.remove(); this.render(); });
 				}
-				statusSel.addEventListener('change', async () => { this.filterStatus = statusSel.value; await persist(); dropdown.remove(); this.render(); });
 
 				if (this.viewMode === 'parent') {
 					const subtaskLabel = dropdown.createEl('label', { cls: 'pf-filter-label pf-filter-label-check' });
