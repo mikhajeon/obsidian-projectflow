@@ -89,6 +89,10 @@ export async function generateTicketNote(plugin: ProjectFlowPlugin, ticketId: st
 
 	const tags = [projectSlug, ticket.type, ticket.priority, ticket.status];
 	if (epicAncestor) tags.push('epic-' + epicAncestor.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+	// In no-sprint mode, tag with 'board' or 'backlog' to reflect showOnBoard status
+	if (project.useSprints === false) {
+		tags.push(ticket.showOnBoard === true ? 'board' : 'backlog');
+	}
 	const tagsYaml = tags.map(t => `  - ${t}`).join('\n');
 
 	const frontmatterLines = [

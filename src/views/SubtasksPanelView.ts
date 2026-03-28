@@ -88,9 +88,7 @@ export class SubtasksPanelView {
 			});
 
 			blockHeader.createSpan({ cls: `pf-badge pf-type-${parent.type}`, text: parent.type });
-			if (!parent.sprintId) {
-				blockHeader.createSpan({ cls: 'pf-subtasks-backlog-badge', text: 'backlog' });
-			}
+			blockHeader.createSpan({ cls: `pf-badge pf-pri-${parent.priority}`, text: parent.priority });
 			blockHeader.createSpan('pf-subtasks-block-title').setText(parent.title);
 			blockHeader.createSpan('pf-subtasks-block-progress').setText(`${doneCount}/${allChildren.length}`);
 
@@ -103,6 +101,25 @@ export class SubtasksPanelView {
 					defaultType: 'subtask',
 					parentId: parent.id,
 				}, () => this.view.render()).open();
+			});
+
+			blockHeader.addEventListener('contextmenu', (e) => {
+				const menu = new Menu();
+				menu.addItem(i => i.setTitle('Edit').setIcon('pencil').onClick(() =>
+					new TicketModal(this.view.app, this.view.plugin, { ticket: parent, sprintId: currentSprint?.id ?? null }, () => this.view.render()).open()
+				));
+				menu.addItem(i => i.setTitle('Open note').setIcon('file-text').onClick(async () =>
+					await this.view.openTicketNote(parent)
+				));
+				menu.addItem(i => i.setTitle('Add subtask').setIcon('plus').onClick(() =>
+					new TicketModal(this.view.app, this.view.plugin, {
+						projectId,
+						sprintId: currentSprint ? currentSprint.id : null,
+						defaultType: 'subtask',
+						parentId: parent.id,
+					}, () => this.view.render()).open()
+				));
+				menu.showAtMouseEvent(e);
 			});
 
 			if (isCollapsed) continue;
@@ -183,7 +200,8 @@ export class SubtasksPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint | null): void {
-		const card = container.createDiv(`pf-subtasks-card pf-priority-border-${ticket.priority}`);
+		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const card = container.createDiv(`pf-subtasks-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}`);
 		card.dataset.id = ticket.id;
 		card.draggable = true;
 

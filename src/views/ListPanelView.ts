@@ -23,10 +23,10 @@ export class ListPanelView {
 		const scrollArea = container.createEl('div', { cls: 'pf-epics-list pf-tbl-container' });
 		this._scrollArea = scrollArea;
 		const epicsCols = [
-			{ key: 'name',     label: 'Name',     cssVar: '--pf-col-name',     default: 320 },
-			{ key: 'priority', label: 'Priority', cssVar: '--pf-col-priority', default: 100 },
-			{ key: 'status',   label: 'Status',   cssVar: '--pf-col-status',   default: 110 },
-			{ key: 'points',   label: 'Points',   cssVar: '--pf-col-extra',    default: 80 },
+			{ key: 'name',     label: 'Name',     cssVar: '--pf-col-name',     default: 320, sortField: 'title'    },
+			{ key: 'priority', label: 'Priority', cssVar: '--pf-col-priority', default: 100, sortField: 'priority' },
+			{ key: 'status',   label: 'Status',   cssVar: '--pf-col-status',   default: 110, sortField: 'status'   },
+			{ key: 'points',   label: 'Points',   cssVar: '--pf-col-extra',    default: 80,  sortField: 'points'   },
 		];
 		const savedListWidths = store.getColWidths('list');
 		for (const col of epicsCols) {
@@ -66,6 +66,10 @@ export class ListPanelView {
 						}
 					}
 				}
+			} else if (!this.view.collapsedSections.has(item.id)) {
+				for (const sub of store.getChildTickets(item.id)) {
+					orderedIds.push(sub.id);
+				}
 			}
 		}
 
@@ -78,6 +82,14 @@ export class ListPanelView {
 		this.view.renderTableHeader(scrollArea, epicsCols, (key, width) => {
 			const current = store.getColWidths('list');
 			store.setColWidths('list', { ...current, [key]: width });
+		}, this.view.sortOrder, async (next) => {
+			this.view.sortOrder = next;
+			await this.view.plugin.store.setSortOrder('list', next);
+			const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			const scrollTop = scrollEl?.scrollTop ?? 0;
+			this.view.render();
+			const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
 
 		const dropLineEl = scrollArea.createEl('div', { cls: 'pf-drop-line' });
@@ -90,38 +102,49 @@ export class ListPanelView {
 			}
 		}
 
-		// Selection action bar
-		if (this.view.selectedIds.size > 0) {
-			const levels = new Set([...this.view.selectedIds].map(id => this.view.getTicketLevel(id)).filter(Boolean));
-			const dragAllowed = levels.size === 1;
+		// Selection action bar — always rendered to reserve space; hidden when empty
+		{
+			const hasSelection = this.view.selectedIds.size > 0;
 			const bar = scrollArea.createEl('div', { cls: 'pf-selection-bar' });
-			bar.createEl('span', { cls: 'pf-selection-bar-count', text: `${this.view.selectedIds.size} selected` });
-			if (!dragAllowed) {
-				bar.createEl('span', { cls: 'pf-selection-bar-locked', text: 'Drag locked: mixed hierarchy' });
-			}
-			const deleteBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Delete selected' });
-			deleteBtn.addEventListener('click', async () => {
-				const ids = [...this.view.selectedIds];
-				const totalDescendants = ids.reduce((n, id) => n + store.getDescendantIds(id).length, 0);
-				const msg = totalDescendants > 0
-					? `Delete ${ids.length} ticket${ids.length !== 1 ? 's' : ''} and ${totalDescendants} descendant${totalDescendants !== 1 ? 's' : ''}? This cannot be undone.`
-					: `Delete ${ids.length} ticket${ids.length !== 1 ? 's' : ''}? This cannot be undone.`;
-				new ConfirmModal(this.view.app, msg, async () => {
-					for (const id of ids) {
-						await deleteTicketNote(this.view.plugin, id);
-						await store.deleteTicket(id);
-					}
+			if (hasSelection) {
+				const levels = new Set([...this.view.selectedIds].map(id => this.view.getTicketLevel(id)).filter(Boolean));
+				const dragAllowed = levels.size === 1;
+				bar.createEl('span', { cls: 'pf-selection-bar-count', text: `${this.view.selectedIds.size} selected` });
+				if (!dragAllowed) {
+					bar.createEl('span', { cls: 'pf-selection-bar-locked', text: 'Drag locked: mixed hierarchy' });
+				}
+				const archiveBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Archive selected' });
+				archiveBtn.addEventListener('click', async () => {
+					const ids = [...this.view.selectedIds];
+					await store.bulkArchiveTickets(ids);
 					this.view.selectedIds.clear();
 					this.view.lastSelectedId = null;
 					this.view.render();
-				}).open();
-			});
-			const clearBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Clear' });
-			clearBtn.addEventListener('click', () => {
-				this.view.selectedIds.clear();
-				this.view.lastSelectedId = null;
-				this.view.render();
-			});
+				});
+				const deleteBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Delete selected' });
+				deleteBtn.addEventListener('click', async () => {
+					const ids = [...this.view.selectedIds];
+					const totalDescendants = ids.reduce((n, id) => n + store.getDescendantIds(id).length, 0);
+					const msg = totalDescendants > 0
+						? `Delete ${ids.length} ticket${ids.length !== 1 ? 's' : ''} and ${totalDescendants} descendant${totalDescendants !== 1 ? 's' : ''}? This cannot be undone.`
+						: `Delete ${ids.length} ticket${ids.length !== 1 ? 's' : ''}? This cannot be undone.`;
+					new ConfirmModal(this.view.app, msg, async () => {
+						for (const id of ids) {
+							await deleteTicketNote(this.view.plugin, id);
+							await store.deleteTicket(id);
+						}
+						this.view.selectedIds.clear();
+						this.view.lastSelectedId = null;
+						this.view.render();
+					}).open();
+				});
+				const clearBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Clear' });
+				clearBtn.addEventListener('click', () => {
+					this.view.selectedIds.clear();
+					this.view.lastSelectedId = null;
+					this.view.render();
+				});
+			}
 		}
 
 		// Container-level dragover
@@ -442,8 +465,7 @@ export class ListPanelView {
 		headerEl.createEl('div', { cls: 'pf-tbl-cell' })
 			.createEl('span', { cls: `pf-badge pf-pri-${epic.priority}`, text: epic.priority });
 
-		headerEl.createEl('div', { cls: 'pf-tbl-cell' })
-			.createEl('span', { cls: `pf-badge pf-status-col-${epic.status.replace(/-/g, '')}`, text: TICKET_STATUS_LABELS[epic.status] });
+		this.view.makeStatusBadge(headerEl.createEl('div', { cls: 'pf-tbl-cell' }), epic.status, projectId);
 
 		const extraCell = headerEl.createEl('div', { cls: 'pf-tbl-cell' });
 		if (children.length > 0) {
@@ -509,6 +531,9 @@ export class ListPanelView {
 		epics: Ticket[],
 		orderedIds: string[],
 	): void {
+		const subtasks = store.getChildTickets(ticket.id);
+		const isCollapsed = this.view.collapsedSections.has(ticket.id);
+
 		const row = container.createEl('div', {
 			cls: `pf-tbl-row pf-priority-border-${ticket.priority} pf-draggable-row`,
 		});
@@ -524,7 +549,25 @@ export class ListPanelView {
 
 		const nameCell = row.createEl('div', { cls: 'pf-tbl-cell pf-tbl-cell-name' });
 		const nameInner = nameCell.createEl('div', { cls: 'pf-tbl-name-inner' });
-		nameInner.createEl('span', { cls: 'pf-epic-toggle-placeholder' });
+
+		if (subtasks.length > 0) {
+			const toggleEl = nameInner.createEl('span', {
+				cls: `pf-epic-toggle${isCollapsed ? '' : ' pf-epic-toggle-open'}`,
+				text: isCollapsed ? '▸' : '▾',
+			});
+			toggleEl.addEventListener('click', (e) => {
+				e.stopPropagation();
+				if (this.view.collapsedSections.has(ticket.id)) {
+					this.view.collapsedSections.delete(ticket.id);
+				} else {
+					this.view.collapsedSections.add(ticket.id);
+				}
+				this.view.render();
+			});
+		} else {
+			nameInner.createEl('span', { cls: 'pf-epic-toggle-placeholder' });
+		}
+
 		nameInner.createEl('span', { cls: `pf-type-icon pf-type-icon-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? '◻' });
 		nameInner.createEl('span', { cls: 'pf-tbl-title', text: ticket.title });
 		if (ticket.points !== undefined) {
@@ -534,11 +577,26 @@ export class ListPanelView {
 		row.createEl('div', { cls: 'pf-tbl-cell' })
 			.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
 
-		row.createEl('div', { cls: 'pf-tbl-cell' })
-			.createEl('span', { cls: `pf-badge pf-status-col-${ticket.status.replace(/-/g, '')}`, text: TICKET_STATUS_LABELS[ticket.status] });
+		this.view.makeStatusBadge(row.createEl('div', { cls: 'pf-tbl-cell' }), ticket.status, projectId);
 
-		row.createEl('div', { cls: 'pf-tbl-cell' });
-		row.createEl('div', { cls: 'pf-tbl-cell pf-tbl-cell-actions' });
+		const extraCell = row.createEl('div', { cls: 'pf-tbl-cell' });
+		if (subtasks.length > 0) {
+			extraCell.createEl('span', { cls: 'pf-epic-progress', text: `${subtasks.filter(s => s.status === 'done').length}/${subtasks.length}` });
+		}
+
+		const actionsCell = row.createEl('div', { cls: 'pf-tbl-cell pf-tbl-cell-actions' });
+		if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
+			const addSubBtn = actionsCell.createEl('button', { cls: 'pf-btn pf-btn-sm pf-epic-add-child', text: '+ Sub' });
+			addSubBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				new TicketModal(this.view.app, this.view.plugin, {
+					projectId,
+					sprintId: null,
+					parentId: ticket.id,
+					defaultType: 'subtask',
+				}, () => this.view.render()).open();
+			});
+		}
 
 		row.addEventListener('dragstart', (e) => {
 			this.view.draggedTicketId = ticket.id;
@@ -568,6 +626,18 @@ export class ListPanelView {
 					await this.view.openTicketNote(ticket)
 				)
 			);
+			if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
+				menu.addItem(item =>
+					item.setTitle('Add subtask').setIcon('plus').onClick(() =>
+						new TicketModal(this.view.app, this.view.plugin, {
+							projectId,
+							sprintId: ticket.sprintId ?? null,
+							parentId: ticket.id,
+							defaultType: 'subtask',
+						}, () => this.view.render()).open()
+					)
+				);
+			}
 			if (epics.length > 0) {
 				for (const epic of epics) {
 					menu.addItem(item =>
@@ -593,6 +663,13 @@ export class ListPanelView {
 			);
 			menu.showAtMouseEvent(e);
 		});
+
+		// Render subtasks below rogue row when expanded
+		if (subtasks.length > 0 && !isCollapsed) {
+			for (const sub of subtasks) {
+				this.renderEpicChild(container, store, projectId, sub, 1, orderedIds);
+			}
+		}
 	}
 
 	private renderEpicChild(
@@ -662,8 +739,7 @@ export class ListPanelView {
 		row.createEl('div', { cls: 'pf-tbl-cell' })
 			.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
 
-		row.createEl('div', { cls: 'pf-tbl-cell' })
-			.createEl('span', { cls: `pf-badge pf-status-col-${ticket.status.replace(/-/g, '')}`, text: TICKET_STATUS_LABELS[ticket.status] });
+		this.view.makeStatusBadge(row.createEl('div', { cls: 'pf-tbl-cell' }), ticket.status, projectId);
 
 		const extraCell = row.createEl('div', { cls: 'pf-tbl-cell' });
 		if (ticket.points !== undefined) {

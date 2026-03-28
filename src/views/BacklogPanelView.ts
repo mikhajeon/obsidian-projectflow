@@ -37,9 +37,9 @@ export class BacklogPanelView {
 		this._scrollArea = scrollArea;
 
 		const backlogCols = [
-			{ key: 'name',     label: 'Name',                          cssVar: '--pf-col-name',     default: 280 },
-			{ key: 'priority', label: 'Priority',                      cssVar: '--pf-col-priority', default: 100 },
-			{ key: 'status',   label: 'Status',                        cssVar: '--pf-col-status',   default: 110 },
+			{ key: 'name',     label: 'Name',                          cssVar: '--pf-col-name',     default: 280, sortField: 'title'    },
+			{ key: 'priority', label: 'Priority',                      cssVar: '--pf-col-priority', default: 100, sortField: 'priority' },
+			{ key: 'status',   label: 'Status',                        cssVar: '--pf-col-status',   default: 110, sortField: 'status'   },
 			{ key: 'sprint',   label: useSprints ? 'Sprint' : 'Board', cssVar: '--pf-col-extra',    default: 130 },
 		];
 		const savedBacklogWidths = store.getColWidths('backlog');
@@ -50,6 +50,14 @@ export class BacklogPanelView {
 		this.view.renderTableHeader(scrollArea, backlogCols, (key, width) => {
 			const current = store.getColWidths('backlog');
 			store.setColWidths('backlog', { ...current, [key]: width });
+		}, this.view.sortOrder, async (next) => {
+			this.view.sortOrder = next;
+			await this.view.plugin.store.setSortOrder('backlog', next);
+			const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			const scrollTop = scrollEl?.scrollTop ?? 0;
+			this.view.render();
+			const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
 
 		// ── No-sprint mode: two flat sections (Board list + Product Backlog) ─
@@ -81,7 +89,7 @@ export class BacklogPanelView {
 			this.renderBacklogSection(scrollArea, store, projectId, 'Board', null, 'board-list', sortedBoard, null, orderedIds);
 			this.renderBacklogSection(scrollArea, store, projectId, 'Product Backlog', null, 'product-backlog', sortedBacklog, null, orderedIds);
 
-			if (this.view.selectedIds.size > 0) this.renderSelectionBar(scrollArea, store);
+			this.renderSelectionBar(scrollArea, store);
 
 			// ── No-sprint drag handlers ───────────────────────────────────────
 			this.attachDragHandlers(scrollArea, dropLineEl, async (destSectionId, beforeId) => {
@@ -145,7 +153,7 @@ export class BacklogPanelView {
 		);
 		this.renderBacklogSection(scrollArea, store, projectId, 'Product Backlog', null, 'product-backlog', unassigned, null, orderedIds);
 
-		if (this.view.selectedIds.size > 0) this.renderSelectionBar(scrollArea, store);
+		this.renderSelectionBar(scrollArea, store);
 
 		// ── Sprint drag handlers ──────────────────────────────────────────────
 		this.attachDragHandlers(scrollArea, dropLineEl, async (destSectionId, beforeId) => {
@@ -277,7 +285,9 @@ export class BacklogPanelView {
 	}
 
 	private renderSelectionBar(scrollArea: HTMLElement, store: ProjectStore): void {
+		const hasSelection = this.view.selectedIds.size > 0;
 		const bar = scrollArea.createEl('div', { cls: 'pf-selection-bar' });
+		if (!hasSelection) return;
 		bar.createEl('span', { cls: 'pf-selection-bar-count', text: `${this.view.selectedIds.size} selected` });
 		const archiveBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Archive selected' });
 		archiveBtn.addEventListener('click', async () => {
@@ -459,8 +469,7 @@ export class BacklogPanelView {
 		row.createEl('div', { cls: 'pf-tbl-cell' })
 			.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
 
-		row.createEl('div', { cls: 'pf-tbl-cell' })
-			.createEl('span', { cls: `pf-badge pf-status-col-${ticket.status.replace(/-/g, '')}`, text: TICKET_STATUS_LABELS[ticket.status] });
+		this.view.makeStatusBadge(row.createEl('div', { cls: 'pf-tbl-cell' }), ticket.status, projectId);
 
 		const lastCell = row.createEl('div', { cls: 'pf-tbl-cell' });
 
@@ -540,6 +549,18 @@ export class BacklogPanelView {
 						await generateTicketNote(this.view.plugin, ticket.id);
 						this.view.render();
 					})
+				);
+			}
+			if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
+				menu.addItem(item =>
+					item.setTitle('Add subtask').setIcon('plus').onClick(() =>
+						new TicketModal(this.view.app, this.view.plugin, {
+							projectId: ticket.projectId,
+							sprintId: sprint?.id ?? null,
+							parentId: ticket.id,
+							defaultType: 'subtask',
+						}, () => this.view.render()).open()
+					)
 				);
 			}
 			menu.addSeparator();

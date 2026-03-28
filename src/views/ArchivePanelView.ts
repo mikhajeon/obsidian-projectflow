@@ -17,10 +17,10 @@ export class ArchivePanelView {
 		const scrollArea = container.createEl('div', { cls: 'pf-backlog-list pf-tbl-container pf-archive-panel' });
 
 		const archiveCols = [
-			{ key: 'name',       label: 'Name',        cssVar: '--pf-col-name',     default: 280 },
-			{ key: 'priority',   label: 'Priority',    cssVar: '--pf-col-priority', default: 100 },
-			{ key: 'status',     label: 'Status',      cssVar: '--pf-col-status',   default: 110 },
-			{ key: 'archivedAt', label: 'Archived',    cssVar: '--pf-col-extra',    default: 150 },
+			{ key: 'name',       label: 'Name',        cssVar: '--pf-col-name',     default: 280, sortField: 'title'    },
+			{ key: 'priority',   label: 'Priority',    cssVar: '--pf-col-priority', default: 100, sortField: 'priority' },
+			{ key: 'status',     label: 'Status',      cssVar: '--pf-col-status',   default: 110, sortField: 'status'   },
+			{ key: 'archivedAt', label: 'Archived',    cssVar: '--pf-col-extra',    default: 150, sortField: 'archived' },
 		];
 		const savedWidths = store.getColWidths('archive');
 		for (const col of archiveCols) {
@@ -30,6 +30,14 @@ export class ArchivePanelView {
 		this.view.renderTableHeader(scrollArea, archiveCols, (key, width) => {
 			const current = store.getColWidths('archive');
 			store.setColWidths('archive', { ...current, [key]: width });
+		}, this.view.sortOrder, async (next) => {
+			this.view.sortOrder = next;
+			await this.view.plugin.store.setSortOrder('archive', next);
+			const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			const scrollTop = scrollEl?.scrollTop ?? 0;
+			this.view.render();
+			const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
 
 		const archived = store.getArchivedTickets(projectId);
@@ -133,8 +141,7 @@ export class ArchivePanelView {
 			.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
 
 		// Status cell
-		row.createEl('div', { cls: 'pf-tbl-cell' })
-			.createEl('span', { cls: `pf-badge pf-status-col-${ticket.status.replace(/-/g, '')}`, text: TICKET_STATUS_LABELS[ticket.status] ?? ticket.status });
+		this.view.makeStatusBadge(row.createEl('div', { cls: 'pf-tbl-cell' }), ticket.status, ticket.projectId);
 
 		// Archived date cell
 		const dateCell = row.createEl('div', { cls: 'pf-tbl-cell' });
