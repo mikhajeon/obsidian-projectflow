@@ -61,6 +61,9 @@ export class BoardView extends ItemView {
 	// Column width (persisted per view, shared with panel delegates)
 	boardColWidth = 240;
 
+	// Hidden board columns (persisted per project)
+	hiddenBoardColumns: Set<string> = new Set();
+
 	// UI state
 	private viewMode: ViewMode = 'board';
 	collapsedSections: Set<string> = new Set();
@@ -127,6 +130,13 @@ export class BoardView extends ItemView {
 		this.filterStatus = savedFilter.status;
 		this.filterHasSubtasks = savedFilter.hasSubtasks ?? false;
 		const projectId = store.getActiveProjectId();
+		if (projectId) {
+			this.hiddenBoardColumns = new Set(store.getHiddenBoardColumns(projectId));
+			// Restore persisted collapsed board columns into collapsedSections
+			for (const id of store.getCollapsedBoardColumns(projectId)) {
+				this.collapsedSections.add(`board-col-${id}`);
+			}
+		}
 
 		if (!projectId) {
 			this.renderEmpty(container, 'No project selected.', 'Create a project to get started.', () =>
@@ -163,12 +173,6 @@ export class BoardView extends ItemView {
 		editProjectBtn.addEventListener('click', () => {
 			const current = store.getProject(store.getActiveProjectId() ?? '');
 			if (current) new ProjectModal(this.app, this.plugin, current, () => this.plugin.refreshAllViews()).open();
-		});
-		const statusGearBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm', text: '⚙' });
-		statusGearBtn.setAttribute('aria-label', 'Manage statuses');
-		statusGearBtn.addEventListener('click', () => {
-			const pid = store.getActiveProjectId();
-			if (pid) new ProjectStatusModal(this.app, this.plugin, pid, () => { this.plugin.refreshAllViews(); }).open();
 		});
 		projectArea.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Project' })
 			.addEventListener('click', () =>
@@ -459,12 +463,20 @@ export class BoardView extends ItemView {
 
 			const SORT_OPTIONS: [string, string][] = [
 				['manual', 'Manual order'],
-				['priority', 'Priority'],
-				['title', 'Title (A–Z)'],
-				['points', 'Points'],
-				['created', 'Created'],
-				['updated', 'Updated'],
-				['completed', 'Completed'],
+				['priority-asc', 'Priority (high → low)'],
+				['priority-desc', 'Priority (low → high)'],
+				['title-asc', 'Title (A → Z)'],
+				['title-desc', 'Title (Z → A)'],
+				['status-asc', 'Status (A → Z)'],
+				['status-desc', 'Status (Z → A)'],
+				['points-asc', 'Points (low → high)'],
+				['points-desc', 'Points (high → low)'],
+				['created-desc', 'Created (newest)'],
+				['created-asc', 'Created (oldest)'],
+				['updated-desc', 'Updated (newest)'],
+				['updated-asc', 'Updated (oldest)'],
+				['completed-desc', 'Completed (newest)'],
+				['completed-asc', 'Completed (oldest)'],
 			];
 
 			sortBtn.addEventListener('click', (e) => {
@@ -479,10 +491,14 @@ export class BoardView extends ItemView {
 				dropdown.style.left = `${rect.left}px`;
 
 				for (const [value, label] of SORT_OPTIONS) {
+					const isActive = this.sortOrder === value;
 					const item = dropdown.createEl('button', {
-						cls: `pf-sort-option${this.sortOrder === value ? ' pf-sort-option-active' : ''}`,
-						text: label,
+						cls: `pf-sort-option${isActive ? ' pf-sort-option-active' : ''}`,
 					});
+					if (isActive) {
+						item.createEl('span', { cls: 'pf-sort-dot' });
+					}
+					item.createEl('span', { text: label });
 					item.addEventListener('click', async () => {
 						this.sortOrder = value;
 						await this.plugin.store.setSortOrder(this.viewMode, value);
@@ -500,53 +516,12 @@ export class BoardView extends ItemView {
 				document.addEventListener('click', onOutsideClick, true);
 			});
 
-		// Column width button (board + parent views only)
-		if (this.viewMode === 'board' || this.viewMode === 'parent') {
-			const colBtn = filterRow.createEl('button', {
-				cls: 'pf-btn pf-btn-sm pf-filter-btn',
-				text: 'Columns',
-			});
-
-			colBtn.addEventListener('click', (e) => {
-				e.stopPropagation();
-
-				const existing = document.querySelector('.pf-col-width-dropdown');
-				if (existing) { existing.remove(); return; }
-
-				const dropdown = document.body.createEl('div', { cls: 'pf-col-width-dropdown' });
-				const rect = colBtn.getBoundingClientRect();
-				dropdown.style.top = `${rect.bottom + 4}px`;
-				dropdown.style.left = `${rect.left}px`;
-
-				const countEl = dropdown.createEl('span', { cls: 'pf-col-width-label', text: `Column width: ${this.boardColWidth}px` });
-				const slider = dropdown.createEl('input', { cls: 'pf-col-width-slider' }) as HTMLInputElement;
-				slider.type = 'range';
-				slider.min = '160';
-				slider.max = '420';
-				slider.step = '10';
-				slider.value = String(this.boardColWidth);
-
-				slider.addEventListener('input', () => {
-					countEl.setText(`Column width: ${slider.value}px`);
-				});
-
-				slider.addEventListener('change', async () => {
-					const w = parseInt(slider.value);
-					this.boardColWidth = w;
-					await store.setBoardColWidth(this.viewMode, w);
-					dropdown.remove();
-					this.render();
-				});
-
-				const onOutside = (ev: MouseEvent) => {
-					if (!dropdown.contains(ev.target as Node) && ev.target !== colBtn) {
-						dropdown.remove();
-						document.removeEventListener('click', onOutside, true);
-					}
-				};
-				setTimeout(() => document.addEventListener('click', onOutside, true), 0);
-			});
-		}
+		// ── Board settings gear (right-aligned in filter row) ───────────────
+		const statusGearBtn = filterRow.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-filter-gear', text: '⚙' });
+		statusGearBtn.setAttribute('aria-label', 'Manage statuses');
+		statusGearBtn.addEventListener('click', () => {
+			if (projectId) new ProjectStatusModal(this.app, this.plugin, projectId, () => { this.plugin.refreshAllViews(); }).open();
+		});
 
 		}
 		} // end if (this.viewMode !== 'archive')
@@ -593,17 +568,44 @@ export class BoardView extends ItemView {
 
 	renderTableHeader(
 		container: HTMLElement,
-		cols: { key: string; label: string; cssVar: string }[],
+		cols: { key: string; label: string; cssVar: string; sortField?: string }[],
 		onResize?: (key: string, width: number) => void,
+		sortOrder?: string,
+		onSort?: (newSortOrder: string) => void,
 	): void {
 		const header = container.createEl('div', { cls: 'pf-tbl-header' });
 
 		header.createEl('div', { cls: 'pf-tbl-th' });
 		header.createEl('div', { cls: 'pf-tbl-th' });
 
+		// Parse active sort field + direction from e.g. "priority-asc" or legacy "priority"
+		const sortMatch = (sortOrder ?? '').match(/^(.+)-(asc|desc)$/);
+		const activeSortField = sortMatch ? sortMatch[1] : null;
+		const activeSortDir   = sortMatch ? (sortMatch[2] as 'asc' | 'desc') : null;
+
 		for (const col of cols) {
-			const cell = header.createEl('div', { cls: 'pf-tbl-th' });
+			const isSortable = !!col.sortField && !!onSort;
+			const isActive   = isSortable && activeSortField === col.sortField;
+			const cell = header.createEl('div', { cls: `pf-tbl-th${isSortable ? ' pf-tbl-th-sortable' : ''}` });
+
 			cell.createEl('span', { cls: 'pf-tbl-th-label', text: col.label });
+
+			if (isSortable) {
+				const arrow = cell.createEl('span', {
+					cls: `pf-tbl-sort-arrow${isActive ? ' pf-tbl-sort-active' : ''}`,
+					text: isActive ? (activeSortDir === 'asc' ? '↑' : '↓') : '↕',
+				});
+				arrow.setAttribute('aria-hidden', 'true');
+
+				cell.addEventListener('click', (e) => {
+					if ((e.target as HTMLElement).closest('.pf-tbl-resize-handle')) return;
+					let next: string;
+					if (!isActive)                  next = `${col.sortField}-asc`;
+					else if (activeSortDir === 'asc') next = `${col.sortField}-desc`;
+					else                              next = 'manual';
+					onSort!(next);
+				});
+			}
 
 			const handle = cell.createEl('div', { cls: 'pf-tbl-resize-handle' });
 			handle.addEventListener('mousedown', (e) => {
@@ -630,6 +632,19 @@ export class BoardView extends ItemView {
 				document.addEventListener('mouseup', onUp);
 			});
 		}
+	}
+
+	// ── Status badge helper (used by panel classes) ──────────────────────────
+
+	makeStatusBadge(parent: HTMLElement, statusId: string, projectId: string): HTMLElement {
+		const statuses = this.plugin.store.getProjectStatuses(projectId);
+		const def = statuses.find(s => s.id === statusId);
+		const label = def?.label ?? statusId;
+		const color = def?.color ?? '#888888';
+		const badge = parent.createEl('span', { cls: 'pf-badge pf-status-badge', text: label });
+		badge.style.background = `${color}2e`;
+		badge.style.color = color;
+		return badge;
 	}
 
 	// ── Row checkbox helper (used by panel classes) ───────────────────────────
@@ -712,22 +727,32 @@ export class BoardView extends ItemView {
 
 	// ── Sort helper (used by panel classes) ───────────────────────────────────
 
-	applySort<T extends { priority: string; title: string; points?: number; createdAt: number; updatedAt: number; completedAt?: number; order: number }>(
+	applySort<T extends { priority: string; title: string; status: string; points?: number; createdAt: number; updatedAt: number; completedAt?: number; archivedAt?: number; order: number }>(
 		tickets: T[],
 		sortOrder: string,
 	): T[] {
 		if (sortOrder === 'manual') return tickets;
 		const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+		// Support both "field-asc"/"field-desc" and legacy bare field names (treated as asc)
+		const dirMatch = sortOrder.match(/^(.+)-(asc|desc)$/);
+		const field = dirMatch ? dirMatch[1] : sortOrder;
+		const flip  = dirMatch && dirMatch[2] === 'desc' ? -1 : 1;
+
 		return tickets.slice().sort((a, b) => {
-			switch (sortOrder) {
-				case 'priority': return (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
-				case 'title':    return a.title.localeCompare(b.title);
-				case 'points':   return (b.points ?? 0) - (a.points ?? 0);
-				case 'created':  return b.createdAt - a.createdAt;
-				case 'updated':  return b.updatedAt - a.updatedAt;
-				case 'completed': return (b.completedAt ?? 0) - (a.completedAt ?? 0);
-				default:         return a.order - b.order;
+			let cmp = 0;
+			switch (field) {
+				case 'priority': cmp = (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9); break;
+				case 'title':    cmp = a.title.localeCompare(b.title); break;
+				case 'status':   cmp = a.status.localeCompare(b.status); break;
+				case 'points':   cmp = (a.points ?? 0) - (b.points ?? 0); break;
+				case 'created':  cmp = a.createdAt - b.createdAt; break;
+				case 'updated':  cmp = a.updatedAt - b.updatedAt; break;
+				case 'completed': cmp = (a.completedAt ?? 0) - (b.completedAt ?? 0); break;
+				case 'archived': cmp = (a.archivedAt ?? 0) - (b.archivedAt ?? 0); break;
+				default:         cmp = a.order - b.order;
 			}
+			return cmp * flip;
 		});
 	}
 

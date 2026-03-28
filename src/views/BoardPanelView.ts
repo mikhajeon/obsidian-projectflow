@@ -26,6 +26,8 @@ export class BoardPanelView {
 
 		const COLUMNS = this.view.plugin.store.getProjectStatuses(projectId);
 		for (const col of COLUMNS) {
+			if (this.view.hiddenBoardColumns.has(col.id)) continue;
+
 			const allTickets = (currentSprint
 				? store.getTickets({ projectId, sprintId: currentSprint.id })
 				: store.getTickets({ projectId })
@@ -38,17 +40,44 @@ export class BoardPanelView {
 				.filter(t => this.view.filterStatus === 'all' || t.status === this.view.filterStatus);
 			const tickets = this.view.applySort(filtered, this.view.sortOrder);
 
-			const colEl = board.createEl('div', { cls: 'pf-column' });
+			const colKey = `board-col-${col.id}`;
+			const isCollapsed = this.view.collapsedSections.has(colKey);
+			const colEl = board.createEl('div', { cls: `pf-column${isCollapsed ? ' pf-column-collapsed' : ''}` });
 			colEl.dataset.status = col.id;
 			colEl.style.setProperty('--pf-col-color', col.color);
 			const colW = this.view.boardColWidth;
-			colEl.style.flex = `0 0 ${colW}px`;
-			colEl.style.minWidth = `${colW}px`;
-			colEl.style.maxWidth = `${colW}px`;
+			if (!isCollapsed) {
+				colEl.style.flex = `0 0 ${colW}px`;
+				colEl.style.minWidth = `${colW}px`;
+				colEl.style.maxWidth = `${colW}px`;
+			}
 
 			const colHead = colEl.createEl('div', { cls: 'pf-column-header' });
+			const colToggle = colHead.createEl('span', { cls: 'pf-column-toggle', text: isCollapsed ? '▸' : '▾' });
+			const toggleColumn = () => {
+				if (this.view.collapsedSections.has(colKey)) {
+					this.view.collapsedSections.delete(colKey);
+				} else {
+					this.view.collapsedSections.add(colKey);
+				}
+				this.persistCollapsedColumns(projectId);
+				this.view.render();
+			};
+			colToggle.addEventListener('click', (e) => {
+				e.stopPropagation();
+				toggleColumn();
+			});
 			colHead.createEl('span', { cls: 'pf-column-title', text: col.label });
 			colHead.createEl('span', { cls: 'pf-column-count', text: String(allTickets.length) });
+
+			if (isCollapsed) {
+				colEl.addEventListener('click', () => {
+					this.view.collapsedSections.delete(colKey);
+					this.persistCollapsedColumns(projectId);
+					this.view.render();
+				});
+				continue;
+			}
 
 			const colBody = colEl.createEl('div', { cls: 'pf-column-body' });
 			const dropLineEl = colBody.createEl('div', { cls: 'pf-board-drop-line' });
@@ -178,17 +207,19 @@ export class BoardPanelView {
 		}
 	}
 
+	private persistCollapsedColumns(projectId: string): void {
+		const PREFIX = 'board-col-';
+		const ids = [...this.view.collapsedSections]
+			.filter(k => k.startsWith(PREFIX))
+			.map(k => k.slice(PREFIX.length));
+		this.view.plugin.store.setCollapsedBoardColumns(projectId, ids);
+	}
+
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint | null): void {
-		const card = container.createEl('div', { cls: `pf-card pf-priority-border-${ticket.priority}` });
+		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const card = container.createEl('div', { cls: `pf-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}` });
 		card.draggable = true;
 		card.dataset.id = ticket.id;
-
-		const top = card.createEl('div', { cls: 'pf-card-top' });
-		top.createEl('span', { cls: `pf-badge pf-type-${ticket.type}`, text: ticket.type });
-		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
-		if (ticket.points !== undefined) {
-			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
-		}
 
 		card.createEl('p', { cls: 'pf-card-title', text: ticket.title });
 
@@ -196,9 +227,23 @@ export class BoardPanelView {
 			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });
 		}
 
+		const top = card.createEl('div', { cls: 'pf-card-top' });
+		const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
+		typeIcon.title = ticket.type;
+		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
+		if (ticket.points !== undefined) {
+			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
+		}
+
 		if (ticket.checklist && ticket.checklist.length > 0) {
 			const doneCount = ticket.checklist.filter(i => i.done).length;
 			card.createEl('p', { cls: 'pf-checklist-progress', text: `${doneCount}/${ticket.checklist.length} subtasks` });
+		}
+
+		const childSubtasks = this.view.plugin.store.getChildTickets(ticket.id).filter(t => t.type === 'subtask');
+		if (childSubtasks.length > 0) {
+			const doneSubtasks = childSubtasks.filter(t => t.status === 'done').length;
+			card.createEl('p', { cls: 'pf-card-subtask-count', text: `⧉ ${doneSubtasks}/${childSubtasks.length} subtasks` });
 		}
 
 		card.addEventListener('dragstart', () => {
@@ -235,6 +280,18 @@ export class BoardPanelView {
 					this.view.render();
 				})
 			);
+			if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
+				menu.addItem(item =>
+					item.setTitle('Add subtask').setIcon('plus').onClick(() =>
+						new TicketModal(this.view.app, this.view.plugin, {
+							projectId: ticket.projectId,
+							sprintId: sprint?.id ?? null,
+							parentId: ticket.id,
+							defaultType: 'subtask',
+						}, () => this.view.render()).open()
+					)
+				);
+			}
 			menu.addSeparator();
 			menu.addItem(item =>
 				item.setTitle('Archive').setIcon('archive').onClick(() => {

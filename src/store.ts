@@ -273,6 +273,10 @@ export class ProjectStore {
 		return this.getProject(projectId)?.autoArchiveDone === true;
 	}
 
+	getProjectBoardPriorityEdges(projectId: string): boolean {
+		return this.getProject(projectId)?.boardPriorityEdges !== false; // default true
+	}
+
 	getTicket(id: string): Ticket | undefined {
 		return this.data.tickets.find(t => t.id === id);
 	}
@@ -492,6 +496,30 @@ export class ProjectStore {
 
 	async setBoardGrouping(value: string): Promise<void> {
 		this.data.boardGrouping = value;
+		await this.save();
+	}
+
+	// ── Hidden board columns ──────────────────────────────────────────────────
+
+	getHiddenBoardColumns(projectId: string): string[] {
+		return this.data.hiddenBoardColumns?.[projectId] ?? [];
+	}
+
+	async setHiddenBoardColumns(projectId: string, ids: string[]): Promise<void> {
+		if (!this.data.hiddenBoardColumns) this.data.hiddenBoardColumns = {};
+		this.data.hiddenBoardColumns[projectId] = ids;
+		await this.save();
+	}
+
+	// ── Collapsed board columns ──────────────────────────────────────────────
+
+	getCollapsedBoardColumns(projectId: string): string[] {
+		return this.data.collapsedBoardColumns?.[projectId] ?? [];
+	}
+
+	async setCollapsedBoardColumns(projectId: string, ids: string[]): Promise<void> {
+		if (!this.data.collapsedBoardColumns) this.data.collapsedBoardColumns = {};
+		this.data.collapsedBoardColumns[projectId] = ids;
 		await this.save();
 	}
 

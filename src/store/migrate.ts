@@ -98,5 +98,8 @@ export function migrateAppData(saved: RawData | null): AppData {
 		sortOrders: saved?.sortOrders ?? {},
 		boardGrouping: saved?.boardGrouping ?? 'default',
 		filterStates: saved?.filterStates ?? {},
+		hiddenBoardColumns: saved?.hiddenBoardColumns ?? {},
+		collapsedBoardColumns: saved?.collapsedBoardColumns ?? {},
+		boardColWidth: saved?.boardColWidth ?? {},
 	};
 }

@@ -1,17 +1,10 @@
 import { Menu, Notice } from 'obsidian';
 import type { BoardView } from './BoardView';
 import type { ProjectStore } from '../store';
-import type { Sprint, Ticket, TicketStatus } from '../types';
+import type { Sprint, Ticket } from '../types';
 import { TicketModal } from '../modals/TicketModal';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { generateTicketNote, deleteTicketNote } from '../ticketNote';
-
-const COLUMNS: { id: TicketStatus; label: string }[] = [
-	{ id: 'todo', label: 'To Do' },
-	{ id: 'in-progress', label: 'In Progress' },
-	{ id: 'in-review', label: 'In Review' },
-	{ id: 'done', label: 'Done' },
-];
 
 /**
  * Board panel that shows only subtasks across the four status columns.
@@ -35,22 +28,32 @@ export class BoardSubtasksPanelView {
 		const allSprintTickets = store.getTickets({ projectId, sprintId: currentSprint.id });
 		const subtasks = allSprintTickets.filter(t => t.type === 'subtask');
 
+		const COLUMNS = store.getProjectStatuses(projectId);
 		for (const col of COLUMNS) {
+			if (this.view.hiddenBoardColumns.has(col.id)) continue;
+
 			const allInCol = subtasks.filter(t => t.status === col.id);
 
+			// Only priority filter is meaningful here — type is always subtask, status is implicit from column
 			const filtered = allInCol
-				.filter(t => this.view.filterPriority === 'all' || t.priority === this.view.filterPriority)
-				.filter(t => this.view.filterStatus === 'all' || t.status === this.view.filterStatus);
+				.filter(t => this.view.filterPriority === 'all' || t.priority === this.view.filterPriority);
 			const tickets = this.view.applySort(filtered, this.view.sortOrder);
 
 			const colEl = board.createEl('div', { cls: 'pf-column' });
 			colEl.dataset.status = col.id;
+			colEl.style.setProperty('--pf-col-color', col.color);
+			const colW = this.view.boardColWidth;
+			colEl.style.flex = `0 0 ${colW}px`;
+			colEl.style.minWidth = `${colW}px`;
+			colEl.style.maxWidth = `${colW}px`;
 
 			const colHead = colEl.createEl('div', { cls: 'pf-column-header' });
 			colHead.createEl('span', { cls: 'pf-column-title', text: col.label });
 			colHead.createEl('span', { cls: 'pf-column-count', text: String(allInCol.length) });
 
 			const colBody = colEl.createEl('div', { cls: 'pf-column-body' });
+			const dropLineEl = colBody.createEl('div', { cls: 'pf-board-drop-line' });
+			let dropBeforeId: string | null | '__end__' = null;
 
 			for (const ticket of tickets) {
 				const parent = ticket.parentId ? store.getTicket(ticket.parentId) : undefined;
@@ -59,24 +62,92 @@ export class BoardSubtasksPanelView {
 
 			colBody.addEventListener('dragover', (e) => {
 				e.preventDefault();
-				colEl.addClass('pf-drop-active');
+				if (!this.view.draggedTicketId) return;
+
+				const card = (e.target as HTMLElement).closest<HTMLElement>('.pf-card[data-id]');
+
+				if (card && card.dataset.id === this.view.draggedTicketId) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					return;
+				}
+
+				const cards = Array.from(colBody.querySelectorAll<HTMLElement>('.pf-card[data-id]'))
+					.filter(c => c.dataset.id !== this.view.draggedTicketId);
+
+				const allCardsInCol = Array.from(colBody.querySelectorAll<HTMLElement>('.pf-card[data-id]'));
+				const draggedIdx = allCardsInCol.findIndex(c => c.dataset.id === this.view.draggedTicketId);
+				const nextAdjacentId: string | '__end__' =
+					draggedIdx !== -1 && draggedIdx + 1 < allCardsInCol.length
+						? (allCardsInCol[draggedIdx + 1].dataset.id ?? '__end__')
+						: '__end__';
+
+				let lineTop: number;
+
+				if (card) {
+					const rect = card.getBoundingClientRect();
+					const insertBefore = (e.clientY - rect.top) / rect.height < 0.5;
+					const cardIdx = cards.indexOf(card);
+					if (insertBefore) {
+						dropBeforeId = card.dataset.id ?? '__end__';
+						lineTop = card.offsetTop;
+					} else {
+						const next = cards[cardIdx + 1];
+						dropBeforeId = next?.dataset.id ?? '__end__';
+						lineTop = card.offsetTop + card.offsetHeight;
+					}
+				} else {
+					dropBeforeId = '__end__';
+					const lastCard = cards[cards.length - 1];
+					lineTop = lastCard ? lastCard.offsetTop + lastCard.offsetHeight : 0;
+				}
+
+				if (draggedIdx !== -1 && dropBeforeId === nextAdjacentId) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					return;
+				}
+
+				dropLineEl.style.top = lineTop + 'px';
+				dropLineEl.classList.add('pf-drop-line-visible');
 			});
-			colBody.addEventListener('dragleave', () => colEl.removeClass('pf-drop-active'));
+
+			colBody.addEventListener('dragleave', (e) => {
+				if (!colBody.contains(e.relatedTarget as Node)) {
+					dropLineEl.classList.remove('pf-drop-line-visible');
+					dropBeforeId = null;
+				}
+			});
+
 			colBody.addEventListener('drop', async (e) => {
 				e.preventDefault();
-				colEl.removeClass('pf-drop-active');
+				dropLineEl.classList.remove('pf-drop-line-visible');
 				if (this.view.draggedTicketId) {
 					const droppedId = this.view.draggedTicketId;
 					const dragged = store.getTicket(droppedId);
 					if (!dragged || dragged.type !== 'subtask') {
 						new Notice('Only subtasks are shown in this view.');
 						this.view.draggedTicketId = null;
+						dropBeforeId = null;
 						return;
 					}
-					const colTickets = subtasks.filter(t => t.status === col.id && t.id !== droppedId);
-					const maxOrder = colTickets.length > 0 ? Math.max(...colTickets.map(t => t.order)) : -1;
-					await store.moveTicket(droppedId, currentSprint.id, col.id, maxOrder + 1);
+					const colTickets = subtasks
+						.filter(t => t.status === col.id && t.id !== droppedId)
+						.sort((a, b) => a.order - b.order);
+
+					let insertIdx = colTickets.length;
+					if (dropBeforeId !== '__end__' && dropBeforeId !== null) {
+						const idx = colTickets.findIndex(t => t.id === dropBeforeId);
+						if (idx !== -1) insertIdx = idx;
+					}
+
+					let newOrder: number;
+					if (colTickets.length === 0)           newOrder = 0;
+					else if (insertIdx === 0)              newOrder = colTickets[0].order - 1;
+					else if (insertIdx >= colTickets.length) newOrder = colTickets[colTickets.length - 1].order + 1;
+					else newOrder = (colTickets[insertIdx - 1].order + colTickets[insertIdx].order) / 2;
+
+					dropBeforeId = null;
 					this.view.draggedTicketId = null;
+					await store.moveTicket(droppedId, currentSprint.id, col.id, newOrder);
 					this.view.render();
 					generateTicketNote(this.view.plugin, droppedId).catch(() => { /* silent */ });
 				}
@@ -95,7 +166,8 @@ export class BoardSubtasksPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint, parent: Ticket | undefined): void {
-		const card = container.createEl('div', { cls: `pf-card pf-priority-border-${ticket.priority}` });
+		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const card = container.createEl('div', { cls: `pf-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}` });
 		card.draggable = true;
 		card.dataset.id = ticket.id;
 

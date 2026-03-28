@@ -16,6 +16,7 @@ export interface Project {
 	autoCreateSprint?: boolean; // default false
 	autoSpillover?: boolean;    // default false
 	autoArchiveDone?: boolean;  // default false — auto-archive 'done' tickets on sprint complete
+	boardPriorityEdges?: boolean; // default true — show priority-coloured border edges on board cards
 }
 
 export interface Sprint {
@@ -69,6 +70,8 @@ export interface AppData {
 	boardGrouping?: string;               // 'default' | 'by-parent' | 'subtasks-only'
 	filterStates?: Record<string, { type: string; priority: string; status: string; hasSubtasks?: boolean }>;
 	boardColWidth?: Record<string, number>; // viewKey -> column width in px
+	hiddenBoardColumns?: Record<string, string[]>; // projectId -> array of hidden status IDs
+	collapsedBoardColumns?: Record<string, string[]>; // projectId -> array of collapsed status IDs
 }
 
 export const DEFAULT_DATA: AppData = {
