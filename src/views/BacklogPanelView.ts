@@ -398,7 +398,7 @@ export class BacklogPanelView {
 		sectionId: string,
 		orderedIds: string[],
 	): void {
-		const row = container.createEl('div', { cls: `pf-tbl-row pf-priority-border-${ticket.priority} pf-draggable-row` });
+		const row = container.createEl('div', { cls: `pf-tbl-row pf-draggable-row` });
 		row.draggable = true;
 		row.dataset.ticketId = ticket.id;
 		row.dataset.sectionId = sectionId;

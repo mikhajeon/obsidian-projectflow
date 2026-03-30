@@ -1,0 +1,214 @@
+/* ── Status settings UI ──────────────────────────────────────────────────── */
+.pf-status-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 12px;
+	position: relative;
+}
+
+.pf-status-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 10px;
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+}
+
+.pf-status-swatch-btn {
+	width: 22px;
+	height: 22px;
+	min-width: 22px;
+	border-radius: 4px;
+	border: 2px solid rgba(255,255,255,0.15);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.1s;
+}
+.pf-status-swatch-btn:hover { transform: scale(1.1); }
+
+.pf-status-label-input {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	background: transparent;
+	border: none;
+	color: var(--text-normal);
+	padding: 2px 4px;
+	border-radius: 3px;
+}
+.pf-status-label-input:focus {
+	outline: none;
+	background: var(--background-primary);
+	box-shadow: 0 0 0 2px var(--interactive-accent);
+}
+
+.pf-status-map-sel {
+	font-size: var(--font-ui-smaller);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 2px 6px;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.pf-status-eye-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	width: 20px;
+	text-align: center;
+	font-size: 12px;
+	line-height: 1;
+	opacity: 0.8;
+	flex-shrink: 0;
+}
+.pf-status-eye-btn:hover { opacity: 1; }
+.pf-status-eye-hidden { opacity: 0.35; }
+.pf-status-eye-hidden:hover { opacity: 0.6; }
+
+.pf-status-width-slider {
+	flex: 1;
+	min-width: 100px;
+}
+
+.pf-status-default-badge {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pf-status-options {
+	padding: 10px 0 4px;
+	border-top: 1px solid var(--background-modifier-border);
+}
+
+.pf-status-option-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 4px 0;
+}
+
+.pf-status-option-label {
+	font-size: 13px;
+	color: var(--text-normal);
+}
+
+.pf-status-drag-handle {
+	cursor: grab;
+	color: var(--text-faint);
+	font-size: 16px;
+	padding: 0 2px;
+	user-select: none;
+	line-height: 1;
+	flex-shrink: 0;
+}
+.pf-status-drag-handle:active { cursor: grabbing; }
+
+.pf-status-row-dragging { opacity: 0.4; }
+
+.pf-status-drop-line {
+	display: none;
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--interactive-accent);
+	border-radius: 1px;
+	pointer-events: none;
+	z-index: 10;
+}
+.pf-status-drop-line-visible { display: block; }
+
+.pf-status-delete-btn {
+	font-size: 16px;
+	line-height: 1;
+	padding: 0 5px;
+	background: transparent;
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+	border-radius: 4px;
+	flex-shrink: 0;
+}
+.pf-status-delete-btn:hover { background: var(--background-modifier-error); color: #fff; }
+
+/* ── Color picker popover ────────────────────────────────────────────────── */
+.pf-color-picker-popover {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 8px;
+	box-shadow: 0 6px 24px rgba(0,0,0,0.22);
+	padding: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: fit-content;
+}
+
+.pf-cp-palette {
+	display: grid;
+	grid-template-columns: repeat(6, 24px);
+	gap: 5px;
+}
+
+.pf-cp-swatch {
+	width: 24px;
+	height: 24px;
+	border-radius: 4px;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: transform 0.1s;
+}
+.pf-cp-swatch:hover { transform: scale(1.15); }
+.pf-cp-swatch-active { border-color: #fff; box-shadow: 0 0 0 1px #888; }
+
+.pf-cp-wheel-wrap {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-cp-wheel, .pf-cp-sl {
+	border-radius: 4px;
+	cursor: crosshair;
+	display: block;
+}
+
+.pf-cp-hex-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-cp-hex-input {
+	flex: 1;
+	font-family: var(--font-monospace);
+	font-size: 12px;
+	padding: 3px 6px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	background: var(--background-secondary);
+	color: var(--text-normal);
+}
+.pf-cp-hex-input:focus { outline: none; box-shadow: 0 0 0 2px var(--interactive-accent); }
+
+.pf-cp-preview {
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+}
+

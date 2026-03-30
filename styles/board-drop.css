@@ -1,0 +1,135 @@
+/* ── Board column drop indicator line ───────────────────────────────────── */
+
+.pf-board-drop-line {
+	position: absolute !important; /* override .pf-column-body > * { position: relative } */
+	left: 4px;
+	right: 4px;
+	height: 2px;
+	background: var(--interactive-accent);
+	pointer-events: none;
+	display: none;
+	z-index: 20;
+	border-radius: 1px;
+	transform: translateY(-1px);
+}
+
+.pf-board-drop-line::before {
+	content: '';
+	position: absolute;
+	left: -4px;
+	top: -3px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.pf-board-drop-line.pf-drop-line-visible {
+	display: block;
+}
+
+/* ── Board grouping (by-parent) ─────────────────────────────────────────── */
+
+.pf-column-body-grouped {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-board-group {
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.pf-board-group-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+}
+
+.pf-board-group-title {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: var(--text-normal);
+}
+
+.pf-board-group-count {
+	color: var(--text-muted);
+	font-size: 11px;
+	min-width: 14px;
+	text-align: right;
+}
+
+.pf-board-group-body {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 6px 8px 4px;
+	min-height: 36px;
+}
+
+.pf-board-group-empty {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	padding: 4px 2px 2px;
+	font-style: italic;
+}
+
+.pf-board-group.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+	outline-offset: -2px;
+}
+
+.pf-group-add {
+	width: 100%;
+	border-radius: 0;
+	border-top: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+	font-size: var(--font-ui-small);
+	padding: 5px 10px;
+	text-align: left;
+	cursor: pointer;
+}
+
+.pf-group-add:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
+}
+
+/* ── Subtasks-only board: parent label on card ───────────────────────────── */
+
+.pf-card-parent-label {
+	font-size: 10px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	max-width: 100px;
+	flex-shrink: 1;
+}
+
+/* ── Group dropdown (reuses .pf-sort-option styles) ─────────────────────── */
+
+.pf-group-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	padding: 4px;
+	min-width: 180px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+

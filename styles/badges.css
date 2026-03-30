@@ -1,0 +1,23 @@
+/* ── Badges ──────────────────────────────────────────────────────────────── */
+
+.pf-badge {
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+}
+
+.pf-type-task    { background: var(--pf-type-task-bg);    color: var(--pf-type-task-color); }
+.pf-type-bug     { background: var(--pf-type-bug-bg);     color: var(--pf-type-bug-color); }
+.pf-type-feature { background: var(--pf-type-feature-bg); color: var(--pf-type-feature-color); }
+.pf-type-story   { background: var(--pf-type-story-bg);   color: var(--pf-type-story-color); }
+.pf-type-epic    { background: var(--pf-type-epic-bg);    color: var(--pf-type-epic-color); font-weight: 600; }
+.pf-type-subtask { background: var(--pf-type-subtask-bg); color: var(--pf-type-subtask-color); }
+
+.pf-pri-critical { background: var(--pf-pri-critical-bg); color: var(--pf-pri-critical-color); }
+.pf-pri-high     { background: var(--pf-pri-high-bg);     color: var(--pf-pri-high-color); }
+.pf-pri-medium   { background: var(--pf-pri-medium-bg);   color: var(--pf-pri-medium-color); }
+.pf-pri-low      { background: var(--background-modifier-hover); color: var(--text-muted); }
+

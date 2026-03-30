@@ -1,0 +1,253 @@
+/* ── Modals ──────────────────────────────────────────────────────────────── */
+
+/* Remove modal padding — we control all spacing ourselves */
+.modal-content:has(.pf-modal) {
+	padding: 0;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.pf-modal {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.pf-modal-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 0;
+	padding: 12px 16px;
+	background: var(--background-primary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-modal-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 16px;
+}
+
+.pf-modal-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	white-space: nowrap;
+	flex-shrink: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.pf-modal-ticket-key {
+	font-size: var(--font-ui-smaller);
+	font-family: var(--font-monospace);
+	font-weight: 600;
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 4px;
+	padding: 2px 6px;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+.pf-modal-title-input {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	background: none;
+	border: none;
+	border-bottom: 1px solid transparent;
+	outline: none;
+	color: var(--text-normal);
+	padding: 2px 4px;
+	min-width: 0;
+}
+
+.pf-modal-title-input:focus {
+	border-bottom-color: var(--interactive-accent);
+}
+
+.pf-modal-close {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 18px;
+	line-height: 1;
+	color: var(--text-muted);
+	border-radius: 4px;
+	flex-shrink: 0;
+	padding: 0;
+}
+
+.pf-modal-close:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-input-full {
+	width: 100%;
+}
+
+.pf-input-short {
+	width: 80px;
+}
+
+.pf-textarea {
+	width: 100%;
+	min-height: 450px;
+	resize: vertical !important;
+	box-sizing: border-box;
+}
+
+.pf-desc-block {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px 0;
+}
+
+.pf-desc-label-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-desc-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+
+/* Match Setting labels (Work type, Priority, Status, Story points) to the same style */
+.pf-modal-body .setting-item-name {
+	font-size: var(--font-ui-smaller);
+	font-weight: 500;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+/* Tighten spacing between Work type, Priority, Status, Story points */
+.pf-ticket-info-pane .setting-item {
+	padding: 4px 0 !important;
+	border-top: none !important;
+	border-bottom: none !important;
+}
+
+
+
+/* ── Ticket modal two-pane layout ───────────────────────────────────────── */
+
+.pf-ticket-panes {
+	display: flex;
+	gap: 0;
+	align-items: flex-start;
+}
+
+.pf-ticket-form-pane {
+	flex: 1 1 0;
+	min-width: 0;
+	padding-right: 20px;
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+.pf-ticket-info-pane {
+	flex: 0 0 220px;
+	padding-left: 20px;
+}
+
+.pf-info-pane-heading {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	margin-bottom: 12px;
+	padding-bottom: 6px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-info-row {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	margin-bottom: 12px;
+}
+
+.pf-info-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.pf-info-value {
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	word-break: break-all;
+}
+
+.pf-info-row-tags {
+	margin-top: 4px;
+}
+
+.pf-info-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-top: 4px;
+}
+
+.pf-info-tag {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 7px;
+	border-radius: 10px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.pf-info-pane-empty .pf-info-row {
+	opacity: 0.4;
+}
+
+.pf-info-value-empty {
+	font-style: italic;
+}
+
+.pf-btn-open-note {
+	margin-left: 8px;
+	padding: 1px 7px;
+	font-size: var(--font-ui-smaller);
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	color: var(--text-muted);
+	cursor: pointer;
+	vertical-align: middle;
+}
+.pf-btn-open-note:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-modal .pf-modal-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	flex-shrink: 0;
+	padding: 12px 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+}
+

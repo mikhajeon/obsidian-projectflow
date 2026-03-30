@@ -1,0 +1,77 @@
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.pf-btn {
+	padding: 4px 12px;
+	border-radius: 5px;
+	font-size: var(--font-ui-small);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	transition: background 0.15s;
+}
+
+.pf-btn:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-btn-primary {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.pf-btn-primary:hover {
+	background: var(--interactive-accent-hover);
+	border-color: var(--interactive-accent-hover);
+}
+
+.pf-btn-danger {
+	background: var(--pf-danger-bg);
+	color: var(--pf-danger-color);
+	border-color: var(--pf-danger-border);
+}
+
+.pf-btn-danger:hover {
+	filter: brightness(1.1);
+}
+
+.pf-btn-sm {
+	padding: 2px 9px;
+	font-size: var(--font-ui-smaller);
+}
+
+.pf-btn-icon {
+	padding: 2px 8px;
+	font-size: 16px;
+	line-height: 1;
+	letter-spacing: 1px;
+}
+
+/* ── Selects ─────────────────────────────────────────────────────────────── */
+
+.pf-project-switcher {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	padding: 3px 8px;
+	border-radius: 5px;
+	background: var(--background-modifier-hover);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
+.pf-select {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.pf-select-sm {
+	font-size: 11px;
+	padding: 1px 4px;
+}
+

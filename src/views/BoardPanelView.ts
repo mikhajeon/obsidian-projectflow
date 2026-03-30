@@ -22,7 +22,8 @@ export class BoardPanelView {
 		currentSprint: Sprint | null,
 		useSprints = true,
 	): void {
-		const board = container.createEl('div', { cls: 'pf-board' });
+		const wrapper = container.createEl('div', { cls: 'pf-board-wrapper' });
+		const board = wrapper.createEl('div', { cls: 'pf-board' });
 
 		const COLUMNS = this.view.plugin.store.getProjectStatuses(projectId);
 		for (const col of COLUMNS) {

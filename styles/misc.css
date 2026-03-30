@@ -1,0 +1,112 @@
+/* ── Sprint settings toggles ─────────────────────────────────────────────── */
+
+.pf-sprint-setting-note {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+}
+
+/* ── Multi-drag ghost ────────────────────────────────────────────────────── */
+
+.pf-multi-drag-ghost {
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    background: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: var(--font-ui-small);
+    font-weight: 500;
+    color: var(--text-normal);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 9999;
+}
+
+/* ── No-sprint backlog dual-list ─────────────────────────────────────────── */
+
+.pf-backlog-section-desc {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-faint);
+    font-style: italic;
+    margin-left: 6px;
+    margin-right: 4px;
+}
+
+/* Board/backlog badge (clickable toggle in no-sprint backlog) */
+.pf-board-badge {
+    cursor: pointer;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    transition: opacity 0.15s;
+}
+.pf-board-badge:hover { opacity: 0.75; }
+
+.pf-board-badge-on {
+    background: rgba(76,175,125,0.18);
+    color: #4caf7d;
+    border-color: rgba(76,175,125,0.3);
+}
+.pf-board-badge-off {
+    background: rgba(139,139,139,0.12);
+    color: var(--text-muted);
+    border-color: rgba(139,139,139,0.2);
+}
+
+/* ── RetroModal spillover/auto-create checkboxes ─────────────────────────── */
+
+.pf-retro-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--background-modifier-border);
+    margin-bottom: 10px;
+}
+.pf-retro-option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-ui-small);
+}
+.pf-retro-option-note {
+    font-size: var(--font-ui-smaller);
+    color: var(--text-muted);
+    font-style: italic;
+    margin-left: 22px;
+}
+
+/* ── Archive panel ────────────────────────────────────────────────────────── */
+
+.pf-archive-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	min-height: 36px;
+}
+
+.pf-archive-sel-count {
+	font-size: 12px;
+	color: var(--text-muted);
+	flex: 1;
+}
+
+.pf-archive-row {
+	opacity: 0.75;
+}
+
+.pf-archive-row:hover {
+	opacity: 1;
+}
+
+.pf-drag-handle-disabled {
+	visibility: hidden;
+	cursor: default;
+}

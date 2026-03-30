@@ -1,0 +1,254 @@
+/* ── Board view container — constrain height so columns scroll instead of growing ── */
+.workspace-leaf-content[data-type="projectflow-board"] .view-content {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+}
+.workspace-leaf-content[data-type="projectflow-board"] {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+/* ── Kanban board ────────────────────────────────────────────────────────── */
+
+/* Wrapper that claims the remaining vertical space in the flex column */
+.pf-board-wrapper {
+	flex: 1 1 0px;
+	min-height: 0;
+	position: relative;
+}
+
+/* Board is absolutely positioned so it gets a definite height from the wrapper */
+.pf-board {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	gap: 12px;
+	padding: 12px 16px;
+	overflow-x: auto;
+	overflow-y: hidden;
+	align-items: stretch;
+}
+
+.pf-column {
+	min-width: 220px;
+	max-width: 260px;
+	flex: 1;
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	transition: outline 0.1s;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.pf-column.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+}
+
+/* ── Column status color accents — driven by --pf-col-color injected per column ── */
+.pf-column { border-top: 3px solid var(--pf-col-color, var(--background-modifier-border)); }
+.pf-column-title { color: var(--pf-col-color, var(--text-muted)); }
+
+/* ── Column gradient background ─────────────────────────────────────────── */
+.pf-column {
+	background:
+		linear-gradient(to bottom,
+			color-mix(in srgb, var(--pf-col-color, transparent) 22%, transparent) 0%,
+			color-mix(in srgb, var(--pf-col-color, transparent) 5%, transparent) 100%
+		),
+		var(--background-secondary);
+}
+
+.pf-column-header {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 12px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.pf-column-toggle {
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 20px;
+	width: 22px;
+	text-align: center;
+	line-height: 1;
+	flex-shrink: 0;
+}
+.pf-column-toggle:hover { color: var(--text-normal); }
+
+.pf-column-title {
+	font-weight: 600;
+	font-size: var(--font-ui-small);
+	flex: 1;
+}
+
+.pf-column-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	padding: 1px 7px;
+	border-radius: 10px;
+	flex-shrink: 0;
+}
+
+/* Collapsed board column */
+.pf-column.pf-column-collapsed {
+	flex: 0 0 36px !important;
+	min-width: 36px !important;
+	max-width: 36px !important;
+	overflow: hidden;
+	cursor: pointer;
+	align-self: stretch;
+}
+.pf-column-collapsed .pf-column-header {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	padding: 10px 8px;
+	height: 100%;
+	border-bottom: none;
+	cursor: pointer;
+	gap: 8px;
+	justify-content: flex-start;
+}
+.pf-column-collapsed .pf-column-toggle {
+	writing-mode: horizontal-tb;
+	font-size: 14px;
+	width: 16px;
+}
+.pf-column-collapsed .pf-column-title {
+	white-space: nowrap;
+	flex: unset;
+}
+.pf-column-collapsed .pf-column-count {
+	writing-mode: horizontal-tb;
+}
+
+.pf-column-body {
+	padding: 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	min-height: 0;
+	flex: 1 1 0px;
+	background: transparent;
+	scrollbar-width: thin;
+	scrollbar-color: var(--background-modifier-border-hover) transparent;
+}
+
+/* Ultra-thin overlay scrollbar for board columns — doesn't affect column width */
+.pf-column-body::-webkit-scrollbar {
+	width: 4px;
+}
+.pf-column-body::-webkit-scrollbar-track {
+	background: transparent;
+}
+.pf-column-body::-webkit-scrollbar-thumb {
+	background: var(--background-modifier-border-hover);
+	border-radius: 2px;
+}
+.pf-column-body::-webkit-scrollbar-thumb:hover {
+	background: var(--text-faint);
+}
+
+/* ── Column add button (hover-reveal at bottom) ──────────────────────────── */
+
+.pf-column-add {
+	width: 100%;
+	padding: 5px 8px;
+	font-size: var(--font-ui-smaller);
+	text-align: center;
+	cursor: pointer;
+	border: none;
+	border-top: 1px dashed transparent;
+	border-radius: 0 0 8px 8px;
+	background: transparent;
+	color: transparent;
+	transition: color 0.15s, border-color 0.15s, background 0.15s;
+	flex-shrink: 0;
+}
+
+.pf-column:hover .pf-column-add {
+	border-top-color: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+.pf-column-add:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+/* ── Ticket cards ────────────────────────────────────────────────────────── */
+
+.pf-card {
+	background: var(--background-primary);
+	border-radius: 6px;
+	padding: 10px;
+	border: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+	transition: box-shadow 0.15s, opacity 0.15s;
+	min-width: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	flex-shrink: 0;          /* never compress cards — overflow into scroll instead */
+}
+
+.pf-card:hover {
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
+}
+
+.pf-card.pf-dragging {
+	opacity: 0.4;
+}
+
+.pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
+.pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
+.pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
+.pf-priority-border-low      { border: 2px solid var(--background-modifier-border); }
+
+.pf-card-top {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-card-type-icon {
+	font-size: 14px;
+	line-height: 1;
+	margin-right: 2px;
+	cursor: default;
+}
+
+.pf-card-title {
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+	margin: 0 0 4px;
+	line-height: 1.4;
+}
+
+.pf-card-desc {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.pf-card-subtask-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 4px 0 0;
+}
+

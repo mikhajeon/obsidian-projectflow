@@ -1,0 +1,438 @@
+/* ── Table layout (Epics + Backlog views) ────────────────────────────────── */
+
+.pf-tbl-container {
+	--pf-col-handle: 24px;
+	--pf-col-check: 28px;
+	--pf-col-name: 320px;
+	--pf-col-priority: 100px;
+	--pf-col-status: 110px;
+	--pf-col-extra: 90px;
+	--pf-col-actions: 80px;
+}
+
+/* Grid template shared by header and all rows */
+.pf-tbl-header,
+.pf-tbl-row {
+	display: grid;
+	grid-template-columns:
+		var(--pf-col-handle)
+		var(--pf-col-check)
+		var(--pf-col-name)
+		var(--pf-col-priority)
+		var(--pf-col-status)
+		var(--pf-col-extra)
+		var(--pf-col-actions);
+	align-items: center;
+	min-width: 0;
+}
+
+/* Backlog view: no actions column */
+.pf-backlog-list .pf-tbl-header,
+.pf-backlog-list .pf-tbl-row {
+	grid-template-columns:
+		var(--pf-col-handle)
+		var(--pf-col-check)
+		var(--pf-col-name)
+		var(--pf-col-priority)
+		var(--pf-col-status)
+		var(--pf-col-extra);
+}
+
+/* Header row */
+.pf-tbl-header {
+	position: sticky;
+	top: 0;
+	z-index: 5;
+	background: var(--background-primary);
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.pf-tbl-th {
+	position: relative;
+	display: flex;
+	align-items: center;
+	padding: 0 8px;
+	height: 28px;
+	user-select: none;
+	overflow: hidden;
+	box-shadow: inset -1px 0 0 var(--background-modifier-border);
+}
+
+.pf-tbl-th:last-child {
+	box-shadow: none;
+}
+
+.pf-tbl-th-sortable {
+	cursor: pointer;
+	user-select: none;
+}
+.pf-tbl-th-sortable:hover .pf-tbl-th-label {
+	color: var(--text-normal);
+}
+.pf-tbl-sort-arrow {
+	font-size: 10px;
+	margin-left: 3px;
+	color: var(--text-faint);
+	opacity: 0.35;
+	transition: opacity 0.1s;
+}
+.pf-tbl-th-sortable:hover .pf-tbl-sort-arrow {
+	opacity: 0.7;
+}
+.pf-tbl-sort-active {
+	opacity: 1 !important;
+	color: var(--interactive-accent);
+}
+
+.pf-tbl-th-label {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.6px;
+	color: var(--text-faint);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex: 1;
+}
+
+/* Resize handle */
+.pf-tbl-resize-handle {
+	position: absolute;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	width: 5px;
+	cursor: col-resize;
+	z-index: 2;
+}
+
+.pf-tbl-resize-handle:hover,
+.pf-tbl-resize-handle:active {
+	background: var(--interactive-accent);
+	opacity: 0.5;
+}
+
+/* Data rows */
+.pf-tbl-row {
+	border-bottom: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
+	background: var(--background-primary);
+	cursor: pointer;
+	transition: background 0.1s;
+	height: 34px;
+}
+
+.pf-tbl-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-tbl-row-epic {
+	background: var(--background-secondary);
+	font-weight: 500;
+}
+
+.pf-tbl-row-epic:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* Cells */
+.pf-tbl-cell {
+	display: flex;
+	align-items: center;
+	padding: 0 8px;
+	min-width: 0;
+	overflow: hidden;
+	box-shadow: inset -1px 0 0 var(--background-modifier-border);
+}
+
+.pf-tbl-cell:last-child {
+	box-shadow: none;
+}
+
+.pf-tbl-cell-name {
+	padding: 6px 4px;
+}
+
+.pf-tbl-cell-actions {
+	justify-content: flex-end;
+	padding-right: 8px;
+}
+
+/* Name cell inner layout: indent + toggle + icon + title */
+.pf-tbl-name-inner {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	width: 100%;
+}
+
+.pf-tbl-title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	flex: 1;
+	font-size: var(--font-ui-small);
+}
+
+.pf-tbl-title-epic {
+	font-weight: 600;
+}
+
+.pf-tbl-empty-text {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	padding-left: 40px;
+}
+
+.pf-tbl-sprint-name {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Type icons */
+.pf-type-icon {
+	font-size: 13px;
+	flex-shrink: 0;
+	width: 22px;
+	text-align: center;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-type-icon-epic    { color: #8b5cf6; font-size: 20px; }
+.pf-type-icon-task    { color: #3b82f6; }
+.pf-type-icon-bug     { color: #ef4444; font-size: 20.7px; }
+.pf-type-icon-story   { color: #10b981; font-size: 18px; }
+.pf-type-icon-subtask { color: #3b82f6; }
+
+/* Section headers (sprint groups, unparented group) — full-width, not a grid row */
+.pf-tbl-section-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	user-select: none;
+	font-weight: 500;
+	margin-bottom: 2px;
+}
+
+.pf-tbl-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-tbl-section-header.pf-section-drop-active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	outline: 2px solid var(--interactive-accent);
+}
+
+/* ── Backlog sections ────────────────────────────────────────────────────── */
+
+.pf-backlog-section {
+	margin-bottom: 12px;
+}
+
+.pf-backlog-section-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-radius: var(--radius-s);
+	cursor: pointer;
+	user-select: none;
+	font-weight: 500;
+}
+
+.pf-backlog-section-header:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-backlog-section-title {
+	font-weight: 600;
+	flex: 1;
+}
+
+.pf-backlog-section-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-empty {
+	padding: 8px 12px 8px 32px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* ── Epics view ──────────────────────────────────────────────────────────── */
+
+.pf-epics-list {
+	overflow-y: auto;
+	flex: 1;
+	padding: 0;
+	position: relative;
+}
+
+.pf-epic-section {
+	margin-bottom: 0;
+}
+
+.pf-epic-progress {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+.pf-epic-add-child {
+	opacity: 0;
+	transition: opacity 0.15s;
+	flex-shrink: 0;
+}
+
+.pf-tbl-row:hover .pf-epic-add-child {
+	opacity: 1;
+}
+
+.pf-epic-toggle {
+	font-size: 20px;
+	width: 22px;
+	text-align: center;
+	flex-shrink: 0;
+	cursor: pointer;
+	color: var(--text-muted);
+	line-height: 1;
+}
+
+.pf-epic-toggle:hover {
+	color: var(--text-normal);
+}
+
+.pf-epic-toggle-placeholder {
+	width: 22px;
+	flex-shrink: 0;
+}
+
+.pf-tbl-row.pf-drop-active {
+	outline: 2px solid var(--interactive-accent);
+	background: var(--background-modifier-hover);
+}
+
+.pf-draggable-row {
+	cursor: default;
+}
+
+.pf-drag-handle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 100%;
+	cursor: grab;
+	color: var(--text-muted);
+	opacity: 0;
+	font-size: 14px;
+	letter-spacing: -1px;
+	user-select: none;
+	transition: opacity 0.1s;
+}
+
+.pf-tbl-row:hover .pf-drag-handle {
+	opacity: 1;
+}
+
+.pf-drag-handle:active {
+	cursor: grabbing;
+}
+
+/* ── Row checkbox ────────────────────────────────────────────────────────── */
+
+.pf-row-checkbox-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-row-checkbox {
+	opacity: 0;
+	cursor: pointer;
+	width: 14px;
+	height: 14px;
+	accent-color: var(--interactive-accent);
+	transition: opacity 0.1s;
+}
+
+.pf-tbl-row:hover .pf-row-checkbox,
+.pf-tbl-row.pf-row-selected .pf-row-checkbox,
+.pf-epics-list.pf-has-selection .pf-row-checkbox {
+	opacity: 1;
+}
+
+.pf-tbl-row.pf-row-selected {
+	background: var(--background-modifier-active-hover);
+}
+
+/* ── Multi-select action bar ─────────────────────────────────────────────── */
+
+.pf-selection-bar {
+	position: sticky;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	background: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+	z-index: 10;
+}
+
+.pf-selection-bar-count {
+	font-size: 12px;
+	color: var(--text-muted);
+	flex: 1;
+}
+
+.pf-selection-bar-locked {
+	font-size: 11px;
+	color: var(--text-error);
+}
+
+/* ── Drop indicator line ─────────────────────────────────────────────────── */
+
+.pf-drop-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--interactive-accent);
+	pointer-events: none;
+	display: none;
+	z-index: 10;
+	border-radius: 1px;
+}
+
+.pf-drop-line.pf-drop-line-visible {
+	display: block;
+}
+
+.pf-drop-line.pf-drop-line-indented {
+	left: 32px;
+}
+
+.pf-drop-line.pf-drop-line-indented-2 {
+	left: 56px;
+}
+

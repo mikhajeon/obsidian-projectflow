@@ -1,0 +1,80 @@
+/* ── Backlog ──────────────────────────────────────────────────────────────── */
+
+.pf-toolbar {
+	display: flex;
+	gap: 16px;
+	margin-top: 8px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.pf-toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-toolbar-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-count {
+	margin-top: 6px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-backlog-list {
+	padding: 0;
+	overflow-y: auto;
+	flex: 1;
+	display: block;
+}
+
+.pf-backlog-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	background: var(--background-primary);
+	border-radius: 6px;
+	padding: 8px 12px;
+	border-left: 3px solid transparent;
+	border: 1px solid var(--background-modifier-border);
+	border-left: 3px solid transparent;
+	gap: 8px;
+	transition: background 0.12s;
+}
+
+.pf-backlog-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-backlog-left {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: 1;
+	min-width: 0;
+}
+
+.pf-backlog-title {
+	font-weight: 500;
+	font-size: var(--font-ui-small);
+}
+
+.pf-backlog-desc {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pf-backlog-right {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+}
+

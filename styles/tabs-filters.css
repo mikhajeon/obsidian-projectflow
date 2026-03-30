@@ -1,0 +1,341 @@
+/* ── Settings ────────────────────────────────────────────────────────────── */
+
+.pf-settings-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 8px 0;
+}
+
+/* ── View mode tabs ──────────────────────────────────────────────────────── */
+
+.pf-view-tabs {
+	display: flex;
+	gap: 0;
+	padding: 8px 0 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	margin-top: 8px;
+}
+
+.pf-tab {
+	padding: 5px 16px;
+	font-size: var(--font-ui-small);
+	cursor: grab;
+	border: none;
+	border-bottom: 2px solid transparent;
+	background: transparent;
+	color: var(--text-muted);
+	border-radius: 0;
+	margin-bottom: -1px;
+	transition: color 0.15s, border-color 0.15s;
+}
+
+.pf-tab:hover {
+	color: var(--text-normal);
+}
+
+.pf-tab-active {
+	color: var(--text-normal);
+	border-bottom-color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+.pf-tab-dragging {
+	opacity: 0.4;
+	cursor: grabbing;
+}
+
+.pf-tab-drop-before,
+.pf-tab-drop-after {
+	position: relative;
+}
+
+.pf-tab-drop-before::before,
+.pf-tab-drop-after::after {
+	content: '';
+	position: absolute;
+	top: 4px;
+	bottom: 4px;
+	width: 2px;
+	background: var(--interactive-accent);
+	border-radius: 1px;
+	pointer-events: none;
+}
+
+.pf-tab-drop-before::before {
+	left: 0;
+}
+
+.pf-tab-drop-after::after {
+	right: 0;
+}
+
+
+/* ── Story points badge ──────────────────────────────────────────────────── */
+
+.pf-points {
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	font-family: var(--font-monospace);
+	text-transform: none;
+	letter-spacing: 0;
+}
+
+/* ── Velocity ────────────────────────────────────────────────────────────── */
+
+.pf-velocity {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 0;
+}
+
+/* ── Sprint goal ─────────────────────────────────────────────────────────── */
+
+.pf-sprint-goal {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-style: italic;
+	margin: 4px 0 0;
+}
+
+/* ── Filter button + dropdown ────────────────────────────────────────────── */
+
+.pf-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 8px;
+}
+
+.pf-filter-gear {
+	margin-left: auto;
+	opacity: 0.6;
+}
+.pf-filter-gear:hover { opacity: 1; }
+
+.pf-filter-btn {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.pf-filter-btn-active {
+	border-color: var(--interactive-accent);
+	color: var(--interactive-accent);
+}
+
+.pf-filter-dot {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	flex-shrink: 0;
+}
+
+.pf-filter-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 12px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	min-width: 180px;
+}
+
+.pf-filter-clear {
+	align-self: flex-start;
+	margin-top: 2px;
+}
+
+/* ── Filter bar (used inside dropdown) ───────────────────────────────────── */
+
+.pf-filter-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.pf-filter-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-filter-label-check {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 6px;
+	cursor: pointer;
+	padding: 2px 0;
+	color: var(--text-normal);
+}
+
+.pf-filter-select {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	color: var(--text-normal);
+}
+
+.pf-filter-select:not([value='all']) {
+	border-color: var(--interactive-accent);
+}
+
+/* ── Sort dropdown ───────────────────────────────────────────────────────── */
+
+.pf-sort-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 160px;
+}
+
+.pf-sort-option {
+	background: none;
+	border: none;
+	border-radius: 4px;
+	padding: 6px 10px;
+	text-align: left;
+	display: flex;
+	align-items: center;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	cursor: pointer;
+	width: 100%;
+}
+
+.pf-sort-option:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-sort-option-active {
+	color: var(--interactive-accent);
+	font-weight: 600;
+}
+
+.pf-sort-dot {
+	display: inline-block;
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+	margin-right: 6px;
+	flex-shrink: 0;
+}
+
+/* ── Column visibility + width dropdown ─────────────────────────────────── */
+
+.pf-col-visibility-heading {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: var(--text-faint);
+	padding-bottom: 2px;
+}
+
+.pf-col-visibility-row {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	cursor: pointer;
+	padding: 2px 0;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+.pf-col-visibility-row:hover { color: var(--text-accent); }
+
+.pf-col-visibility-swatch {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.pf-col-visibility-label { flex: 1; }
+
+.pf-col-visibility-divider {
+	height: 1px;
+	background: var(--background-modifier-border);
+	margin: 2px 0;
+}
+
+/* ── Collapsed column stub ───────────────────────────────────────────────── */
+
+.pf-column-stub {
+	flex: 0 0 28px;
+	min-width: 28px;
+	max-width: 28px;
+	border-radius: 6px;
+	border-top: 3px solid var(--pf-col-color, var(--background-modifier-border));
+	background: var(--background-secondary);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	opacity: 0.7;
+	transition: opacity 0.15s;
+}
+.pf-column-stub:hover { opacity: 1; }
+
+.pf-column-stub-label {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	transform: rotate(180deg);
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-height: 120px;
+	letter-spacing: 0.4px;
+}
+
+/* ── Column width dropdown ───────────────────────────────────────────────── */
+
+.pf-col-width-dropdown {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+	padding: 10px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 220px;
+}
+
+.pf-col-width-label {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	font-weight: 500;
+}
+
+.pf-col-width-slider {
+	width: 100%;
+	accent-color: var(--interactive-accent);
+	cursor: pointer;
+}
+

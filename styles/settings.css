@@ -1,0 +1,24 @@
+/* ── Empty states ────────────────────────────────────────────────────────── */
+
+.pf-empty-state {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+	padding: 48px 24px;
+	text-align: center;
+	color: var(--text-muted);
+}
+
+.pf-empty-title {
+	font-size: var(--font-ui-medium);
+	font-weight: 500;
+	margin-bottom: 6px;
+}
+
+.pf-empty-desc {
+	font-size: var(--font-ui-small);
+	margin-bottom: 16px;
+}
+

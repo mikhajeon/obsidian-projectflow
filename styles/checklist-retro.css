@@ -1,0 +1,73 @@
+/* ── Checklist editor (in TicketModal) ───────────────────────────────────── */
+
+.pf-setting-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: 600;
+	color: var(--text-muted);
+	margin: 14px 0 6px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.pf-checklist-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 8px;
+}
+
+.pf-checklist-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-checklist-text {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	padding: 3px 7px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+}
+
+.pf-btn-icon-sm {
+	padding: 1px 7px;
+	border-radius: 4px;
+	font-size: var(--font-ui-smaller);
+	cursor: pointer;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+}
+
+.pf-btn-icon-sm:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-input-points {
+	width: 80px;
+}
+
+/* ── Checklist progress on cards ─────────────────────────────────────────── */
+
+.pf-checklist-progress {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 4px 0 0;
+}
+
+/* ── Retro modal ─────────────────────────────────────────────────────────── */
+
+.pf-retro-intro {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin-bottom: 10px;
+}
+
+.pf-retro-notes {
+	min-height: 120px;
+}
+

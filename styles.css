@@ -209,14 +209,37 @@
 	white-space: nowrap;
 }
 
+/* ── Board view container — constrain height so columns scroll instead of growing ── */
+.workspace-leaf-content[data-type="projectflow-board"] .view-content {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	height: 100%;
+}
+.workspace-leaf-content[data-type="projectflow-board"] {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
 /* ── Kanban board ────────────────────────────────────────────────────────── */
 
+/* Wrapper that claims the remaining vertical space in the flex column */
+.pf-board-wrapper {
+	flex: 1 1 0px;
+	min-height: 0;
+	position: relative;
+}
+
+/* Board is absolutely positioned so it gets a definite height from the wrapper */
 .pf-board {
+	position: absolute;
+	inset: 0;
 	display: flex;
 	gap: 12px;
 	padding: 12px 16px;
 	overflow-x: auto;
-	flex: 1;
+	overflow-y: hidden;
 	align-items: stretch;
 }
 
@@ -227,8 +250,9 @@
 	border-radius: 8px;
 	display: flex;
 	flex-direction: column;
-	overflow: hidden;
 	transition: outline 0.1s;
+	min-height: 0;
+	overflow: hidden;
 }
 
 .pf-column.pf-drop-active {
@@ -255,6 +279,7 @@
 	gap: 6px;
 	padding: 10px 12px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
 }
 
 .pf-column-toggle {
@@ -317,30 +342,28 @@
 
 .pf-column-body {
 	padding: 8px;
-	padding-right: 3px;
-	margin-right: -5px;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
+	overflow-x: hidden;
 	overflow-y: auto;
-	overflow-y: overlay;
-	min-height: 60px;
-	flex: 1;
+	min-height: 0;
+	flex: 1 1 0px;
 	background: transparent;
 	scrollbar-width: thin;
 	scrollbar-color: var(--background-modifier-border-hover) transparent;
 }
 
-/* Thin overlay scrollbar for board columns */
+/* Ultra-thin overlay scrollbar for board columns — doesn't affect column width */
 .pf-column-body::-webkit-scrollbar {
-	width: 5px;
+	width: 4px;
 }
 .pf-column-body::-webkit-scrollbar-track {
 	background: transparent;
 }
 .pf-column-body::-webkit-scrollbar-thumb {
 	background: var(--background-modifier-border-hover);
-	border-radius: 3px;
+	border-radius: 2px;
 }
 .pf-column-body::-webkit-scrollbar-thumb:hover {
 	background: var(--text-faint);
@@ -383,6 +406,10 @@
 	cursor: pointer;
 	box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
 	transition: box-shadow 0.15s, opacity 0.15s;
+	min-width: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	flex-shrink: 0;          /* never compress cards — overflow into scroll instead */
 }
 
 .pf-card:hover {

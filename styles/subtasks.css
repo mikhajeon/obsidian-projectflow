@@ -1,0 +1,245 @@
+/* ── By-parent board: vertical stack of parent blocks ───────────────────── */
+
+/* ── By-Parent view ───────────────────────────────────────────────────────── */
+
+.pf-subtasks-wrapper {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: auto;
+	padding: 12px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-subtasks-block {
+	border-radius: 6px;
+	border: 1px solid var(--background-modifier-border);
+	min-width: max-content;
+}
+
+.pf-subtasks-block-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 7px 12px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-subtasks-toggle {
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 20px;
+	width: 22px;
+	text-align: center;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.pf-subtasks-toggle:hover {
+	color: var(--text-normal);
+}
+
+.pf-subtasks-block-title {
+	flex: 1;
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pf-subtasks-block-progress {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.pf-subtasks-backlog-badge {
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+	white-space: nowrap;
+	font-style: italic;
+}
+
+.pf-subtasks-card-list {
+	padding: 4px 0;
+}
+
+.pf-subtasks-no-subtasks {
+	padding: 8px 12px;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.pf-subtasks-card {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	padding: 10px;
+	cursor: pointer;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+	transition: box-shadow 0.15s, opacity 0.15s;
+}
+.pf-subtasks-card.pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
+.pf-subtasks-card.pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
+.pf-subtasks-card.pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
+.pf-subtasks-card.pf-priority-border-low      { border: 2px solid var(--background-modifier-border); }
+
+.pf-subtasks-card:hover {
+	box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
+}
+
+.pf-subtasks-status {
+	flex-shrink: 0;
+	font-size: 10px;
+	font-weight: 600;
+	padding: 2px 6px;
+	border-radius: 3px;
+	cursor: pointer;
+	white-space: nowrap;
+	text-transform: uppercase;
+}
+.pf-subtasks-status-todo        { background: rgba(139,139,139,0.18); color: #9a9a9a; }
+.pf-subtasks-status-inprogress  { background: rgba(76,155,232,0.18);  color: #4c9be8; }
+.pf-subtasks-status-inreview    { background: rgba(232,162,76,0.18);  color: #e8a24c; }
+.pf-subtasks-status-done        { background: rgba(76,175,125,0.18);  color: #4caf7d; }
+
+.pf-subtasks-card .pf-card-title {
+	font-size: var(--font-ui-small);
+	font-weight: 500;
+	margin: 0 0 4px;
+	line-height: 1.4;
+}
+
+.pf-subtasks-card .pf-card-desc {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 0;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.pf-subtasks-card .pf-card-top {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	margin-top: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-subtasks-empty {
+	padding: 20px 16px;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+/* By Parent — dynamic-column grid, column count + gap set inline in BoardByParentPanelView.ts */
+.pf-subtasks-grid {
+	display: grid;
+	padding: 12px 16px;
+	border-top: 1px solid var(--background-modifier-border);
+	align-items: stretch;
+}
+
+.pf-subtasks-col {
+	display: flex;
+	flex-direction: column;
+	/* width is driven by inline grid-template-columns from BoardByParentPanelView.ts */
+	overflow: hidden;
+	background:
+		linear-gradient(to bottom,
+			color-mix(in srgb, var(--pf-col-color, transparent) 10%, transparent) 0%,
+			color-mix(in srgb, var(--pf-col-color, transparent) 3%, transparent) 100%
+		),
+		var(--background-secondary);
+	border-radius: 8px;
+	border-top: 3px solid var(--pf-col-color, var(--background-modifier-border));
+}
+
+.pf-subtasks-col-head {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 10px;
+	background: var(--background-secondary);
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-subtasks-col-title {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-normal);
+}
+
+.pf-subtasks-col-count {
+	font-size: 10px;
+	color: var(--text-muted);
+}
+
+.pf-subtasks-col-body {
+	flex: 1;
+	padding: 6px 8px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	min-height: 50px;
+}
+
+.pf-subtasks-col-empty {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 2px;
+}
+
+/* Subtask column header add button (icon) */
+.pf-subtasks-col-add-btn {
+	margin-left: auto;
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-faint);
+	font-size: 12px;
+	padding: 1px 4px;
+	border-radius: 3px;
+	display: flex;
+	align-items: center;
+	gap: 1px;
+	opacity: 0;
+	transition: opacity 0.15s, color 0.15s, background 0.15s;
+	flex-shrink: 0;
+	line-height: 1;
+}
+.pf-subtasks-col:hover .pf-subtasks-col-add-btn {
+	opacity: 1;
+}
+.pf-subtasks-col-add-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-subtasks-col-drop-active > .pf-subtasks-col-body {
+	outline: 2px dashed var(--interactive-accent);
+	outline-offset: -2px;
+	border-radius: 4px;
+	background: var(--background-modifier-hover);
+}
+
+.pf-subtasks-card-dragging {
+	opacity: 0.4;
+}
+

@@ -103,7 +103,7 @@ export class ArchivePanelView {
 		selectedIds: Set<string>,
 		updateToolbar: () => void,
 	): void {
-		const row = container.createEl('div', { cls: `pf-tbl-row pf-priority-border-${ticket.priority} pf-archive-row` });
+		const row = container.createEl('div', { cls: `pf-tbl-row pf-archive-row` });
 		row.dataset.ticketId = ticket.id;
 
 		// Drag handle placeholder (no drag in archive)

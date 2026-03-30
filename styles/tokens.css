@@ -1,0 +1,98 @@
+/* ── Theme tokens ───────────────────────────────────────────────────────── */
+
+.theme-light {
+	/* Planning banner */
+	--pf-plan-bg:             #e8f0fd;
+	--pf-plan-border:         #bcd0f7;
+	--pf-plan-color:          #2471a3;
+
+	/* Priority border accents */
+	--pf-border-critical:     #e74c3c;
+	--pf-border-high:         #e67e22;
+	--pf-border-medium:       #3498db;
+
+	/* Card hover shadow */
+	--pf-card-shadow:         rgba(0, 0, 0, 0.12);
+
+	/* Type badges */
+	--pf-type-task-bg:        #e8f4fd;
+	--pf-type-task-color:     #2980b9;
+	--pf-type-bug-bg:         #fde8e8;
+	--pf-type-bug-color:      #c0392b;
+	--pf-type-feature-bg:     #e8fde8;
+	--pf-type-feature-color:  #27ae60;
+	--pf-type-story-bg:       #f4e8fd;
+	--pf-type-story-color:    #8e44ad;
+	--pf-type-epic-bg:        #fdf5e8;
+	--pf-type-epic-color:     #b7791f;
+	--pf-type-subtask-bg:     #e8f4f4;
+	--pf-type-subtask-color:  #1a7a7a;
+
+	/* Priority badges */
+	--pf-pri-critical-bg:     #fde8e8;
+	--pf-pri-critical-color:  #c0392b;
+	--pf-pri-high-bg:         #fdf0e8;
+	--pf-pri-high-color:      #d35400;
+	--pf-pri-medium-bg:       #e8f0fd;
+	--pf-pri-medium-color:    #2471a3;
+
+	/* Sprint status badges */
+	--pf-status-planning-bg:  #e8f0fd;
+	--pf-status-planning-color: #2471a3;
+	--pf-status-active-bg:    #e8fde8;
+	--pf-status-active-color: #1e8449;
+
+	/* Danger button */
+	--pf-danger-bg:           #e74c3c;
+	--pf-danger-color:        #ffffff;
+	--pf-danger-border:       #c0392b;
+}
+
+.theme-dark {
+	/* Planning banner */
+	--pf-plan-bg:             rgba(36, 113, 163, 0.18);
+	--pf-plan-border:         rgba(36, 113, 163, 0.40);
+	--pf-plan-color:          #80bdde;
+
+	/* Priority border accents */
+	--pf-border-critical:     #d95f5f;
+	--pf-border-high:         #cc7a35;
+	--pf-border-medium:       #5590c8;
+
+	/* Card hover shadow */
+	--pf-card-shadow:         rgba(0, 0, 0, 0.40);
+
+	/* Type badges */
+	--pf-type-task-bg:        rgba(41, 128, 185, 0.20);
+	--pf-type-task-color:     #80bdde;
+	--pf-type-bug-bg:         rgba(192, 57, 43, 0.22);
+	--pf-type-bug-color:      #de8080;
+	--pf-type-feature-bg:     rgba(39, 174, 96, 0.20);
+	--pf-type-feature-color:  #6dcc8d;
+	--pf-type-story-bg:       rgba(142, 68, 173, 0.22);
+	--pf-type-story-color:    #c07de0;
+	--pf-type-epic-bg:        rgba(183, 121, 31, 0.20);
+	--pf-type-epic-color:     #d4a84b;
+	--pf-type-subtask-bg:     rgba(26, 122, 122, 0.20);
+	--pf-type-subtask-color:  #5aadad;
+
+	/* Priority badges */
+	--pf-pri-critical-bg:     rgba(192, 57, 43, 0.22);
+	--pf-pri-critical-color:  #de8080;
+	--pf-pri-high-bg:         rgba(211, 84, 0, 0.22);
+	--pf-pri-high-color:      #d48a55;
+	--pf-pri-medium-bg:       rgba(36, 113, 163, 0.20);
+	--pf-pri-medium-color:    #80bdde;
+
+	/* Sprint status badges */
+	--pf-status-planning-bg:  rgba(36, 113, 163, 0.20);
+	--pf-status-planning-color: #80bdde;
+	--pf-status-active-bg:    rgba(30, 132, 73, 0.20);
+	--pf-status-active-color: #6dcc8d;
+
+	/* Danger button */
+	--pf-danger-bg:           #b03a2e;
+	--pf-danger-color:        #ffffff;
+	--pf-danger-border:       #922b21;
+}
+

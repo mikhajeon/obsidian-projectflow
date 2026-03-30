@@ -1,0 +1,88 @@
+/* ── Sprint panel ────────────────────────────────────────────────────────── */
+
+.pf-sprint-cycle-info {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 4px 0 0;
+}
+
+.pf-sprint-list {
+	padding: 12px 16px;
+	overflow-y: auto;
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.pf-sprint-card {
+	background: var(--background-secondary);
+	border-radius: 8px;
+	padding: 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.pf-sprint-card-header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.pf-sprint-title-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.pf-sprint-name {
+	font-size: var(--font-ui-small);
+	font-weight: 600;
+	margin: 0;
+}
+
+.pf-sprint-status-badge {
+	font-size: 10px;
+	padding: 2px 7px;
+	border-radius: 10px;
+	font-weight: 500;
+	text-transform: capitalize;
+}
+
+.pf-status-planning  { background: var(--pf-status-planning-bg);  color: var(--pf-status-planning-color); }
+.pf-status-active    { background: var(--pf-status-active-bg);    color: var(--pf-status-active-color); }
+.pf-status-completed { background: var(--background-modifier-hover); color: var(--text-muted); }
+
+.pf-sprint-dates {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+}
+
+.pf-sprint-progress-wrap {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.pf-sprint-summary {
+	display: flex;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-mini-badge {
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 4px;
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+}
+
+.pf-sprint-actions {
+	display: flex;
+	gap: 6px;
+	justify-content: flex-end;
+}
+
