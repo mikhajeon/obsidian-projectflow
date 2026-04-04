@@ -1,6 +1,6 @@
 # ProjectFlow
 
-Personal project management with kanban boards, sprints, and progress tracking -- all inside Obsidian. Manage tickets, plan sprints, and track progress without leaving your vault.
+Personal project management with kanban boards, sprints, and progress tracking — all inside Obsidian. Manage tickets, plan sprints, and track progress without leaving your vault.
 
 ## Features
 
@@ -88,12 +88,14 @@ Personal project management with kanban boards, sprints, and progress tracking -
 
 ### Commands
 
-- **Open kanban board** -- open the board view.
-- **Open backlog** -- open the backlog view.
-- **Open sprint panel** -- open the sprint management panel.
-- **New project** -- create a new project.
-- **Undo last ticket change** -- undo the most recent ticket modification.
-- **Redo ticket change** -- redo an undone modification.
+| Command | Description |
+|---------|-------------|
+| **Open kanban board** | Open the board view. |
+| **Open backlog** | Open the backlog view. |
+| **Open sprint panel** | Open the sprint management panel. |
+| **New project** | Create a new project. |
+| **Undo last ticket change** | Undo the most recent ticket modification. |
+| **Redo ticket change** | Redo an undone modification. |
 
 ## Data storage
 
