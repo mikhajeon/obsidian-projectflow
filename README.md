@@ -1,5 +1,9 @@
 # ProjectFlow
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Obsidian](https://img.shields.io/badge/Obsidian-%3E%3D1.4.0-blueviolet)](https://obsidian.md/)
+[![Version](https://img.shields.io/github/v/release/mikhajeon/obsidian-projectflow)](https://github.com/mikhajeon/obsidian-projectflow/releases)
+
 Personal project management with kanban boards, sprints, and progress tracking — all inside Obsidian. Manage tickets, plan sprints, and track progress without leaving your vault.
 
 ## Features
