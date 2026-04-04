@@ -198,7 +198,10 @@ export class BoardSubtasksPanelView {
 			this.view.draggedTicketId = ticket.id;
 			card.addClass('pf-dragging');
 		});
-		card.addEventListener('dragend', () => card.removeClass('pf-dragging'));
+		card.addEventListener('dragend', () => {
+			card.removeClass('pf-dragging');
+			document.querySelectorAll('.pf-board-drop-line').forEach(el => el.classList.remove('pf-drop-line-visible'));
+		});
 
 		card.addEventListener('click', () => {
 			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint.id }, () => this.view.render()).open();

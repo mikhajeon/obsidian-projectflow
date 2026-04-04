@@ -130,6 +130,7 @@
 }
 
 .pf-column-body {
+	position: relative;
 	padding: 8px;
 	display: flex;
 	flex-direction: column;

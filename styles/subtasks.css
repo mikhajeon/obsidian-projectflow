@@ -191,12 +191,20 @@
 }
 
 .pf-subtasks-col-body {
+	position: relative;
 	flex: 1;
 	padding: 6px 8px;
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 	min-height: 50px;
+}
+
+/* Drop line inside subtask column bodies — reuses board-drop styling */
+.pf-subtasks-col-body > .pf-board-drop-line {
+	position: absolute !important;
+	left: 4px;
+	right: 4px;
 }
 
 .pf-subtasks-col-empty {
