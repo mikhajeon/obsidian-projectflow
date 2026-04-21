@@ -3,11 +3,14 @@ import type ProjectFlowPlugin from '../main';
 import type { Project } from '../types';
 import { safeFileName, generateTicketNote } from '../ticketNote';
 import { defaultTagFromName } from '../store';
+import { ConfirmModal } from './ConfirmModal';
 
 export class ProjectModal extends Modal {
 	private plugin: ProjectFlowPlugin;
 	private project: Project | null;
 	private onSave: () => void;
+
+	private static readonly DESC_MAX = 200;
 
 	private name = '';
 	private description = '';
@@ -18,6 +21,12 @@ export class ProjectModal extends Modal {
 	private autoCreateSprint = false;
 	private autoSpillover = false;
 	private autoArchiveDone = false;
+	private color = '';
+
+	private static readonly COLOR_PALETTE = [
+		'#4c9be8', '#e8854c', '#4ce87a', '#e84c9b', '#9b4ce8', '#e8d44c',
+		'#4ce8d4', '#e84c4c', '#8ce84c', '#4c4ce8',
+	];
 
 	constructor(app: App, plugin: ProjectFlowPlugin, project: Project | null, onSave: () => void) {
 		super(app);
@@ -35,6 +44,11 @@ export class ProjectModal extends Modal {
 			this.autoCreateSprint = project.autoCreateSprint === true;
 			this.autoSpillover = project.autoSpillover === true;
 			this.autoArchiveDone = project.autoArchiveDone === true;
+			this.color = project.color ?? '';
+		} else {
+			// Auto-assign a color from palette based on total project count (including archived)
+			const count = plugin.store.getAllProjects().length;
+			this.color = ProjectModal.COLOR_PALETTE[count % ProjectModal.COLOR_PALETTE.length];
 		}
 	}
 
@@ -87,13 +101,29 @@ export class ProjectModal extends Modal {
 				});
 			});
 
+		const descWrap = body.createDiv('pf-field-stacked');
+		descWrap.createEl('label', { cls: 'pf-field-label', text: 'Project description' });
+		const descArea = descWrap.createEl('textarea', { cls: 'pf-textarea', placeholder: 'Brief summary of the project goal, scope, or context (max 200 chars).' });
+		descArea.value = this.description;
+		descArea.maxLength = ProjectModal.DESC_MAX;
+		const charCount = descWrap.createEl('span', { cls: 'pf-char-count' });
+		const updateCharCount = () => {
+			const len = descArea.value.length;
+			charCount.setText(`${len} / ${ProjectModal.DESC_MAX}`);
+			charCount.removeClass('pf-char-count--warn', 'pf-char-count--error');
+			if (len >= ProjectModal.DESC_MAX) charCount.addClass('pf-char-count--error');
+			else if (len >= ProjectModal.DESC_MAX * 0.9) charCount.addClass('pf-char-count--warn');
+		};
+		updateCharCount();
+		descArea.addEventListener('input', () => { this.description = descArea.value; updateCharCount(); });
+
+		// ── Project color ─────────────────────────────────────────────────────
 		new Setting(body)
-			.setName('Description')
-			.setDesc('Optional short description of this project.')
-			.addTextArea(area => {
-				area.setPlaceholder('What are you building?').setValue(this.description);
-				area.inputEl.addClass('pf-textarea');
-				area.onChange(val => { this.description = val; });
+			.setName('Project color')
+			.setDesc('Color used for this project in the calendar and other views.')
+			.addColorPicker(picker => {
+				if (this.color) picker.setValue(this.color);
+				picker.onChange(val => { this.color = val; });
 			});
 
 		// ── Sprint settings ───────────────────────────────────────────────────
@@ -157,6 +187,31 @@ export class ProjectModal extends Modal {
 		const footer = contentEl.createEl('div', { cls: 'pf-modal-footer' });
 		footer.createEl('button', { cls: 'pf-btn', text: 'Cancel' })
 			.addEventListener('click', () => this.close());
+
+		if (this.project) {
+			if (this.project.archived) {
+				footer.createEl('button', { cls: 'pf-btn', text: 'Restore from archive' })
+					.addEventListener('click', async () => {
+						await this.plugin.store.unarchiveProject(this.project!.id);
+						new Notice(`Project "${this.project!.name}" restored.`);
+						this.close();
+						this.onSave();
+						this.plugin.refreshAllViews();
+					});
+			} else {
+				footer.createEl('button', { cls: 'pf-btn pf-btn-danger', text: 'Archive project' })
+					.addEventListener('click', () => {
+						new ConfirmModal(this.app, `Archive project "${this.project!.name}"? It will be hidden from all views but can be restored from Settings.`, async () => {
+							await this.plugin.store.archiveProject(this.project!.id);
+							new Notice(`Project "${this.project!.name}" archived.`);
+							this.close();
+							this.onSave();
+							this.plugin.refreshAllViews();
+						}).open();
+					});
+			}
+		}
+
 		footer.createEl('button', { cls: 'pf-btn pf-btn-primary', text: this.project ? 'Save' : 'Create' })
 			.addEventListener('click', () => this.submit());
 	}
@@ -171,10 +226,15 @@ export class ProjectModal extends Modal {
 			return;
 		}
 
+		if (this.description.length > ProjectModal.DESC_MAX) {
+			new Notice(`Description must be ${ProjectModal.DESC_MAX} characters or fewer.`);
+			return;
+		}
+
 		const finalTag = this.tag.trim() || defaultTagFromName(this.name);
 
-		// Check tag uniqueness across other projects
-		const others = this.plugin.store.getProjects().filter(p => p.id !== this.project?.id);
+		// Check tag uniqueness across all projects (including archived)
+		const others = this.plugin.store.getAllProjects().filter(p => p.id !== this.project?.id);
 		if (others.some(p => p.tag === finalTag)) {
 			new Notice(`Tag "${finalTag}" is already used by another project. Choose a different tag.`);
 			return;
@@ -207,6 +267,7 @@ export class ProjectModal extends Modal {
 				autoCreateSprint: this.autoCreateSprint,
 				autoSpillover: this.autoSpillover,
 				autoArchiveDone: this.autoArchiveDone,
+				color: this.color || undefined,
 			});
 
 			if (switchingToNoSprint) {
@@ -230,6 +291,7 @@ export class ProjectModal extends Modal {
 				autoCreateSprint: this.autoCreateSprint,
 				autoSpillover: this.autoSpillover,
 				autoArchiveDone: this.autoArchiveDone,
+				color: this.color || undefined,
 			});
 			new Notice(`Project "${this.name.trim()}" created.`);
 		}

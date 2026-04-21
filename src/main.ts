@@ -3,14 +3,19 @@ import { ProjectStore } from './store';
 import { BoardView, BOARD_VIEW } from './views/BoardView';
 import { BacklogView, BACKLOG_VIEW } from './views/BacklogView';
 import { SprintPanelView, SPRINT_VIEW } from './views/SprintPanelView';
+import { CalendarView, CALENDAR_VIEW } from './views/calendar/CalendarView';
+import { NotificationPanelView, NOTIFICATION_VIEW_TYPE } from './views/NotificationPanelView';
+import { NotificationManager } from './notifications/NotificationManager';
 import { ProjectFlowSettingTab } from './settings';
 import { ProjectModal } from './modals/ProjectModal';
-import { generateTicketNote, ticketFilePath } from './ticketNote';
+import { TicketModal } from './modals/TicketModal';
+import { generateTicketNote, deleteTicketNote, ticketFilePath } from './ticketNote';
 import { NoteSyncWatcher } from './noteSyncWatcher';
 import type { Ticket, TicketPriority, TicketType } from './types';
 
 export default class ProjectFlowPlugin extends Plugin {
 	store!: ProjectStore;
+	notificationManager: NotificationManager | null = null;
 
 	// Paths currently being written by the plugin — skip sync on these to avoid loops
 	writingPaths = new Set<string>();
@@ -31,19 +36,44 @@ export default class ProjectFlowPlugin extends Plugin {
 	async onload(): Promise<void> {
 		this.store = new ProjectStore(this);
 		await this.store.load();
+		this.store.setTicketDeleteHook(id => deleteTicketNote(this, id));
 
 		this.registerView(BOARD_VIEW, (leaf) => new BoardView(leaf, this));
 		this.registerView(BACKLOG_VIEW, (leaf) => new BacklogView(leaf, this));
 		this.registerView(SPRINT_VIEW, (leaf) => new SprintPanelView(leaf, this));
+		this.registerView(CALENDAR_VIEW, (leaf) => new CalendarView(leaf, this));
+		this.registerView(NOTIFICATION_VIEW_TYPE, (leaf) => new NotificationPanelView(leaf, this));
 
 		this.addRibbonIcon('layout-dashboard', 'ProjectFlow board', () =>
 			this.activateView(BOARD_VIEW)
 		);
+		this.addRibbonIcon('calendar-days', 'ProjectFlow calendar flow', () =>
+			this.activateView(CALENDAR_VIEW)
+		);
+
+		// Notification ribbon icon with badge
+		const bellIconEl = this.addRibbonIcon('bell', 'ProjectFlow notifications', () =>
+			this.activateView(NOTIFICATION_VIEW_TYPE)
+		);
+		bellIconEl.style.position = 'relative';
+		const badgeEl = bellIconEl.createEl('span', { cls: 'pf-ribbon-badge' });
+		badgeEl.style.display = 'none';
+
+		this.notificationManager = new NotificationManager(this);
+		this.notificationManager.addBadge(badgeEl);
+		this.app.workspace.onLayoutReady(() => {
+			this.notificationManager!.start();
+		});
 
 		this.addCommand({
 			id: 'open-board',
 			name: 'Open kanban board',
 			callback: () => this.activateView(BOARD_VIEW),
+		});
+		this.addCommand({
+			id: 'open-calendar',
+			name: 'Open calendar flow',
+			callback: () => this.activateView(CALENDAR_VIEW),
 		});
 		this.addCommand({
 			id: 'open-backlog',
@@ -80,6 +110,32 @@ export default class ProjectFlowPlugin extends Plugin {
 			},
 		});
 
+		// Calendar navigation commands (also triggered by keyboard in CalendarView)
+		this.addCommand({
+			id: 'calendar-prev',
+			name: 'Calendar: Previous period',
+			callback: () => {
+				const view = this.app.workspace.getLeavesOfType(CALENDAR_VIEW)[0]?.view;
+				if (view instanceof CalendarView) (view as any).navigatePrev?.();
+			},
+		});
+		this.addCommand({
+			id: 'calendar-next',
+			name: 'Calendar: Next period',
+			callback: () => {
+				const view = this.app.workspace.getLeavesOfType(CALENDAR_VIEW)[0]?.view;
+				if (view instanceof CalendarView) (view as any).navigateNext?.();
+			},
+		});
+		this.addCommand({
+			id: 'calendar-today',
+			name: 'Calendar: Jump to today',
+			callback: () => {
+				const view = this.app.workspace.getLeavesOfType(CALENDAR_VIEW)[0]?.view;
+				if (view instanceof CalendarView) (view as any).navigateToday?.();
+			},
+		});
+
 		this.addSettingTab(new ProjectFlowSettingTab(this.app, this));
 
 		new NoteSyncWatcher(this).register();
@@ -90,9 +146,23 @@ export default class ProjectFlowPlugin extends Plugin {
 	}
 
 	async onunload(): Promise<void> {
+		this.notificationManager?.stop();
 		this.app.workspace.detachLeavesOfType(BOARD_VIEW);
 		this.app.workspace.detachLeavesOfType(BACKLOG_VIEW);
 		this.app.workspace.detachLeavesOfType(SPRINT_VIEW);
+		this.app.workspace.detachLeavesOfType(CALENDAR_VIEW);
+		this.app.workspace.detachLeavesOfType(NOTIFICATION_VIEW_TYPE);
+	}
+
+	openTicketModal(ticket: Ticket): void {
+		new TicketModal(this.app, this, { ticket, sprintId: ticket.sprintId }, () => this.refreshAllViews()).open();
+	}
+
+	refreshNotificationPanel(): void {
+		for (const leaf of this.app.workspace.getLeavesOfType(NOTIFICATION_VIEW_TYPE)) {
+			const view = leaf.view as NotificationPanelView;
+			view.render();
+		}
 	}
 
 	async activateView(viewType: string): Promise<void> {
@@ -174,8 +244,8 @@ export default class ProjectFlowPlugin extends Plugin {
 			// Resolve project by name
 			const projectName = typeof fm.project === 'string' ? fm.project.trim() : '';
 			if (!projectName) continue;
-			const project = this.store.getProjects().find(p => p.name === projectName);
-			if (!project) continue;
+			const project = this.store.getAllProjects().find(p => p.name === projectName);
+			if (!project || project.archived) continue;
 
 			// Parse ticket number from key field (e.g. "DBA-42" → 42)
 			const keyMatch = typeof fm.key === 'string' ? /^[^-]+-(\d+)$/.exec(fm.key) : null;
@@ -236,12 +306,13 @@ export default class ProjectFlowPlugin extends Plugin {
 	}
 
 	refreshAllViews(): void {
-		const types = [BOARD_VIEW, BACKLOG_VIEW, SPRINT_VIEW];
+		const types = [BOARD_VIEW, BACKLOG_VIEW, SPRINT_VIEW, CALENDAR_VIEW, NOTIFICATION_VIEW_TYPE];
 		for (const type of types) {
 			for (const leaf of this.app.workspace.getLeavesOfType(type)) {
 				const view = leaf.view as { refresh?: () => void };
 				view.refresh?.();
 			}
 		}
+		this.notificationManager?.updateBadge();
 	}
 }

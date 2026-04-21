@@ -13,4 +13,6 @@ table.css
 board-drop.css
 subtasks.css
 status-settings.css
+calendar.css
+notifications.css
 misc.css

@@ -167,6 +167,7 @@ export class ListRowRenderer {
 
 		nameInner.createEl('span', { cls: `pf-type-icon pf-type-icon-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? '◻' });
 		nameInner.createEl('span', { cls: 'pf-tbl-title', text: ticket.title });
+		if (ticket.recurrence) nameInner.createEl('span', { cls: 'pf-tbl-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 		if (ticket.points !== undefined) {
 			nameInner.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
 		}
@@ -332,6 +333,7 @@ export class ListRowRenderer {
 
 		nameInner.createEl('span', { cls: `pf-type-icon pf-type-icon-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? '◻' });
 		nameInner.createEl('span', { cls: 'pf-tbl-title', text: ticket.title });
+		if (ticket.recurrence) nameInner.createEl('span', { cls: 'pf-tbl-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 
 		row.createEl('div', { cls: 'pf-tbl-cell' })
 			.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });

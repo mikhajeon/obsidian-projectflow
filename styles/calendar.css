@@ -1,0 +1,1059 @@
+/* ── Calendar view ──────────────────────────────────────────────────────── */
+
+/* ── Multi-project picker ────────────────────────────────────────────────── */
+
+.pf-cal-project-picker-wrap {
+	position: relative;
+}
+
+.pf-cal-project-trigger {
+	min-width: 100px;
+	text-align: left;
+}
+
+.pf-cal-project-dropdown {
+	position: absolute;
+	top: calc(100% + 4px);
+	left: 0;
+	z-index: 200;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+	padding: 6px 0;
+	min-width: 180px;
+	max-height: 260px;
+	overflow-y: auto;
+}
+
+.pf-cal-project-row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 12px;
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.pf-cal-project-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-cal-project-row-all {
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
+	font-weight: var(--font-semibold);
+}
+
+.pf-cal-project-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.pf-cal-chip-project-dot {
+	width: 6px;
+	height: 6px;
+	margin-right: 1px;
+}
+
+.pf-cal-project-name {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+/* Toolbar */
+.pf-cal-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 6px 12px 8px;
+	flex-wrap: wrap;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-cal-toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.pf-cal-mode-btn {
+	padding: 3px 10px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	cursor: pointer;
+	font-size: 12px;
+	color: var(--text-muted);
+	transition: background 0.1s, color 0.1s;
+}
+
+.pf-cal-mode-btn.active {
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.pf-select-sm {
+	font-size: 12px;
+	padding: 3px 6px;
+	height: 26px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
+/* ── Content area (grid + sidebar) ──────────────────────────────────────── */
+
+.pf-cal-content {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+	min-height: 0;
+}
+
+.pf-cal-grid-wrap {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
+	min-width: 0;
+}
+
+/* ── Month view ──────────────────────────────────────────────────────────── */
+
+.pf-cal-weekday-row {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	border-bottom: 1px solid var(--background-modifier-border);
+	position: sticky;
+	top: 0;
+	background: var(--background-primary);
+	z-index: 2;
+}
+
+.pf-cal-weekday-cell {
+	padding: 6px 8px;
+	font-size: 11px;
+	font-weight: 600;
+	text-align: center;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.pf-cal-today-header {
+	color: var(--interactive-accent);
+}
+
+/* Month: week rows replace the flat grid */
+.pf-cal-week-row {
+	display: flex;
+	flex-direction: column;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* Multi-day bars container — sits between day number and single-day chips */
+.pf-cal-day-bars {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	overflow: visible;
+}
+
+/* Multi-day spanning bar — absolutely positioned on .pf-cal-week-cells */
+.pf-cal-multiday-bar {
+	position: absolute;
+	height: 18px;
+	z-index: 4;
+	border-radius: 3px;
+	border-left: 3px solid transparent;
+	background: var(--background-secondary);
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0 6px 0 4px;
+	overflow: hidden;
+	cursor: pointer;
+	font-size: 11px;
+	white-space: nowrap;
+	transition: box-shadow 0.1s;
+	flex-shrink: 0;
+}
+.pf-cal-multiday-bar:hover { box-shadow: 0 1px 5px var(--pf-card-shadow); }
+
+.pf-multiday-cont { border-left: none; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.pf-multiday-last { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.pf-multiday-cont.pf-multiday-last { border-radius: 0; }
+
+.pf-multiday-bar-key   { font-size: 10px; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+.pf-multiday-bar-title { font-size: 11px; overflow: hidden; text-overflow: ellipsis; color: var(--text-normal); min-width: 0; flex: 1; }
+
+/* Left/right edge resize handles on multi-day bars */
+.pf-bar-resize-left,
+.pf-bar-resize-right {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 8px;
+	cursor: ew-resize;
+	z-index: 6;
+	border-radius: 2px;
+	transition: background 0.1s;
+}
+.pf-bar-resize-left  { left: -3px; }
+.pf-bar-resize-right { right: -3px; }
+.pf-bar-resize-left:hover,
+.pf-bar-resize-right:hover { background: var(--interactive-accent); opacity: 0.5; }
+
+.pf-cal-multiday-bar.pf-bar-resizing {
+	opacity: 0.85;
+	z-index: 10;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.pf-cal-bar-resize-tooltip {
+	position: absolute;
+	bottom: calc(100% + 4px);
+	left: 50%;
+	transform: translateX(-50%);
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+	font-size: 10px;
+	padding: 2px 6px;
+	border-radius: 3px;
+	white-space: nowrap;
+	pointer-events: none;
+	z-index: 20;
+	box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+/* Day cells row within each week row */
+.pf-cal-week-cells {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	grid-auto-rows: 110px;
+	background: var(--background-modifier-border);
+	gap: 1px;
+	position: relative;
+	overflow: visible;
+}
+
+/* Legacy .pf-cal-grid still used by week-view day columns */
+.pf-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	background: var(--background-modifier-border);
+	gap: 1px;
+	flex: 1;
+}
+
+.pf-cal-day {
+	background: var(--background-primary);
+	height: 110px;
+	min-width: 0;
+	padding: 4px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	cursor: pointer;
+	position: relative;
+	overflow: hidden;
+	transition: background 0.1s;
+}
+
+.pf-cal-day:hover { background: var(--background-secondary); }
+
+.pf-cal-outside   { opacity: var(--pf-cal-outside-opacity); }
+
+/* ── Past day cells (month view) ─────────────────────────────────────────── */
+
+.pf-cal-today {
+	background: var(--pf-cal-today-bg) !important;
+	box-shadow: inset 0 0 0 2px var(--pf-cal-today-border);
+}
+
+.pf-cal-drop-target {
+	background: var(--pf-cal-drop-bg) !important;
+	box-shadow: inset 0 0 0 2px var(--interactive-accent);
+}
+
+.pf-cal-day-num {
+	display: block;
+	font-size: 12px;
+	font-weight: 500;
+	color: var(--text-muted);
+	text-align: right;
+	padding: 0 2px;
+	line-height: 1.4;
+}
+
+.pf-cal-today .pf-cal-day-num {
+	color: var(--interactive-accent);
+	font-weight: 700;
+}
+
+/* Sprint accent bars */
+.pf-cal-sprint-bar {
+	height: 3px;
+	border-radius: 1.5px;
+	margin-bottom: 1px;
+	flex-shrink: 0;
+}
+.pf-cal-sprint-planning  { background: var(--pf-cal-sprint-planning);  opacity: 0.7; }
+.pf-cal-sprint-active    { background: var(--pf-cal-sprint-active);    opacity: 0.8; }
+.pf-cal-sprint-completed { background: var(--pf-cal-sprint-completed); opacity: 0.5; }
+
+/* Ticket chips container — pushed to bottom of cell by margin-top: auto */
+.pf-cal-day-tickets {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	overflow: hidden;
+	flex: 1;
+	min-height: 0;
+	margin-top: auto;
+}
+
+/* ── Ticket chip (month + sidebar) ──────────────────────────────────────── */
+
+.pf-cal-chip {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 5px;
+	border-radius: 3px;
+	background: var(--background-secondary);
+	border-left: 3px solid transparent;
+	cursor: grab;
+	font-size: 11px;
+	line-height: 1.4;
+	min-width: 0;
+	overflow: hidden;
+	transition: box-shadow 0.1s, opacity 0.1s;
+}
+.pf-cal-chip:hover        { box-shadow: 0 1px 4px var(--pf-card-shadow); }
+.pf-cal-chip.pf-dragging  { opacity: 0.4; cursor: grabbing; }
+
+/* Priority border — generic (chips, agenda items, etc.) */
+.pf-priority-edge-critical { border-left-color: var(--pf-border-critical); }
+.pf-priority-edge-high     { border-left-color: var(--pf-border-high); }
+.pf-priority-edge-medium   { border-left-color: var(--pf-border-medium); }
+.pf-priority-edge-low      { border-left-color: var(--background-modifier-border-hover); }
+/* Higher specificity for blocks — overrides .pf-cal-block's border-left shorthand */
+.pf-cal-block.pf-priority-edge-critical { border-left-color: var(--pf-border-critical); }
+.pf-cal-block.pf-priority-edge-high     { border-left-color: var(--pf-border-high); }
+.pf-cal-block.pf-priority-edge-medium   { border-left-color: var(--pf-border-medium); }
+.pf-cal-block.pf-priority-edge-low      { border-left-color: var(--background-modifier-border-hover); }
+
+.pf-cal-chip-type {
+	flex-shrink: 0;
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+	font-size: 9px;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.pf-type-badge-task    { background: var(--pf-type-task-bg);    color: var(--pf-type-task-color); }
+.pf-type-badge-bug     { background: var(--pf-type-bug-bg);     color: var(--pf-type-bug-color); }
+.pf-type-badge-story   { background: var(--pf-type-story-bg);   color: var(--pf-type-story-color); }
+.pf-type-badge-epic    { background: var(--pf-type-epic-bg);    color: var(--pf-type-epic-color); }
+.pf-type-badge-subtask { background: var(--pf-type-subtask-bg); color: var(--pf-type-subtask-color); }
+
+.pf-cal-chip-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-normal); }
+.pf-cal-chip-time  { flex-shrink: 0; font-size: 10px; color: var(--text-muted); white-space: nowrap; }
+
+.pf-cal-overflow {
+	font-size: 10px;
+	color: var(--text-muted);
+	padding: 1px 4px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+.pf-cal-overflow:hover { background: var(--background-modifier-hover); }
+
+/* ── Week view layout ────────────────────────────────────────────────────── */
+
+.pf-cal-week-header-row {
+	display: flex;
+	border-bottom: 1px solid var(--background-modifier-border);
+	position: sticky;
+	top: 0;
+	background: var(--background-primary);
+	z-index: 3;
+}
+
+.pf-cal-time-spacer {
+	width: 52px;
+	flex-shrink: 0;
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+.pf-cal-week-day-header {
+	flex: 1;
+	min-width: 0;
+	text-align: center;
+	padding: 6px 4px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	border-right: 1px solid var(--background-modifier-border);
+}
+.pf-cal-week-day-header.pf-cal-today-header { color: var(--interactive-accent); }
+
+/* All-day row */
+.pf-cal-allday-row {
+	display: flex;
+	border-bottom: 2px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	min-width: 0;
+}
+
+.pf-cal-allday-label {
+	width: 52px;
+	flex-shrink: 0;
+	font-size: 10px;
+	color: var(--text-faint);
+	padding: 4px 4px 4px 6px;
+	display: flex;
+	align-items: center;
+	border-right: 1px solid var(--background-modifier-border);
+}
+
+.pf-cal-allday-col {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	min-height: 28px;
+	padding: 2px 3px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	border-right: 1px solid var(--background-modifier-border);
+	cursor: pointer;
+}
+.pf-cal-allday-col:hover { background: var(--background-modifier-hover); }
+
+/* Scrollable time body */
+.pf-cal-timebody {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+	position: relative;
+}
+
+.pf-cal-timegrid {
+	display: flex;
+	position: relative;
+}
+
+/* Time column */
+.pf-cal-time-col {
+	width: 52px;
+	flex-shrink: 0;
+	border-right: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	position: sticky;
+	left: 0;
+	z-index: 1;
+}
+
+.pf-cal-time-label {
+	height: 64px;     /* must match HOUR_HEIGHT in CalendarView.ts */
+	padding: 2px 6px 0 0;
+	font-size: 10px;
+	color: var(--text-faint);
+	text-align: right;
+	box-sizing: border-box;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+/* Day columns in time grid */
+.pf-cal-week-day-col {
+	flex: 1;
+	position: relative;
+	border-right: 1px solid var(--background-modifier-border);
+	height: 1536px; /* 24 * 64px */
+}
+
+.pf-cal-today-col {
+	background: var(--pf-cal-today-bg);
+	border-left: 2px solid var(--pf-cal-today-border);
+	border-right: 2px solid var(--pf-cal-today-border);
+	box-sizing: border-box;
+}
+
+/* ── Past day columns (week view) ─────────────────────────────────────────── */
+
+/* Current-time indicator */
+.pf-cal-now-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: #e53935;
+	z-index: 5;
+	pointer-events: none;
+}
+.pf-cal-now-line::before {
+	content: '';
+	position: absolute;
+	left: -4px;
+	top: -4px;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: #e53935;
+}
+
+/* Sprint stripe at top of day col */
+.pf-cal-week-sprint-stripe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	z-index: 1;
+	pointer-events: none;
+}
+
+/* Hour grid lines */
+.pf-cal-hour-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 64px; /* matches HOUR_HEIGHT */
+	border-top: 1px solid var(--background-modifier-border);
+	box-sizing: border-box;
+	cursor: pointer;
+}
+.pf-cal-hour-line:hover { background: var(--background-modifier-hover); }
+
+/* ── Timed duration block ────────────────────────────────────────────────── */
+
+.pf-cal-block {
+	position: absolute;
+	left: 3px;
+	right: 3px;
+	border-radius: 4px;
+	border-left: 3px solid transparent;
+	background: var(--background-secondary);
+	padding: 3px 5px;
+	overflow: hidden;
+	cursor: pointer;
+	font-size: 11px;
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 1px;
+	z-index: 2;
+	transition: box-shadow 0.1s, opacity 0.1s;
+	box-sizing: border-box;
+}
+.pf-cal-block:hover       { box-shadow: 0 2px 6px var(--pf-card-shadow); z-index: 3; }
+.pf-cal-block.pf-dragging { opacity: 0.4; }
+
+/* Row 1: type badge + start date */
+.pf-cal-block-row1 {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	min-width: 0;
+	flex-shrink: 0;
+}
+.pf-cal-block-timerange {
+	flex: 1;
+	min-width: 0;
+	font-size: 10px;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+}
+
+.pf-cal-block-title { min-width: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-normal); }
+
+/* Multi-day block segment corners — create a continuous bar across columns */
+.pf-cal-block-start  { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+.pf-cal-block-middle { border-radius: 0; }
+.pf-cal-block-end    { border-top-left-radius: 0;    border-top-right-radius: 0; }
+
+/* ── Unscheduled sidebar ─────────────────────────────────────────────────── */
+
+.pf-cal-sidebar {
+	width: 210px;
+	flex-shrink: 0;
+	border-left: 1px solid var(--background-modifier-border);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	background: var(--background-primary);
+	transition: background 0.1s, box-shadow 0.1s;
+}
+.pf-cal-sidebar.pf-cal-drop-target {
+	background: var(--pf-cal-drop-bg) !important;
+	box-shadow: inset 0 0 0 2px var(--interactive-accent);
+}
+
+.pf-cal-sidebar-title {
+	padding: 8px 10px 6px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.pf-cal-sidebar-list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.pf-cal-sidebar-empty { font-size: 11px; color: var(--text-faint); padding: 6px 2px; font-style: italic; }
+
+/* ── Date/time fields in TicketModal ─────────────────────────────────────── */
+
+.pf-date-section {
+	padding: 6px 0 4px;
+	border-top: 1px solid var(--background-modifier-border);
+	margin-top: 4px;
+}
+
+.pf-date-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-muted);
+	margin-bottom: 5px;
+	padding: 0 2px;
+}
+
+.pf-date-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.pf-input-date,
+.pf-input-time {
+	height: 28px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	padding: 0 6px;
+	font-size: 13px;
+}
+.pf-input-date { flex: 1; min-width: 110px; }
+.pf-input-time { width: 90px; }
+
+.pf-date-clear-btn {
+	font-size: 11px;
+	padding: 2px 7px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	white-space: nowrap;
+}
+.pf-date-clear-btn:hover { background: var(--background-modifier-hover); }
+
+/* ── Phase 1: Overlap handling ───────────────────────────────────────────── */
+
+.pf-cal-child-badge {
+	position: absolute;
+	top: 3px;
+	right: 4px;
+	background: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-radius: 8px;
+	padding: 0 5px;
+	font-size: 9px;
+	font-weight: 700;
+	cursor: pointer;
+	z-index: 4;
+	line-height: 16px;
+}
+.pf-cal-child-badge:hover { opacity: 0.85; }
+.pf-cal-block-parent { z-index: 2; }
+.pf-cal-block-child {
+	left: 8px !important;
+	right: 8px !important;
+	width: auto !important;
+	opacity: 0.92;
+	z-index: 3;
+	border-left-width: 2px;
+}
+
+/* ── Phase 2: Recurring tickets ──────────────────────────────────────────── */
+
+.pf-cal-chip-ghost {
+	border-style: dashed;
+	opacity: 0.75;
+}
+.pf-cal-block-ghost {
+	opacity: 0.72;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		transparent,
+		transparent 4px,
+		rgba(0,0,0,0.06) 4px,
+		rgba(0,0,0,0.06) 8px
+	);
+	border-style: dashed;
+}
+.pf-cal-repeat-icon {
+	flex-shrink: 0;
+	font-size: 10px;
+	color: var(--interactive-accent);
+	margin-left: 1px;
+}
+.pf-recur-section { margin-top: 6px; }
+.pf-recur-interval-wrap {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.pf-recur-unit { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+.pf-recur-end-wrap { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+
+/* ↻ icon on board cards */
+.pf-card-title-row { display: flex; align-items: flex-start; gap: 4px; }
+.pf-card-title-row .pf-card-title { flex: 1; }
+.pf-card-repeat-icon { font-size: 11px; color: var(--interactive-accent); flex-shrink: 0; margin-top: 1px; }
+/* ↻ icon on list rows */
+.pf-tbl-repeat-icon { font-size: 10px; color: var(--interactive-accent); margin-left: 3px; flex-shrink: 0; }
+
+/* ── Phase 3: Project colors (applied via inline style, minimal CSS) ─────── */
+/* border-left-color is set inline; chips/blocks already have border-left */
+
+/* ── Phase 4: Mini calendar ─────────────────────────────────────────────── */
+
+.pf-mini-cal {
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 6px 6px 8px;
+	flex-shrink: 0;
+}
+.pf-mini-cal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 4px;
+}
+.pf-mini-cal-title {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--text-normal);
+}
+.pf-mini-cal-nav {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-muted);
+	font-size: 14px;
+	padding: 0 4px;
+	line-height: 1;
+}
+.pf-mini-cal-nav:hover { color: var(--text-normal); }
+.pf-mini-cal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 1px;
+}
+.pf-mini-cal-dow {
+	font-size: 9px;
+	text-align: center;
+	color: var(--text-faint);
+	font-weight: 600;
+	padding: 1px 0;
+}
+.pf-mini-cal-day {
+	font-size: 10px;
+	text-align: center;
+	padding: 2px 1px;
+	border-radius: 3px;
+	cursor: pointer;
+	position: relative;
+	color: var(--text-muted);
+	line-height: 14px;
+}
+.pf-mini-cal-day:hover { background: var(--background-modifier-hover); }
+.pf-mini-cal-outside { opacity: 0.35; }
+.pf-mini-cal-today { color: var(--interactive-accent); font-weight: 700; }
+.pf-mini-cal-selected { background: var(--interactive-accent); color: var(--text-on-accent); border-radius: 3px; }
+.pf-mini-cal-selected:hover { background: var(--interactive-accent-hover); }
+.pf-mini-cal-dot {
+	position: absolute;
+	bottom: 1px;
+	left: 50%;
+	transform: translateX(-50%);
+	width: 3px;
+	height: 3px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+.pf-mini-cal-selected .pf-mini-cal-dot { background: var(--text-on-accent); }
+
+/* ── Phase 5: Day view ───────────────────────────────────────────────────── */
+
+.pf-cal-day-view-header { font-size: 13px; font-weight: 600; }
+.pf-cal-day-view-col { flex: 1; }
+
+/* ── Phase 6: Jump-to-date popover ──────────────────────────────────────── */
+
+.pf-cal-jump-popover {
+	position: fixed;
+	z-index: 1000;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 8px 10px;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	box-shadow: 0 4px 16px var(--pf-card-shadow);
+}
+.pf-cal-jump-popover input[type=month] {
+	height: 28px;
+	border-radius: 4px;
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	color: var(--text-normal);
+	padding: 0 6px;
+	font-size: 13px;
+}
+
+/* ── Phase 9: Sprint toggle button ──────────────────────────────────────── */
+
+.pf-cal-sprint-toggle { font-size: 11px; }
+.pf-cal-sprint-toggle.active { color: var(--interactive-accent); border-color: var(--interactive-accent); }
+
+/* ── Phase 10: Agenda view ───────────────────────────────────────────────── */
+
+.pf-agenda-view {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+.pf-agenda-empty {
+	font-size: 13px;
+	color: var(--text-faint);
+	font-style: italic;
+	padding: 20px;
+}
+.pf-agenda-section { display: flex; flex-direction: column; gap: 4px; }
+.pf-agenda-date-header {
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	padding: 4px 0 2px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	margin-bottom: 4px;
+}
+.pf-agenda-overdue-header { color: var(--text-error, #e05252); }
+.pf-agenda-items { display: flex; flex-direction: column; gap: 4px; }
+.pf-agenda-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 8px;
+	border-radius: 5px;
+	border-left: 3px solid transparent;
+	background: var(--background-secondary);
+	cursor: pointer;
+	font-size: 12px;
+	transition: box-shadow 0.1s;
+}
+.pf-agenda-item:hover { box-shadow: 0 1px 5px var(--pf-card-shadow); }
+.pf-agenda-time {
+	flex-shrink: 0;
+	font-size: 11px;
+	color: var(--text-muted);
+	font-weight: 600;
+	min-width: 48px;
+}
+.pf-agenda-time-allday { color: var(--text-faint); font-style: italic; }
+.pf-agenda-key { flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text-muted); }
+.pf-agenda-title { flex: 1; color: var(--text-normal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-agenda-status {
+	flex-shrink: 0;
+	font-size: 10px;
+	padding: 1px 6px;
+	border-radius: 10px;
+	background: var(--background-modifier-border);
+	color: var(--text-muted);
+}
+
+/* ── Phase 8: Auto-schedule ──────────────────────────────────────────────── */
+
+.pf-cal-sidebar-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding-right: 6px;
+}
+.pf-cal-sidebar-header-row .pf-cal-sidebar-title { flex: 1; }
+.pf-cal-autosched-btn { font-size: 10px; padding: 2px 6px; }
+
+/* Done section in unscheduled sidebar */
+.pf-cal-sidebar-done-section { margin-top: 6px; }
+.pf-cal-sidebar-done-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 4px 4px 2px;
+	cursor: pointer;
+	border-top: 1px solid var(--background-modifier-border);
+}
+.pf-cal-sidebar-done-header:hover { background: var(--background-modifier-hover); border-radius: 3px; }
+.pf-cal-sidebar-done-label {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+}
+.pf-cal-sidebar-done-chevron { font-size: 10px; color: var(--text-faint); }
+.pf-cal-sidebar-done-list { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; }
+.pf-cal-sidebar-done-list .pf-cal-chip { opacity: 0.6; }
+.pf-cal-sidebar-done-collapsed { display: none; }
+
+.pf-cal-sidebar-subtask-section {
+	margin-top: 10px;
+	border-top: 1px solid var(--background-modifier-border);
+	padding-top: 4px;
+}
+.pf-cal-sidebar-subtask-header {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-faint);
+	padding: 2px 2px 4px;
+}
+
+.pf-autosched-desc { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+.pf-autosched-empty { font-size: 12px; color: var(--text-faint); font-style: italic; }
+.pf-autosched-list { display: flex; flex-direction: column; gap: 6px; }
+.pf-autosched-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	padding: 6px 8px;
+	border-radius: 4px;
+	background: var(--background-secondary);
+	font-size: 12px;
+}
+.pf-autosched-row input[type=checkbox] { flex-shrink: 0; margin-top: 2px; }
+.pf-autosched-title { flex: 1; font-weight: 500; color: var(--text-normal); }
+
+/* ── Block drag & resize ──────────────────────────────────────────────────── */
+
+/* Resize handles on top/bottom edges of single timed blocks */
+.pf-cal-resize-top,
+.pf-cal-resize-bottom {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 8px;
+	cursor: ns-resize;
+	z-index: 6;
+	border-radius: 2px;
+	transition: background 0.1s;
+}
+.pf-cal-resize-top    { top: -3px; }
+.pf-cal-resize-bottom { bottom: -3px; }
+.pf-cal-resize-top:hover,
+.pf-cal-resize-bottom:hover {
+	background: var(--interactive-accent);
+	opacity: 0.45;
+}
+
+/* Block state while being resized */
+.pf-cal-block.pf-resizing {
+	opacity: 0.85;
+	z-index: 10;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	pointer-events: none; /* let mousemove go to document */
+}
+/* Keep handles interactive during resize */
+.pf-cal-block.pf-resizing .pf-cal-resize-top,
+.pf-cal-block.pf-resizing .pf-cal-resize-bottom {
+	pointer-events: auto;
+}
+
+/* Time tooltip shown during resize */
+.pf-cal-resize-tooltip {
+	position: absolute;
+	right: calc(100% + 6px);
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	padding: 2px 6px;
+	font-size: 10px;
+	font-weight: 600;
+	border-radius: 3px;
+	white-space: nowrap;
+	z-index: 20;
+	pointer-events: none;
+	color: var(--text-normal);
+}
+
+/* Ghost block preview shown in timed columns during dragover */
+.pf-cal-drag-ghost {
+	position: absolute;
+	left: 3px;
+	right: 3px;
+	border-radius: 4px;
+	border-left: 3px solid transparent;
+	background: var(--background-secondary);
+	opacity: 0.55;
+	padding: 3px 5px;
+	font-size: 11px;
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	z-index: 8;
+	pointer-events: none;
+	box-sizing: border-box;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.pf-cal-ghost-time  { font-size: 10px; color: var(--text-muted); }
+.pf-cal-ghost-key   { font-size: 10px; color: var(--text-muted); }
+.pf-cal-ghost-title { font-size: 11px; font-weight: 500; color: var(--text-normal); }
+
+/* Inset subtask block — rendered on top of parent block */
+.pf-cal-block-inset {
+	z-index: 4;
+	opacity: 0.9;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.pf-cal-block-inset:hover { z-index: 5; }
+
+.pf-autosched-time { flex-shrink: 0; font-size: 11px; color: var(--text-muted); white-space: nowrap; }

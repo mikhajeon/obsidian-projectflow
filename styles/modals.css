@@ -103,9 +103,55 @@
 
 .pf-textarea {
 	width: 100%;
+	min-height: 80px;
+	max-height: 80px;
+	resize: vertical !important;
+	box-sizing: border-box;
+}
+
+.pf-ticket-notes {
+	width: 100%;
 	min-height: 450px;
 	resize: vertical !important;
 	box-sizing: border-box;
+}
+
+.pf-char-count {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	text-align: right;
+}
+
+.pf-char-count.pf-char-count--warn {
+	color: var(--text-warning);
+}
+
+.pf-char-count.pf-char-count--error {
+	color: var(--text-error);
+}
+
+.pf-section-divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 8px 0 4px;
+}
+
+.pf-reminders-heading {
+	padding-bottom: 2px !important;
+	margin-bottom: 0 !important;
+}
+
+.pf-field-stacked {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding: 8px 0;
+}
+
+.pf-field-label {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
 }
 
 .pf-desc-block {

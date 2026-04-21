@@ -222,7 +222,9 @@ export class BoardPanelView {
 		card.draggable = true;
 		card.dataset.id = ticket.id;
 
-		card.createEl('p', { cls: 'pf-card-title', text: ticket.title });
+		const cardTitleRow = card.createEl('div', { cls: 'pf-card-title-row' });
+		cardTitleRow.createEl('span', { cls: 'pf-card-title', text: ticket.title });
+		if (ticket.recurrence) cardTitleRow.createEl('span', { cls: 'pf-card-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 
 		if (ticket.description) {
 			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });

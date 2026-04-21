@@ -1,0 +1,299 @@
+/* ── Notification Panel ─────────────────────────────────────────────────── */
+
+.pf-notif-panel {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+.pf-notif-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 10px 12px 8px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+}
+
+.pf-notif-title {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.pf-notif-header-actions {
+	display: flex;
+	gap: 6px;
+}
+
+.pf-notif-btn-sm {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 7px;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-hover);
+	border: none;
+	color: var(--text-muted);
+	cursor: pointer;
+}
+
+.pf-notif-btn-sm:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-border);
+}
+
+/* ── Summary banner ─────────────────────────────────────────────────────── */
+
+.pf-notif-summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
+	flex-wrap: wrap;
+}
+
+.pf-notif-summary-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+}
+
+.pf-notif-summary-icon {
+	display: inline-flex;
+	align-items: center;
+}
+
+.pf-notif-summary-icon svg {
+	width: 12px;
+	height: 12px;
+}
+
+.pf-notif-summary-pill--overdue { color: var(--text-error); }
+.pf-notif-summary-pill--today   { color: var(--color-accent); }
+.pf-notif-summary-pill--sprint  { color: var(--color-orange); }
+
+.pf-notif-summary-clear {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+}
+
+.pf-notif-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 8px 0;
+}
+
+/* ── Group label ────────────────────────────────────────────────────────── */
+
+.pf-notif-group-label {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	color: var(--text-faint);
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 4px 12px 2px;
+}
+
+/* ── Notification card ──────────────────────────────────────────────────── */
+
+.pf-notif-card {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	padding: 9px 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+	background: var(--background-primary);
+	transition: background 0.1s;
+}
+
+.pf-notif-card-dot {
+	flex-shrink: 0;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--color-accent);
+	margin-top: 5px;
+}
+
+.pf-notif-card-content {
+	flex: 1;
+	min-width: 0;
+}
+
+.pf-notif-card:hover {
+	background: var(--background-secondary);
+}
+
+.pf-notif-card--read {
+	opacity: 0.65;
+}
+
+.pf-notif-card-top {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 6px;
+	margin-bottom: 2px;
+}
+
+.pf-notif-card-title {
+	font-size: var(--font-ui-small);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+	flex: 1;
+	min-width: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.pf-notif-card-time {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	flex-shrink: 0;
+}
+
+.pf-notif-chip {
+	display: inline-block;
+	font-size: 10px;
+	font-weight: var(--font-semibold);
+	padding: 1px 5px;
+	border-radius: var(--radius-s);
+	background: var(--background-modifier-hover);
+	color: var(--text-muted);
+	margin-bottom: 3px;
+}
+
+.pf-notif-card-body {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-muted);
+	margin: 0 0 6px;
+}
+
+/* ── Card actions ───────────────────────────────────────────────────────── */
+
+.pf-notif-card-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	align-items: center;
+}
+
+.pf-notif-action-btn {
+	font-size: var(--font-ui-smaller);
+	padding: 2px 7px;
+	border-radius: var(--radius-s);
+	border: 1px solid var(--background-modifier-border);
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	transition: background 0.1s, color 0.1s;
+}
+
+.pf-notif-action-btn:hover {
+	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-notif-action-btn--dismiss:hover {
+	background: var(--background-modifier-error);
+	color: var(--text-error);
+	border-color: var(--text-error);
+}
+
+/* ── Snooze dropdown ────────────────────────────────────────────────────── */
+
+.pf-notif-snooze-wrap {
+	position: relative;
+}
+
+.pf-notif-snooze-menu {
+	position: absolute;
+	bottom: calc(100% + 4px);
+	left: 0;
+	background: var(--background-primary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-m);
+	box-shadow: var(--shadow-s);
+	z-index: 100;
+	min-width: 110px;
+	overflow: hidden;
+}
+
+.pf-notif-snooze-item {
+	padding: 6px 10px;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	cursor: pointer;
+}
+
+.pf-notif-snooze-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+
+.pf-notif-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 160px;
+	gap: 8px;
+	color: var(--text-faint);
+}
+
+.pf-notif-empty-icon {
+	font-size: 28px;
+	opacity: 0.4;
+}
+
+.pf-notif-empty p {
+	font-size: var(--font-ui-small);
+	margin: 0;
+}
+
+/* ── Ribbon badge ───────────────────────────────────────────────────────── */
+
+.pf-ribbon-badge-wrap {
+	position: relative;
+	display: inline-flex;
+}
+
+/* ── Header bell badge (next to + Ticket) ───────────────────────────────── */
+
+.pf-header-bell-wrap {
+	position: relative;
+	display: inline-flex;
+}
+
+.pf-header-bell {
+	font-size: 14px;
+	line-height: 1;
+}
+
+.pf-ribbon-badge {
+	position: absolute;
+	top: -4px;
+	right: -6px;
+	background: var(--color-red);
+	color: #fff;
+	font-size: 9px;
+	font-weight: 700;
+	min-width: 14px;
+	height: 14px;
+	border-radius: 7px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 3px;
+	pointer-events: none;
+	line-height: 1;
+}

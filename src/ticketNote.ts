@@ -111,6 +111,29 @@ export async function generateTicketNote(plugin: ProjectFlowPlugin, ticketId: st
 		frontmatterLines.push(`points: ${ticket.points}`);
 	}
 
+	if (ticket.recurrence) {
+		const r = ticket.recurrence;
+		frontmatterLines.push(`recurrence: ${r.rule}`);
+		if (r.interval && r.interval !== 1) frontmatterLines.push(`recurrence_interval: ${r.interval}`);
+		if (r.endDate) frontmatterLines.push(`recurrence_end: ${new Date(r.endDate).toISOString().split('T')[0]}`);
+	}
+
+	if (ticket.startDate !== undefined) {
+		const sd = new Date(ticket.startDate);
+		const startStr = sd.toISOString().split('T')[0];
+		const sh = sd.getHours(), sm = sd.getMinutes();
+		const startTime = (sh !== 0 || sm !== 0) ? ` ${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}` : '';
+		frontmatterLines.push(`start: ${startStr}${startTime}`);
+	}
+
+	if (ticket.dueDate !== undefined) {
+		const dd = new Date(ticket.dueDate);
+		const dueStr = dd.toISOString().split('T')[0];
+		const dh = dd.getHours(), dm = dd.getMinutes();
+		const dueTime = (dh !== 0 || dm !== 0) ? ` ${String(dh).padStart(2,'0')}:${String(dm).padStart(2,'0')}` : '';
+		frontmatterLines.push(`due: ${dueStr}${dueTime}`);
+	}
+
 	if (ticket.parentId && parent) {
 		frontmatterLines.push(`parent: "${parent.title.replace(/"/g, '\\"')}"`);
 	}

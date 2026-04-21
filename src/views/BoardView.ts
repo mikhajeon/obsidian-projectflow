@@ -1,4 +1,4 @@
-import { ItemView, Menu, Notice, TFile, WorkspaceLeaf } from 'obsidian';
+import { ItemView, Menu, Notice, TFile, WorkspaceLeaf, setIcon } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
 import type { ProjectStore } from '../store';
 import type { Sprint, Ticket, TicketStatus } from '../types';
@@ -6,6 +6,7 @@ import { PRIORITY_ORDER } from '../types';
 import { TicketModal } from '../modals/TicketModal';
 import { SprintModal } from '../modals/SprintModal';
 import { ProjectModal } from '../modals/ProjectModal';
+import { ProjectNotificationModal } from '../modals/ProjectNotificationModal';
 import { ProjectStatusModal } from '../modals/ProjectStatusModal';
 import { RetroModal } from '../modals/RetroModal';
 import { ConfirmModal } from '../modals/ConfirmModal';
@@ -16,6 +17,7 @@ import { BoardSubtasksPanelView } from './BoardSubtasksPanelView';
 import { BacklogPanelView } from './BacklogPanelView';
 import { ListPanelView } from './ListPanelView';
 import { ArchivePanelView } from './ArchivePanelView';
+import { NOTIFICATION_VIEW_TYPE } from './NotificationPanelView';
 
 export const BOARD_VIEW = 'projectflow-board';
 
@@ -64,6 +66,9 @@ export class BoardView extends ItemView {
 	// Hidden board columns (persisted per project)
 	hiddenBoardColumns: Set<string> = new Set();
 
+	// Notification badge in header (re-registered on each render)
+	private headerBadgeEl: HTMLElement | null = null;
+
 	// UI state
 	private viewMode: ViewMode = 'board';
 	collapsedSections: Set<string> = new Set();
@@ -109,13 +114,22 @@ export class BoardView extends ItemView {
 		this.render();
 	}
 
-	async onClose(): Promise<void> {}
+	async onClose(): Promise<void> {
+		if (this.headerBadgeEl) {
+			this.plugin.notificationManager?.removeBadge(this.headerBadgeEl);
+			this.headerBadgeEl = null;
+		}
+	}
 
 	refresh(): void {
 		this.render();
 	}
 
 	render(): void {
+		if (this.headerBadgeEl) {
+			this.plugin.notificationManager?.removeBadge(this.headerBadgeEl);
+			this.headerBadgeEl = null;
+		}
 		const container = this.contentEl;
 		container.empty();
 		container.addClass('pf-view');
@@ -155,6 +169,13 @@ export class BoardView extends ItemView {
 
 		// ── Row 1: project switcher + action buttons ──────────────────────────
 		const header = container.createEl('div', { cls: 'pf-board-header' });
+		const activeProject = store.getProject(projectId);
+		if (activeProject?.color) {
+			const c = activeProject.color;
+			const r = parseInt(c.slice(1, 3), 16), g = parseInt(c.slice(3, 5), 16), b = parseInt(c.slice(5, 7), 16);
+			header.style.backgroundColor = `rgba(${r},${g},${b},0.18)`;
+			header.style.borderBottom = `2px solid rgba(${r},${g},${b},0.5)`;
+		}
 		const titleRow = header.createEl('div', { cls: 'pf-header-row' });
 
 		const projects = store.getProjects();
@@ -168,11 +189,19 @@ export class BoardView extends ItemView {
 			await store.setActiveProject(projectSel.value);
 			this.plugin.refreshAllViews();
 		});
-		const editProjectBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm', text: '✎' });
+		const editProjectBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
+		setIcon(editProjectBtn, 'pencil');
 		editProjectBtn.setAttribute('aria-label', 'Edit project');
 		editProjectBtn.addEventListener('click', () => {
 			const current = store.getProject(store.getActiveProjectId() ?? '');
 			if (current) new ProjectModal(this.app, this.plugin, current, () => this.plugin.refreshAllViews()).open();
+		});
+		const notifProjectBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
+		setIcon(notifProjectBtn, 'bell');
+		notifProjectBtn.setAttribute('aria-label', 'Notification settings');
+		notifProjectBtn.addEventListener('click', () => {
+			const current = store.getProject(store.getActiveProjectId() ?? '');
+			if (current) new ProjectNotificationModal(this.app, this.plugin, current.id, current.name).open();
 		});
 		projectArea.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Project' })
 			.addEventListener('click', () =>
@@ -272,6 +301,18 @@ export class BoardView extends ItemView {
 				);
 		}
 		// archive tab: no action button
+
+		// ── Notification bell badge ────────────────────────────────────────────
+		const bellWrap = actions.createEl('div', { cls: 'pf-header-bell-wrap' });
+		const bellBtn = bellWrap.createEl('button', { cls: 'pf-btn pf-btn-icon pf-header-bell' });
+		bellBtn.setAttribute('aria-label', 'Notifications');
+		setIcon(bellBtn, 'bell');
+		bellBtn.addEventListener('click', () => this.plugin.activateView(NOTIFICATION_VIEW_TYPE));
+		const headerBadge = bellWrap.createEl('span', { cls: 'pf-ribbon-badge' });
+		headerBadge.style.display = 'none';
+		this.headerBadgeEl = headerBadge;
+		this.plugin.notificationManager?.addBadge(headerBadge);
+		this.plugin.notificationManager?.updateBadge();
 
 		// ── Row 2: view mode tabs (draggable to reorder) ──────────────────────
 		const tabs = header.createEl('div', { cls: 'pf-view-tabs' });

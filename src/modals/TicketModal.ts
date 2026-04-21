@@ -1,6 +1,6 @@
 import { App, Modal, Setting, Notice, TFile } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
-import type { Ticket, TicketPriority, TicketStatus, TicketType } from '../types';
+import type { Ticket, TicketPriority, TicketStatus, TicketType, TicketReminder, SnoozeInterval } from '../types';
 import { generateTicketNote, deleteTicketNote, ticketFilePath } from '../ticketNote';
 import { ConfirmModal } from './ConfirmModal';
 
@@ -11,6 +11,8 @@ interface NewTicketContext {
 	parentId?: string;
 	defaultType?: TicketType;
 	showOnBoard?: boolean;
+	dueDate?: number;
+	startDate?: number;
 }
 
 interface EditTicketContext {
@@ -35,6 +37,11 @@ export class TicketModal extends Modal {
 	private priority: TicketPriority = 'medium';
 	private status: TicketStatus = 'todo';
 	private points: number | undefined = undefined;
+	private startDate: number | undefined = undefined;
+	private dueDate: number | undefined = undefined;
+	private recurrence: Ticket['recurrence'] = undefined;
+	private reminders: TicketReminder[] = [];
+	private snoozeIntervals: SnoozeInterval[] = [];
 
 	private submitting = false;
 
@@ -51,9 +58,16 @@ export class TicketModal extends Modal {
 			this.priority = context.ticket.priority;
 			this.status = context.ticket.status;
 			this.points = context.ticket.points;
+			this.startDate = context.ticket.startDate;
+			this.dueDate = context.ticket.dueDate;
+			this.recurrence = context.ticket.recurrence;
+			this.reminders = structuredClone(context.ticket.reminders ?? []);
+			this.snoozeIntervals = structuredClone(context.ticket.snoozeIntervals ?? []);
 		} else {
 			if (context.status) this.status = context.status;
 			if (context.defaultType) this.type = context.defaultType;
+			if (context.dueDate) this.dueDate = context.dueDate;
+			if (context.startDate) this.startDate = context.startDate;
 		}
 	}
 
@@ -94,11 +108,11 @@ export class TicketModal extends Modal {
 				const ticketId = (this.context as EditTicketContext).ticket.id;
 				const title = (this.context as EditTicketContext).ticket.title;
 				new ConfirmModal(this.app, `Delete ticket "${title}"? This cannot be undone.`, async () => {
+					await deleteTicketNote(this.plugin, ticketId).catch(() => { /* silent */ });
 					await this.plugin.store.deleteTicket(ticketId);
 					this.close();
 					this.onSave();
 					new Notice('Ticket deleted.');
-					deleteTicketNote(this.plugin, ticketId).catch(() => { /* silent */ });
 				}).open();
 			}
 		});
@@ -113,7 +127,7 @@ export class TicketModal extends Modal {
 
 		const descBlock = formPane.createEl('div', { cls: 'pf-desc-block' });
 		const descLabelRow = descBlock.createEl('div', { cls: 'pf-desc-label-row' });
-		descLabelRow.createEl('span', { cls: 'pf-desc-label', text: 'Description' });
+		descLabelRow.createEl('span', { cls: 'pf-desc-label', text: 'Notes' });
 
 		if (isEdit) {
 			const ticket = (this.context as EditTicketContext).ticket;
@@ -133,7 +147,7 @@ export class TicketModal extends Modal {
 			});
 		}
 
-		const descTextarea = descBlock.createEl('textarea', { cls: 'pf-textarea', placeholder: 'Optional description' });
+		const descTextarea = descBlock.createEl('textarea', { cls: 'pf-ticket-notes', placeholder: 'Add notes...' });
 		descTextarea.value = this.description;
 		descTextarea.addEventListener('input', () => { this.description = descTextarea.value; });
 
@@ -209,6 +223,191 @@ export class TicketModal extends Modal {
 					this.points = raw === '' ? undefined : Math.max(0, Math.round(Number(raw)));
 				});
 			});
+
+		// ── Start date / time ───────────────────────────────────────────────────
+		const startSection = infoPane.createEl('div', { cls: 'pf-date-section' });
+		startSection.createEl('div', { cls: 'pf-date-label', text: 'Start date' });
+		const startRow = startSection.createEl('div', { cls: 'pf-date-row' });
+		const startDateInput = startRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
+		const startTimeInput = startRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
+		const clearStartBtn = startRow.createEl('button', { cls: 'pf-date-clear-btn', text: '× Clear' });
+
+		if (this.startDate !== undefined) {
+			const sd = new Date(this.startDate);
+			startDateInput.value = sd.toISOString().split('T')[0];
+			const sh = sd.getHours(), sm = sd.getMinutes();
+			if (sh !== 0 || sm !== 0) startTimeInput.value = `${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`;
+		}
+
+		const syncStartDate = () => {
+			if (!startDateInput.value) { this.startDate = undefined; return; }
+			const [y, mo, d] = startDateInput.value.split('-').map(Number);
+			const [h, mi] = startTimeInput.value ? startTimeInput.value.split(':').map(Number) : [0, 0];
+			this.startDate = new Date(y, mo - 1, d, h, mi).getTime();
+		};
+		startDateInput.addEventListener('input', syncStartDate);
+		startTimeInput.addEventListener('input', syncStartDate);
+		clearStartBtn.addEventListener('click', () => {
+			this.startDate = undefined;
+			startDateInput.value = '';
+			startTimeInput.value = '';
+		});
+
+		// ── End date / time ──────────────────────────────────────────────────
+		const dueSection = infoPane.createEl('div', { cls: 'pf-date-section' });
+		dueSection.createEl('div', { cls: 'pf-date-label', text: 'End date' });
+		const dueRow = dueSection.createEl('div', { cls: 'pf-date-row' });
+		const dueDateInput = dueRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
+		const dueTimeInput = dueRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
+		const clearDueBtn = dueRow.createEl('button', { cls: 'pf-date-clear-btn', text: '× Clear' });
+
+		if (this.dueDate !== undefined) {
+			const dd = new Date(this.dueDate);
+			dueDateInput.value = dd.toISOString().split('T')[0];
+			const dh = dd.getHours(), dm = dd.getMinutes();
+			if (dh !== 0 || dm !== 0) dueTimeInput.value = `${String(dh).padStart(2,'0')}:${String(dm).padStart(2,'0')}`;
+		}
+
+		const syncDueDate = () => {
+			if (!dueDateInput.value) { this.dueDate = undefined; return; }
+			const [y, mo, d] = dueDateInput.value.split('-').map(Number);
+			const [h, mi] = dueTimeInput.value ? dueTimeInput.value.split(':').map(Number) : [0, 0];
+			this.dueDate = new Date(y, mo - 1, d, h, mi).getTime();
+		};
+		dueDateInput.addEventListener('input', syncDueDate);
+		dueTimeInput.addEventListener('input', syncDueDate);
+		clearDueBtn.addEventListener('click', () => {
+			this.dueDate = undefined;
+			dueDateInput.value = '';
+			dueTimeInput.value = '';
+		});
+
+		// ── Recurrence ──────────────────────────────────────────────────────────
+		const recurSection = infoPane.createEl('div', { cls: 'pf-date-section pf-recur-section' });
+		recurSection.createEl('div', { cls: 'pf-date-label', text: 'Recurrence' });
+		const recurRow = recurSection.createEl('div', { cls: 'pf-date-row' });
+		const recurSel = recurRow.createEl('select', { cls: 'pf-select pf-select-sm' }) as HTMLSelectElement;
+		for (const [val, lbl] of [['none','None'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['custom','Custom']] as [string,string][]) {
+			const opt = recurSel.createEl('option', { text: lbl, value: val });
+			if ((this.recurrence?.rule ?? 'none') === val) opt.selected = true;
+		}
+		const recurIntervalWrap = recurRow.createEl('div', { cls: 'pf-recur-interval-wrap' });
+		const recurIntervalInput = recurIntervalWrap.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'number', min: '1', placeholder: 'N', title: 'Repeat interval' } }) as HTMLInputElement;
+		if (this.recurrence?.interval) recurIntervalInput.value = String(this.recurrence.interval);
+		recurIntervalWrap.createEl('span', { cls: 'pf-recur-unit', text: 'interval' });
+		recurIntervalWrap.style.display = this.recurrence ? '' : 'none';
+
+		const recurEndWrap = recurSection.createEl('div', { cls: 'pf-recur-end-wrap' });
+		recurEndWrap.createEl('span', { cls: 'pf-date-label', text: 'End date (optional)' });
+		const recurEndInput = recurEndWrap.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
+		if (this.recurrence?.endDate) recurEndInput.value = new Date(this.recurrence.endDate).toISOString().split('T')[0];
+		recurEndWrap.style.display = this.recurrence ? '' : 'none';
+
+		const syncRecur = () => {
+			const rule = recurSel.value;
+			if (rule === 'none') {
+				this.recurrence = undefined;
+				recurIntervalWrap.style.display = 'none';
+				recurEndWrap.style.display = 'none';
+				return;
+			}
+			recurIntervalWrap.style.display = '';
+			recurEndWrap.style.display = '';
+			const interval = Math.max(1, parseInt(recurIntervalInput.value) || 1);
+			let endDate: number | undefined;
+			if (recurEndInput.value) endDate = new Date(recurEndInput.value).getTime();
+			this.recurrence = { rule: rule as 'daily' | 'weekly' | 'monthly' | 'custom', interval, endDate };
+		};
+		recurSel.addEventListener('change', syncRecur);
+		recurIntervalInput.addEventListener('input', syncRecur);
+		recurEndInput.addEventListener('input', syncRecur);
+
+		// ── Reminders ─────────────────────────────────────────────────────────
+		infoPane.createEl('hr', { cls: 'pf-section-divider' });
+		new Setting(infoPane).setName('Reminders').setHeading().settingEl.addClass('pf-reminders-heading');
+
+		// Ticket-level snooze intervals
+		const snoozeSection = infoPane.createDiv('pf-field-stacked');
+		snoozeSection.createEl('label', { cls: 'pf-field-label', text: 'Snooze intervals for this ticket' });
+		const snoozeRowsEl = snoozeSection.createDiv();
+
+		const renderSnoozeRows = () => {
+			snoozeRowsEl.empty();
+			this.snoozeIntervals.forEach((interval, i) => {
+				const row = snoozeRowsEl.createDiv('pf-notif-snooze-row');
+				const labelIn = row.createEl('input', { type: 'text', cls: 'pf-input pf-notif-snooze-label' });
+				labelIn.value = interval.label;
+				labelIn.placeholder = 'Label';
+				labelIn.addEventListener('input', () => { this.snoozeIntervals[i].label = labelIn.value; });
+				const minIn = row.createEl('input', { type: 'number', cls: 'pf-input pf-input-short' });
+				minIn.value = String(interval.minutes);
+				minIn.min = '0';
+				minIn.title = '0 = tomorrow (next midnight)';
+				minIn.addEventListener('input', () => {
+					const v = parseInt(minIn.value, 10);
+					if (!isNaN(v) && v >= 0) this.snoozeIntervals[i].minutes = v;
+				});
+				row.createEl('span', { cls: 'pf-notif-snooze-unit', text: 'min' });
+				const rmBtn = row.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '✕' });
+				rmBtn.addEventListener('click', () => { this.snoozeIntervals.splice(i, 1); renderSnoozeRows(); });
+			});
+			snoozeRowsEl.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Add snooze interval' })
+				.addEventListener('click', () => { this.snoozeIntervals.push({ label: 'Custom', minutes: 60 }); renderSnoozeRows(); });
+		};
+		renderSnoozeRows();
+
+		// Per-ticket reminders
+		const remindersSection = infoPane.createDiv('pf-field-stacked');
+		remindersSection.createEl('label', { cls: 'pf-field-label', text: 'Reminders' });
+		const reminderRowsEl = remindersSection.createDiv();
+
+		const renderReminderRows = () => {
+			reminderRowsEl.empty();
+			this.reminders.forEach((reminder, i) => {
+				const row = reminderRowsEl.createDiv('pf-notif-reminder-row');
+
+				const offsetVal = row.createEl('input', { type: 'number', cls: 'pf-input pf-input-short' });
+				const isHours = reminder.offsetMinutes % 60 === 0 && reminder.offsetMinutes >= 60;
+				offsetVal.value = String(isHours ? reminder.offsetMinutes / 60 : reminder.offsetMinutes);
+				offsetVal.min = '1';
+
+				const unitSel = row.createEl('select', { cls: 'pf-select' });
+				[['minutes', 'min'], ['hours', 'hr']].forEach(([val, label]) => {
+					const opt = unitSel.createEl('option', { value: val, text: label });
+					if ((val === 'hours') === isHours) opt.selected = true;
+				});
+
+				const updateOffset = () => {
+					const v = parseInt(offsetVal.value, 10);
+					if (!isNaN(v) && v > 0) {
+						this.reminders[i].offsetMinutes = unitSel.value === 'hours' ? v * 60 : v;
+					}
+				};
+				offsetVal.addEventListener('input', updateOffset);
+				unitSel.addEventListener('change', updateOffset);
+
+				row.createEl('span', { cls: 'pf-notif-reminder-sep', text: 'before' });
+
+				const anchorSel = row.createEl('select', { cls: 'pf-select' });
+				[['start', 'start time'], ['due', 'due time']].forEach(([val, label]) => {
+					const opt = anchorSel.createEl('option', { value: val, text: label });
+					if (val === reminder.anchor) opt.selected = true;
+				});
+				anchorSel.addEventListener('change', () => {
+					this.reminders[i].anchor = anchorSel.value as 'start' | 'due';
+				});
+
+				const rmBtn = row.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '✕' });
+				rmBtn.addEventListener('click', () => { this.reminders.splice(i, 1); renderReminderRows(); });
+			});
+
+			reminderRowsEl.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Add reminder' })
+				.addEventListener('click', () => {
+					this.reminders.push({ id: Math.random().toString(36).slice(2), anchor: 'due', offsetMinutes: 15 });
+					renderReminderRows();
+				});
+		};
+		renderReminderRows();
 
 		// Read-only details in info pane
 		infoPane.createEl('div', { cls: 'pf-info-pane-heading', text: 'Details' });
@@ -295,11 +494,11 @@ export class TicketModal extends Modal {
 					const ticketId = (this.context as EditTicketContext).ticket.id;
 					const title = (this.context as EditTicketContext).ticket.title;
 					new ConfirmModal(this.app, `Delete ticket "${title}"? This cannot be undone.`, async () => {
+						await deleteTicketNote(this.plugin, ticketId).catch(() => { /* silent */ });
 						await this.plugin.store.deleteTicket(ticketId);
 						this.close();
 						this.onSave();
 						new Notice('Ticket deleted.');
-						deleteTicketNote(this.plugin, ticketId).catch(() => { /* silent */ });
 					}).open();
 				});
 		}
@@ -352,10 +551,16 @@ export class TicketModal extends Modal {
 				status: this.status,
 				sprintId: this.context.sprintId,
 				points: this.points,
+				startDate: this.startDate,
+				dueDate: this.dueDate,
+				recurrence: this.recurrence,
+				reminders: this.reminders.length > 0 ? this.reminders : undefined,
+				snoozeIntervals: this.snoozeIntervals.length > 0 ? this.snoozeIntervals : undefined,
 			});
 
 			this.close();
 			this.onSave();
+			this.plugin.refreshAllViews();
 			new Notice('Ticket updated.');
 			generateTicketNote(this.plugin, this.context.ticket.id, oldFilePath ?? undefined).catch(() => { /* silent */ });
 		} else {
@@ -371,10 +576,16 @@ export class TicketModal extends Modal {
 				points: this.points,
 				parentId: ctx.parentId ?? null,
 				showOnBoard: ctx.showOnBoard,
+				startDate: this.startDate,
+				dueDate: this.dueDate,
+				recurrence: this.recurrence,
+				reminders: this.reminders.length > 0 ? this.reminders : undefined,
+				snoozeIntervals: this.snoozeIntervals.length > 0 ? this.snoozeIntervals : undefined,
 			});
 
 			this.close();
 			this.onSave();
+			this.plugin.refreshAllViews();
 			new Notice('Ticket created.');
 			generateTicketNote(this.plugin, ticket.id).catch(() => { /* silent */ });
 		}

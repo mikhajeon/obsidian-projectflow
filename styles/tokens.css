@@ -46,6 +46,15 @@
 	--pf-danger-bg:           #e74c3c;
 	--pf-danger-color:        #ffffff;
 	--pf-danger-border:       #c0392b;
+
+	/* Calendar */
+	--pf-cal-today-bg:        #fffbe6;
+	--pf-cal-today-border:    #f0c040;
+	--pf-cal-outside-opacity: 0.4;
+	--pf-cal-drop-bg:         #eaf4ff;
+	--pf-cal-sprint-planning: #2471a3;
+	--pf-cal-sprint-active:   #1e8449;
+	--pf-cal-sprint-completed: #7f8c8d;
 }
 
 .theme-dark {
@@ -94,5 +103,14 @@
 	--pf-danger-bg:           #b03a2e;
 	--pf-danger-color:        #ffffff;
 	--pf-danger-border:       #922b21;
+
+	/* Calendar */
+	--pf-cal-today-bg:        rgba(240, 192, 64, 0.12);
+	--pf-cal-today-border:    rgba(240, 192, 64, 0.50);
+	--pf-cal-outside-opacity: 0.35;
+	--pf-cal-drop-bg:         rgba(41, 128, 185, 0.15);
+	--pf-cal-sprint-planning: #5590c8;
+	--pf-cal-sprint-active:   #6dcc8d;
+	--pf-cal-sprint-completed: #7f8c8d;
 }
 

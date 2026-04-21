@@ -220,6 +220,10 @@ export class NoteSyncWatcher {
 		const ticket = plugin.store.getTicket(ticketId);
 		if (!ticket) return;
 
+		// Skip sync for tickets belonging to archived projects
+		const ticketProject = plugin.store.getProject(ticket.projectId);
+		if (ticketProject?.archived) return;
+
 		const newTitle: string = typeof fm.title === 'string' && fm.title.trim()
 			? fm.title.trim()
 			: ticket.title;
@@ -240,12 +244,49 @@ export class NoteSyncWatcher {
 			? Math.round(rawPoints)
 			: ticket.points;
 
+		const rawDue = fm.due;
+		let newDueDate: number | undefined = ticket.dueDate;
+		if (typeof rawDue === 'string' && rawDue.trim()) {
+			const parsed = new Date(rawDue.trim()).getTime();
+			if (!isNaN(parsed)) newDueDate = parsed;
+		} else if (rawDue === null || rawDue === undefined) {
+			newDueDate = undefined;
+		}
+
+		const rawStart = fm.start;
+		let newStartDate: number | undefined = ticket.startDate;
+		if (typeof rawStart === 'string' && rawStart.trim()) {
+			const parsed = new Date(rawStart.trim()).getTime();
+			if (!isNaN(parsed)) newStartDate = parsed;
+		} else if (rawStart === null || rawStart === undefined) {
+			newStartDate = undefined;
+		}
+
+		// Parse recurrence from frontmatter
+		const validRecurRules = new Set(['daily', 'weekly', 'monthly', 'custom']);
+		let newRecurrence = ticket.recurrence;
+		if (typeof fm.recurrence === 'string' && validRecurRules.has(fm.recurrence)) {
+			const rule = fm.recurrence as 'daily' | 'weekly' | 'monthly' | 'custom';
+			const interval = typeof fm.recurrence_interval === 'number' ? Math.max(1, fm.recurrence_interval) : 1;
+			let endDate: number | undefined;
+			if (typeof fm.recurrence_end === 'string') {
+				const p = new Date(fm.recurrence_end).getTime();
+				if (!isNaN(p)) endDate = p;
+			}
+			newRecurrence = { rule, interval, endDate };
+		} else if (fm.recurrence === null || fm.recurrence === undefined || fm.recurrence === 'none') {
+			newRecurrence = undefined;
+		}
+
 		const changed =
 			newTitle       !== ticket.title       ||
 			newDescription !== ticket.description ||
 			newStatus      !== ticket.status      ||
 			newPriority    !== ticket.priority    ||
-			newPoints      !== ticket.points;
+			newPoints      !== ticket.points      ||
+			newDueDate     !== ticket.dueDate     ||
+			newStartDate   !== ticket.startDate   ||
+			JSON.stringify(newRecurrence) !== JSON.stringify(ticket.recurrence);
 
 		if (!changed) return;
 
@@ -255,6 +296,9 @@ export class NoteSyncWatcher {
 			status:      newStatus,
 			priority:    newPriority,
 			points:      newPoints,
+			dueDate:     newDueDate,
+			startDate:   newStartDate,
+			recurrence:  newRecurrence,
 		});
 
 		plugin.markWriting(file.path);

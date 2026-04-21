@@ -1,6 +1,6 @@
 import type ProjectFlowPlugin from './main';
-import type { AppData, Project, Sprint, Ticket, TicketStatus } from './types';
-import { DEFAULT_DATA } from './types';
+import type { AppData, Project, Sprint, Ticket, TicketStatus, StoredNotification, NotificationSettings, ProjectNotificationSettings } from './types';
+import { DEFAULT_DATA, DEFAULT_NOTIFICATION_SETTINGS } from './types';
 import { migrateAppData, defaultTagFromName } from './store/migrate';
 import { type StatusDefinition, DEFAULT_STATUSES } from './statusConfig';
 
@@ -12,6 +12,11 @@ export class ProjectStore {
 	private undoStack: Ticket[][] = [];
 	private redoStack: Ticket[][] = [];
 	private static readonly MAX_UNDO = 50;
+	private ticketDeleteHook: ((ticketId: string) => Promise<void>) | null = null;
+
+	setTicketDeleteHook(fn: (ticketId: string) => Promise<void>): void {
+		this.ticketDeleteHook = fn;
+	}
 
 	constructor(plugin: ProjectFlowPlugin) {
 		this.plugin = plugin;
@@ -61,11 +66,39 @@ export class ProjectStore {
 	// ── Projects ──────────────────────────────────────────────────────────────
 
 	getProjects(): Project[] {
+		return this.data.projects.filter(p => !p.archived);
+	}
+
+	getAllProjects(): Project[] {
 		return this.data.projects;
+	}
+
+	getArchivedProjects(): Project[] {
+		return this.data.projects
+			.filter(p => p.archived)
+			.sort((a, b) => (b.archivedAt ?? 0) - (a.archivedAt ?? 0));
 	}
 
 	getProject(id: string): Project | undefined {
 		return this.data.projects.find(p => p.id === id);
+	}
+
+	async archiveProject(id: string): Promise<void> {
+		const idx = this.data.projects.findIndex(p => p.id === id);
+		if (idx === -1) return;
+		this.data.projects[idx] = { ...this.data.projects[idx], archived: true, archivedAt: Date.now() };
+		if (this.data.activeProjectId === id) {
+			this.data.activeProjectId = this.data.projects.find(p => !p.archived)?.id ?? null;
+		}
+		await this.save();
+	}
+
+	async unarchiveProject(id: string): Promise<void> {
+		const idx = this.data.projects.findIndex(p => p.id === id);
+		if (idx === -1) return;
+		const { archived: _a, archivedAt: _b, ...rest } = this.data.projects[idx];
+		this.data.projects[idx] = rest as Project;
+		await this.save();
 	}
 
 	getActiveProjectId(): string | null {
@@ -158,12 +191,17 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	/** Returns all tickets for a project regardless of archived state. Used for file cleanup on project delete. */
+	getAllTicketsForProject(projectId: string): Ticket[] {
+		return this.data.tickets.filter(t => t.projectId === projectId);
+	}
+
 	async deleteProject(id: string): Promise<void> {
 		this.data.projects = this.data.projects.filter(p => p.id !== id);
 		this.data.sprints = this.data.sprints.filter(s => s.projectId !== id);
 		this.data.tickets = this.data.tickets.filter(t => t.projectId !== id);
 		if (this.data.activeProjectId === id) {
-			this.data.activeProjectId = this.data.projects[0]?.id ?? null;
+			this.data.activeProjectId = this.data.projects.find(p => !p.archived)?.id ?? null;
 		}
 		await this.save();
 	}
@@ -323,9 +361,21 @@ export class ProjectStore {
 	}
 
 	async deleteTicket(id: string): Promise<void> {
-		this.snapshotTickets();
 		const toRemove = new Set([id, ...this.getDescendantIds(id)]);
+		// Delete associated notes before removing from store (lookup still works)
+		if (this.ticketDeleteHook) {
+			for (const ticketId of toRemove) {
+				await this.ticketDeleteHook(ticketId).catch(() => {});
+			}
+		}
+		this.snapshotTickets();
 		this.data.tickets = this.data.tickets.filter(t => !toRemove.has(t.id));
+		// Dismiss any notifications tied to the deleted tickets
+		if (this.data.notifications) {
+			this.data.notifications = this.data.notifications.filter(
+				n => !n.ticketId || !toRemove.has(n.ticketId)
+			);
+		}
 		await this.save();
 	}
 
@@ -535,6 +585,17 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	// ── Calendar project selection ────────────────────────────────────────────
+
+	getCalendarProjectIds(): string[] | null {
+		return this.data.calendarProjectIds ?? null;
+	}
+
+	async setCalendarProjectIds(ids: string[]): Promise<void> {
+		this.data.calendarProjectIds = ids;
+		await this.save();
+	}
+
 	// ── Filter states ─────────────────────────────────────────────────────────
 
 	getFilterState(viewKey: string): { type: string; priority: string; status: string; hasSubtasks?: boolean } {
@@ -569,5 +630,52 @@ export class ProjectStore {
 
 	getProjectAutoSpillover(projectId: string): boolean {
 		return this.getProject(projectId)?.autoSpillover === true; // default false
+	}
+
+	// ── Notification settings ─────────────────────────────────────────────────
+
+	getNotificationSettings(): NotificationSettings {
+		return this.data.notificationSettings ?? DEFAULT_NOTIFICATION_SETTINGS;
+	}
+
+	async saveNotificationSettings(settings: NotificationSettings): Promise<void> {
+		this.data.notificationSettings = settings;
+		await this.save();
+	}
+
+	getProjectNotificationSettings(projectId: string): ProjectNotificationSettings {
+		return this.getProject(projectId)?.notificationSettings ?? { useGlobal: true, triggers: {} };
+	}
+
+	async saveProjectNotificationSettings(projectId: string, settings: ProjectNotificationSettings): Promise<void> {
+		const project = this.getProject(projectId);
+		if (!project) return;
+		project.notificationSettings = settings;
+		await this.save();
+	}
+
+	// ── Notification CRUD ─────────────────────────────────────────────────────
+
+	getNotifications(): StoredNotification[] {
+		return this.data.notifications ?? [];
+	}
+
+	async addNotification(notification: StoredNotification): Promise<void> {
+		if (!this.data.notifications) this.data.notifications = [];
+		this.data.notifications.push(notification);
+		await this.save();
+	}
+
+	async updateNotification(id: string, patch: Partial<StoredNotification>): Promise<void> {
+		if (!this.data.notifications) return;
+		const n = this.data.notifications.find(n => n.id === id);
+		if (n) Object.assign(n, patch);
+		await this.save();
+	}
+
+	async clearDismissed(): Promise<void> {
+		if (!this.data.notifications) return;
+		this.data.notifications = this.data.notifications.filter(n => !n.dismissed);
+		await this.save();
 	}
 }
