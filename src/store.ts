@@ -1,6 +1,6 @@
 import type ProjectFlowPlugin from './main';
-import type { AppData, Project, Sprint, Ticket, TicketStatus, StoredNotification, NotificationSettings, ProjectNotificationSettings } from './types';
-import { DEFAULT_DATA, DEFAULT_NOTIFICATION_SETTINGS } from './types';
+import type { AppData, Project, Sprint, Ticket, TicketStatus, StoredNotification, NotificationSettings, ProjectNotificationSettings, CalendarCardAppearance, CalendarViewAppearance, BoardCardAppearance } from './types';
+import { DEFAULT_DATA, DEFAULT_NOTIFICATION_SETTINGS, DEFAULT_CALENDAR_CARD_APPEARANCE, DEFAULT_BOARD_CARD_APPEARANCE } from './types';
 import { migrateAppData, defaultTagFromName } from './store/migrate';
 import { type StatusDefinition, DEFAULT_STATUSES } from './statusConfig';
 
@@ -301,6 +301,19 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	async migrateTicketStatus(projectId: string, fromStatusId: string, toStatusId: string): Promise<void> {
+		const now = Date.now();
+		let changed = false;
+		this.data.tickets = this.data.tickets.map(t => {
+			if (t.projectId === projectId && t.status === fromStatusId && !t.archived) {
+				changed = true;
+				return { ...t, status: toStatusId, updatedAt: now };
+			}
+			return t;
+		});
+		if (changed) await this.save();
+	}
+
 	async archiveDoneTicketsInSprint(sprintId: string): Promise<void> {
 		const done = this.data.tickets.filter(t => t.sprintId === sprintId && t.status === 'done' && !t.archived);
 		if (done.length === 0) return;
@@ -596,6 +609,33 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	// ── Calendar card appearance ──────────────────────────────────────────────
+
+	getCalendarCardAppearance(): CalendarViewAppearance {
+		const d = DEFAULT_CALENDAR_CARD_APPEARANCE;
+		const stored = this.data.calendarCardAppearance ?? {};
+		return {
+			month:  { ...d, ...stored.month },
+			week:   { ...d, ...stored.week },
+			day:    { ...d, ...stored.day },
+			agenda: { ...d, ...stored.agenda },
+		};
+	}
+
+	async setCalendarCardAppearance(appearance: CalendarViewAppearance): Promise<void> {
+		this.data.calendarCardAppearance = appearance;
+		await this.save();
+	}
+
+	getBoardCardAppearance(): BoardCardAppearance {
+		return { ...DEFAULT_BOARD_CARD_APPEARANCE, ...this.data.boardCardAppearance };
+	}
+
+	async setBoardCardAppearance(appearance: BoardCardAppearance): Promise<void> {
+		this.data.boardCardAppearance = appearance;
+		await this.save();
+	}
+
 	// ── Filter states ─────────────────────────────────────────────────────────
 
 	getFilterState(viewKey: string): { type: string; priority: string; status: string; hasSubtasks?: boolean } {
@@ -678,4 +718,5 @@ export class ProjectStore {
 		this.data.notifications = this.data.notifications.filter(n => !n.dismissed);
 		await this.save();
 	}
+
 }

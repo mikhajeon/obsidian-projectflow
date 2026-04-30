@@ -20,6 +20,10 @@ export class BacklogPanelView {
 	// Cached useSprints flag and scroll container for use inside helpers
 	private _useSprints = true;
 	private _scrollArea: HTMLElement | null = null;
+	// Cached backlog/todo status IDs for the active project
+	private _backlogStatusIds: Set<string> = new Set(['backlog']);
+	private _backlogStatusId = 'backlog';
+	private _todoStatusId = 'todo';
 
 	constructor(view: BoardView) {
 		this.view = view;
@@ -33,6 +37,11 @@ export class BacklogPanelView {
 	): void {
 		this._useSprints = useSprints;
 
+		const projectStatuses = store.getProjectStatuses(projectId);
+		this._backlogStatusIds = new Set(projectStatuses.filter(s => s.universalId === 'backlog').map(s => s.id));
+		this._backlogStatusId = projectStatuses.find(s => s.universalId === 'backlog')?.id ?? 'backlog';
+		this._todoStatusId = projectStatuses.find(s => s.universalId === 'todo')?.id ?? 'todo';
+
 		const scrollArea = container.createEl('div', { cls: 'pf-backlog-list pf-tbl-container' });
 		this._scrollArea = scrollArea;
 
@@ -40,7 +49,7 @@ export class BacklogPanelView {
 			{ key: 'name',     label: 'Name',                          cssVar: '--pf-col-name',     default: 280, sortField: 'title'    },
 			{ key: 'priority', label: 'Priority',                      cssVar: '--pf-col-priority', default: 100, sortField: 'priority' },
 			{ key: 'status',   label: 'Status',                        cssVar: '--pf-col-status',   default: 110, sortField: 'status'   },
-			{ key: 'sprint',   label: useSprints ? 'Sprint' : 'Board', cssVar: '--pf-col-extra',    default: 130 },
+			{ key: 'sprint',   label: useSprints ? 'Sprint' : '',       cssVar: '--pf-col-extra',    default: 130 },
 		];
 		const savedBacklogWidths = store.getColWidths('backlog');
 		for (const col of backlogCols) {
@@ -65,8 +74,8 @@ export class BacklogPanelView {
 			const allUnassigned = store.getTickets({ projectId, sprintId: null })
 				.filter(t => t.type !== 'epic' && t.type !== 'subtask');
 
-			const boardTickets   = allUnassigned.filter(t => t.showOnBoard === true);
-			const backlogTickets = allUnassigned.filter(t => t.showOnBoard !== true);
+			const boardTickets   = allUnassigned.filter(t => !this._backlogStatusIds.has(t.status));
+			const backlogTickets = allUnassigned.filter(t => this._backlogStatusIds.has(t.status));
 
 			const sortedBoard   = this.sortBacklogTickets(this.applyFilters(boardTickets));
 			const sortedBacklog = this.sortBacklogTickets(this.applyFilters(backlogTickets));
@@ -86,7 +95,7 @@ export class BacklogPanelView {
 
 			const dropLineEl = scrollArea.createEl('div', { cls: 'pf-drop-line' });
 
-			this.renderBacklogSection(scrollArea, store, projectId, 'Board', null, 'board-list', sortedBoard, null, orderedIds);
+			this.renderBacklogSection(scrollArea, store, projectId, 'Active', null, 'board-list', sortedBoard, null, orderedIds);
 			this.renderBacklogSection(scrollArea, store, projectId, 'Product Backlog', null, 'product-backlog', sortedBacklog, null, orderedIds);
 
 			this.renderSelectionBar(scrollArea, store);
@@ -96,14 +105,26 @@ export class BacklogPanelView {
 				const ticketsToMove = this.resolveDraggedTickets(store);
 				const newShowOnBoard = destSectionId === 'board-list';
 				for (const t of ticketsToMove) {
-					if (t.showOnBoard !== newShowOnBoard) {
-						await store.updateTicket(t.id, { showOnBoard: newShowOnBoard });
+					const newStatus = newShowOnBoard && this._backlogStatusIds.has(t.status)
+						? this._todoStatusId
+						: !newShowOnBoard && !this._backlogStatusIds.has(t.status)
+						? this._backlogStatusId
+						: undefined;
+					if (t.showOnBoard !== newShowOnBoard || newStatus !== undefined) {
+						await store.updateTicket(t.id, {
+							showOnBoard: newShowOnBoard,
+							...(newStatus !== undefined ? { status: newStatus } : {}),
+						});
 					}
 					const resolvedBefore = beforeId === '__end__' ? null : (beforeId ?? null);
 					await store.reorderBacklogTicket(t.id, null, resolvedBefore);
 					generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 				}
+				const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+				const scrollTop = scrollEl?.scrollTop ?? 0;
 				this.view.render();
+				const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+				if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 			});
 			return;
 		}
@@ -120,14 +141,19 @@ export class BacklogPanelView {
 
 		const orderedIds: string[] = [];
 		for (const sprint of sprints) {
-			const st = this.sortBacklogTickets(this.applyFilters(store.getTickets({ projectId, sprintId: sprint.id })));
+			const st = this.sortBacklogTickets(this.applyFilters(
+				store.getTickets({ projectId, sprintId: sprint.id })
+					.filter(t => !this._backlogStatusIds.has(t.status))
+			));
 			if (!this.view.collapsedSections.has(sprint.id)) {
 				for (const t of st) orderedIds.push(t.id);
 			}
 		}
 		const unassignedForOrder = this.sortBacklogTickets(
 			this.applyFilters(
-				store.getTickets({ projectId, sprintId: null }).filter(t => t.type !== 'epic' && t.type !== 'subtask')
+				store.getTickets({ projectId })
+					.filter(t => t.type !== 'epic' && t.type !== 'subtask')
+					.filter(t => t.sprintId === null || this._backlogStatusIds.has(t.status))
 			)
 		);
 		if (!this.view.collapsedSections.has('product-backlog')) {
@@ -142,13 +168,18 @@ export class BacklogPanelView {
 		const dropLineEl = scrollArea.createEl('div', { cls: 'pf-drop-line' });
 
 		for (const sprint of sprints) {
-			const tickets = this.sortBacklogTickets(this.applyFilters(store.getTickets({ projectId, sprintId: sprint.id })));
+			const tickets = this.sortBacklogTickets(this.applyFilters(
+				store.getTickets({ projectId, sprintId: sprint.id })
+					.filter(t => !this._backlogStatusIds.has(t.status))
+			));
 			this.renderBacklogSection(scrollArea, store, projectId, sprint.name, sprint.status, sprint.id, tickets, sprint, orderedIds);
 		}
 
 		const unassigned = this.sortBacklogTickets(
 			this.applyFilters(
-				store.getTickets({ projectId, sprintId: null }).filter(t => t.type !== 'epic' && t.type !== 'subtask')
+				store.getTickets({ projectId })
+					.filter(t => t.type !== 'epic' && t.type !== 'subtask')
+					.filter(t => t.sprintId === null || this._backlogStatusIds.has(t.status))
 			)
 		);
 		this.renderBacklogSection(scrollArea, store, projectId, 'Product Backlog', null, 'product-backlog', unassigned, null, orderedIds);
@@ -161,14 +192,23 @@ export class BacklogPanelView {
 			const destSprintId = destSectionId === 'product-backlog' ? null : destSectionId;
 			for (const t of ticketsToMove) {
 				const srcSprintId = t.sprintId ?? null;
-				if (destSprintId !== srcSprintId) {
-					await store.moveTicket(t.id, destSprintId, t.status, t.order);
+				const newStatus = destSectionId === 'product-backlog' && !this._backlogStatusIds.has(t.status)
+					? this._backlogStatusId
+					: destSectionId !== 'product-backlog' && this._backlogStatusIds.has(t.status)
+					? this._todoStatusId
+					: t.status;
+				if (destSprintId !== srcSprintId || newStatus !== t.status) {
+					await store.moveTicket(t.id, destSprintId, newStatus, t.order);
 				}
 				const resolvedBefore = beforeId === '__end__' ? null : (beforeId ?? null);
 				await store.reorderBacklogTicket(t.id, destSprintId, resolvedBefore);
 				generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 			}
+			const scrollEl = this.view.contentEl.querySelector('.pf-tbl-container');
+			const scrollTop = scrollEl?.scrollTop ?? 0;
 			this.view.render();
+			const newScrollEl = this.view.contentEl.querySelector('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
 	}
 
@@ -346,8 +386,8 @@ export class BacklogPanelView {
 		}
 		if (!this._useSprints) {
 			const desc = sectionId === 'board-list'
-				? 'Shown on Board & Subtasks views'
-				: 'Hidden from board views';
+				? 'Tickets shown on the board'
+				: 'Backlog status tickets';
 			headerEl.createEl('span', { cls: 'pf-backlog-section-desc', text: desc });
 		}
 		headerEl.createEl('span', { cls: 'pf-backlog-section-count', text: `${tickets.length} item${tickets.length !== 1 ? 's' : ''}` });
@@ -474,19 +514,7 @@ export class BacklogPanelView {
 		const lastCell = row.createEl('div', { cls: 'pf-tbl-cell' });
 
 		if (!this._useSprints) {
-			const onBoard = ticket.showOnBoard === true;
-			const badge = lastCell.createEl('span', {
-				cls: onBoard ? 'pf-badge pf-board-badge pf-board-badge-on' : 'pf-badge pf-board-badge pf-board-badge-off',
-				text: onBoard ? 'board' : 'backlog',
-			});
-			badge.title = onBoard ? 'Shown on board views — click to move to product backlog' : 'Hidden from board views — click to show on board';
-			badge.style.cursor = 'pointer';
-			badge.addEventListener('click', async (e) => {
-				e.stopPropagation();
-				await store.updateTicket(ticket.id, { showOnBoard: !onBoard });
-				await generateTicketNote(this.view.plugin, ticket.id);
-				this.view.render();
-			});
+			// Last cell intentionally empty — section placement is driven by status
 		} else if (!sprint) {
 			const availableSprints = store.getSprints(projectId).filter(s => s.status !== 'completed');
 			if (availableSprints.length > 0) {
@@ -497,7 +525,7 @@ export class BacklogPanelView {
 				}
 				addToSprint.addEventListener('change', async () => {
 					if (addToSprint.value) {
-						await store.moveTicket(ticket.id, addToSprint.value, 'todo', ticket.order);
+						await store.moveTicket(ticket.id, addToSprint.value, this._todoStatusId, ticket.order);
 						await generateTicketNote(this.view.plugin, ticket.id);
 						this.view.render();
 					}
@@ -525,10 +553,18 @@ export class BacklogPanelView {
 				)
 			);
 			if (!this._useSprints) {
-				if (ticket.showOnBoard === true) {
+				if (ticket.showOnBoard === true && !this._backlogStatusIds.has(ticket.status)) {
 					menu.addItem(item =>
 						item.setTitle('Move to product backlog').setIcon('archive').onClick(async () => {
-							await store.updateTicket(ticket.id, { showOnBoard: false });
+							await store.updateTicket(ticket.id, { showOnBoard: false, status: this._backlogStatusId });
+							await generateTicketNote(this.view.plugin, ticket.id);
+							this.view.render();
+						})
+					);
+				} else if (!this._backlogStatusIds.has(ticket.status)) {
+					menu.addItem(item =>
+						item.setTitle('Show on board').setIcon('layout-dashboard').onClick(async () => {
+							await store.updateTicket(ticket.id, { showOnBoard: true });
 							await generateTicketNote(this.view.plugin, ticket.id);
 							this.view.render();
 						})
@@ -536,7 +572,7 @@ export class BacklogPanelView {
 				} else {
 					menu.addItem(item =>
 						item.setTitle('Show on board').setIcon('layout-dashboard').onClick(async () => {
-							await store.updateTicket(ticket.id, { showOnBoard: true });
+							await store.updateTicket(ticket.id, { showOnBoard: true, status: this._todoStatusId });
 							await generateTicketNote(this.view.plugin, ticket.id);
 							this.view.render();
 						})
@@ -545,7 +581,7 @@ export class BacklogPanelView {
 			} else if (sprint) {
 				menu.addItem(item =>
 					item.setTitle('Move to product backlog').setIcon('archive').onClick(async () => {
-						await store.moveTicket(ticket.id, null, 'todo', ticket.order);
+						await store.moveTicket(ticket.id, null, this._backlogStatusId, ticket.order);
 						await generateTicketNote(this.view.plugin, ticket.id);
 						this.view.render();
 					})

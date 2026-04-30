@@ -41,6 +41,16 @@ export function migrateAppData(saved: RawData | null): AppData {
 		statuses: (p as Project).statuses ?? DEFAULT_STATUSES.map(s => ({ ...s })),
 	}));
 
+	// Ensure every project has a backlog status (prepend if missing)
+	for (const p of projects) {
+		if (!p.statuses.some(s => s.universalId === 'backlog')) {
+			p.statuses.unshift({
+				id: 'backlog', label: 'Backlog', color: '#6b7280',
+				isDefault: true, universalId: 'backlog',
+			});
+		}
+	}
+
 	// Migrate tickets: assign ticketNumber and backlogOrder if missing
 	const counterByProject: Record<string, number> = {};
 	const backlogOrderByBucket: Record<string, number> = {};
@@ -101,5 +111,10 @@ export function migrateAppData(saved: RawData | null): AppData {
 		hiddenBoardColumns: saved?.hiddenBoardColumns ?? {},
 		collapsedBoardColumns: saved?.collapsedBoardColumns ?? {},
 		boardColWidth: saved?.boardColWidth ?? {},
+		boardCardAppearance: saved?.boardCardAppearance,
+		calendarCardAppearance: saved?.calendarCardAppearance,
+		calendarProjectIds: saved?.calendarProjectIds,
+		notificationSettings: saved?.notificationSettings,
+		notifications: saved?.notifications,
 	};
 }

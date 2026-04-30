@@ -157,6 +157,48 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 	},
 };
 
+export interface CalendarCardAppearance {
+	typeBadge: boolean;
+	priorityEdge: boolean;
+	timeDisplay: boolean;
+	projectDot: boolean;
+	recurrenceIcon: boolean;
+	ticketKey: boolean;
+	statusBadge: boolean;
+}
+
+export const DEFAULT_CALENDAR_CARD_APPEARANCE: CalendarCardAppearance = {
+	typeBadge: true,
+	priorityEdge: true,
+	timeDisplay: true,
+	projectDot: true,
+	recurrenceIcon: true,
+	ticketKey: true,
+	statusBadge: true,
+};
+
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda';
+
+export type CalendarViewAppearance = Record<CalendarViewMode, CalendarCardAppearance>;
+
+export interface BoardCardAppearance {
+	typeIcon: boolean;       // type icon (◈⛋𓆣⚑⧉)
+	priorityBadge: boolean;  // priority text badge
+	priorityEdge: boolean;   // colored left border
+	points: boolean;         // points badge
+	description: boolean;    // description text
+	recurrenceIcon: boolean; // ↻ on recurring tickets
+	checklist: boolean;      // checklist progress
+	subtaskCount: boolean;   // ⧉ N/M subtasks (board view)
+	parentLabel: boolean;    // parent ticket label (subtasks-only view)
+}
+
+export const DEFAULT_BOARD_CARD_APPEARANCE: BoardCardAppearance = {
+	typeIcon: true, priorityBadge: true, priorityEdge: true,
+	points: true, description: true, recurrenceIcon: true,
+	checklist: true, subtaskCount: true, parentLabel: true,
+};
+
 export interface AppData {
 	projects: Project[];
 	sprints: Sprint[];
@@ -172,6 +214,8 @@ export interface AppData {
 	hiddenBoardColumns?: Record<string, string[]>; // projectId -> array of hidden status IDs
 	collapsedBoardColumns?: Record<string, string[]>; // projectId -> array of collapsed status IDs
 	calendarProjectIds?: string[];  // project IDs visible in Calendar Flow; null = active project only
+	calendarCardAppearance?: Partial<CalendarViewAppearance>;
+	boardCardAppearance?: BoardCardAppearance;
 	notificationSettings?: NotificationSettings;
 	notifications?: StoredNotification[];
 }
@@ -187,6 +231,7 @@ export const DEFAULT_DATA: AppData = {
 
 /** Fallback label map for default statuses. Prefer plugin.settings.statuses for display. */
 export const TICKET_STATUS_LABELS: Record<string, string> = {
+	'backlog': 'Backlog',
 	'todo': 'To Do',
 	'in-progress': 'In Progress',
 	'in-review': 'In Review',

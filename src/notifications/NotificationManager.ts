@@ -34,6 +34,7 @@ export class NotificationManager {
 	private intervalId: number | null = null;
 	private badgeEls: HTMLElement[] = [];
 	private _summaryStats: NotificationSummaryStats = { overdue: 0, dueToday: 0, endingSoon: 0 };
+	private _suppressRefresh = false;
 
 	constructor(plugin: ProjectFlowPlugin) {
 		this.plugin = plugin;
@@ -105,6 +106,40 @@ export class NotificationManager {
 		return this._summaryStats;
 	}
 
+	/**
+	 * Run an immediate check (e.g. when the notification panel opens).
+	 * Suppresses the panel refresh callback to avoid re-entrant renders.
+	 */
+	checkNow(): void {
+		this._suppressRefresh = true;
+		try {
+			this.checkAll(false);
+		} finally {
+			this._suppressRefresh = false;
+		}
+	}
+
+	/** Returns actual ticket arrays for overdue/dueToday, plus endingSoon count. */
+	getDetailedSummary(): { overdueTickets: Ticket[], dueTodayTickets: Ticket[], endingSoon: number } {
+		const now = Date.now();
+		const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+		const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
+		const overdueTickets: Ticket[] = [];
+		const dueTodayTickets: Ticket[] = [];
+		let endingSoon = 0;
+		for (const project of this.plugin.store.getProjects()) {
+			const projectStatuses = this.plugin.store.getProjectStatuses(project.id);
+			const doneIds = new Set(projectStatuses.filter(s => s.universalId === 'done').map(s => s.id));
+			const tickets = this.plugin.store.getTickets({ projectId: project.id })
+				.filter(t => !t.archived && !doneIds.has(t.status));
+			overdueTickets.push(...tickets.filter(t => t.dueDate && t.dueDate < todayStart.getTime()));
+			dueTodayTickets.push(...tickets.filter(t => t.dueDate && t.dueDate >= todayStart.getTime() && t.dueDate <= todayEnd.getTime()));
+			const sprint = this.plugin.store.getSprints(project.id).find(s => s.status === 'active');
+			if (sprint && sprint.endDate - now <= 2 * 86400000 && sprint.endDate > now) endingSoon++;
+		}
+		return { overdueTickets, dueTodayTickets, endingSoon };
+	}
+
 	// ── Core check ────────────────────────────────────────────────────────────
 
 	private checkAll(_isStartup: boolean): void {
@@ -132,7 +167,7 @@ export class NotificationManager {
 			const doneIds = new Set(projectStatuses.filter(s => s.universalId === 'done').map(s => s.id));
 			const tickets = this.plugin.store.getTickets({ projectId: project.id })
 				.filter(t => !t.archived && !doneIds.has(t.status));
-			overdue   += tickets.filter(t => t.dueDate && t.dueDate < now).length;
+			overdue   += tickets.filter(t => t.dueDate && t.dueDate < todayStart.getTime()).length;
 			dueToday  += tickets.filter(t => t.dueDate && t.dueDate >= todayStart.getTime() && t.dueDate <= todayEnd.getTime()).length;
 			const sprint = this.plugin.store.getSprints(project.id).find(s => s.status === 'active');
 			if (sprint && sprint.endDate - now <= 2 * 86400000 && sprint.endDate > now) endingSoon++;
@@ -274,6 +309,7 @@ export class NotificationManager {
 	// ── Panel refresh callback ────────────────────────────────────────────────
 
 	refreshPanel(): void {
+		if (this._suppressRefresh) return;
 		this.plugin.refreshNotificationPanel();
 	}
 }

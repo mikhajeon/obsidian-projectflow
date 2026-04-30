@@ -50,34 +50,40 @@ export class CalendarSidebar {
 			const active = items.filter(t => !doneIds.has(t.status));
 			const done   = items.filter(t =>  doneIds.has(t.status));
 
-			for (const ticket of active) this.view.renderTicketChip(container, ticket);
+			const activeSection = container.createEl('div', { cls: 'pf-cal-sidebar-done-section' });
+			const activeHeader  = activeSection.createEl('div', { cls: 'pf-cal-sidebar-done-header' });
+			activeHeader.createEl('span', { cls: 'pf-cal-sidebar-done-label', text: `Active (${active.length})` });
+			const activeChevron = activeHeader.createEl('span', { cls: 'pf-cal-sidebar-done-chevron', text: '▾' });
+			const activeList = activeSection.createEl('div', { cls: 'pf-cal-sidebar-done-list' });
+			for (const ticket of active) this.view.renderTicketChip(activeList, ticket);
+			activeHeader.addEventListener('click', () => {
+				const collapsed = activeList.hasClass('pf-cal-sidebar-done-collapsed');
+				activeList.toggleClass('pf-cal-sidebar-done-collapsed', !collapsed);
+				activeChevron.textContent = collapsed ? '▾' : '▸';
+			});
 
-			if (done.length > 0) {
-				const doneSection = container.createEl('div', { cls: 'pf-cal-sidebar-done-section' });
-				const doneHeader  = doneSection.createEl('div', { cls: 'pf-cal-sidebar-done-header' });
-				doneHeader.createEl('span', { cls: 'pf-cal-sidebar-done-label', text: `Done (${done.length})` });
-				const chevron = doneHeader.createEl('span', { cls: 'pf-cal-sidebar-done-chevron', text: '▸' });
-
-				const doneList = doneSection.createEl('div', { cls: 'pf-cal-sidebar-done-list pf-cal-sidebar-done-collapsed' });
-				for (const ticket of done) this.view.renderTicketChip(doneList, ticket);
-
-				doneHeader.addEventListener('click', () => {
-					const collapsed = doneList.hasClass('pf-cal-sidebar-done-collapsed');
-					doneList.toggleClass('pf-cal-sidebar-done-collapsed', !collapsed);
-					chevron.textContent = collapsed ? '▾' : '▸';
-				});
-			}
+			const doneSection = container.createEl('div', { cls: 'pf-cal-sidebar-done-section' });
+			const doneHeader  = doneSection.createEl('div', { cls: 'pf-cal-sidebar-done-header' });
+			doneHeader.createEl('span', { cls: 'pf-cal-sidebar-done-label', text: `Done (${done.length})` });
+			const chevron = doneHeader.createEl('span', { cls: 'pf-cal-sidebar-done-chevron', text: '▸' });
+			const doneList = doneSection.createEl('div', { cls: 'pf-cal-sidebar-done-list pf-cal-sidebar-done-collapsed' });
+			for (const ticket of done) this.view.renderTicketChip(doneList, ticket);
+			doneHeader.addEventListener('click', () => {
+				const collapsed = doneList.hasClass('pf-cal-sidebar-done-collapsed');
+				doneList.toggleClass('pf-cal-sidebar-done-collapsed', !collapsed);
+				chevron.textContent = collapsed ? '▾' : '▸';
+			});
 		};
 
 		// Parent / standalone tickets
-		renderActiveAndDone(list, parentTickets);
+		const ticketsSection = list.createEl('div', { cls: 'pf-cal-sidebar-subtask-section' });
+		ticketsSection.createEl('div', { cls: 'pf-cal-sidebar-subtask-header', text: `Tickets (${parentTickets.length})` });
+		renderActiveAndDone(ticketsSection, parentTickets);
 
-		// Subtasks section — only shown if there are unscheduled subtasks
-		if (subtasks.length > 0) {
-			const subtaskSection = list.createEl('div', { cls: 'pf-cal-sidebar-subtask-section' });
-			subtaskSection.createEl('div', { cls: 'pf-cal-sidebar-subtask-header', text: `Subtasks (${subtasks.length})` });
-			renderActiveAndDone(subtaskSection, subtasks);
-		}
+		// Subtasks section
+		const subtaskSection = list.createEl('div', { cls: 'pf-cal-sidebar-subtask-section' });
+		subtaskSection.createEl('div', { cls: 'pf-cal-sidebar-subtask-header', text: `Subtasks (${subtasks.length})` });
+		renderActiveAndDone(subtaskSection, subtasks);
 	}
 
 	// ── Mini calendar ──────────────────────────────────────────────────────────

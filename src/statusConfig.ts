@@ -3,7 +3,7 @@ export interface StatusDefinition {
 	label: string;       // display name (user-editable)
 	color: string;       // hex e.g. "#4c9be8"
 	isDefault: boolean;  // true = rename-only, never deletable
-	universalId: string; // maps to one of the 4 default ids for broad classification
+	universalId: string; // maps to one of the 5 default ids for broad classification
 }
 
 export interface ProjectFlowSettings {
@@ -11,7 +11,8 @@ export interface ProjectFlowSettings {
 }
 
 export const DEFAULT_STATUSES: StatusDefinition[] = [
-	{ id: 'todo',        label: 'To Do',      color: '#8b8b8b', isDefault: true, universalId: 'todo' },
+	{ id: 'backlog',     label: 'Backlog',     color: '#6b7280', isDefault: true, universalId: 'backlog' },
+	{ id: 'todo',        label: 'To Do',       color: '#8b8b8b', isDefault: true, universalId: 'todo' },
 	{ id: 'in-progress', label: 'In Progress', color: '#4c9be8', isDefault: true, universalId: 'in-progress' },
 	{ id: 'in-review',   label: 'In Review',   color: '#e8a24c', isDefault: true, universalId: 'in-review' },
 	{ id: 'done',        label: 'Done',        color: '#4caf7d', isDefault: true, universalId: 'done' },

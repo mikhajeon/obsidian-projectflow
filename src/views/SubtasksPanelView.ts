@@ -260,7 +260,8 @@ export class SubtasksPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint | null): void {
-		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const ap = this.view.plugin.store.getBoardCardAppearance();
+		const showEdges = ap.priorityEdge && this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
 		const card = container.createDiv(`pf-subtasks-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}`);
 		card.dataset.id = ticket.id;
 		card.draggable = true;
@@ -277,15 +278,17 @@ export class SubtasksPanelView {
 		// Match board view card layout: title, description, top row
 		card.createEl('p', { cls: 'pf-card-title', text: ticket.title });
 
-		if (ticket.description) {
+		if (ap.description && ticket.description) {
 			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });
 		}
 
 		const top = card.createEl('div', { cls: 'pf-card-top' });
-		const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
-		typeIcon.title = ticket.type;
-		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
-		if (ticket.points !== undefined) {
+		if (ap.typeIcon) {
+			const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
+			typeIcon.title = ticket.type;
+		}
+		if (ap.priorityBadge) top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
+		if (ap.points && ticket.points !== undefined) {
 			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
 		}
 

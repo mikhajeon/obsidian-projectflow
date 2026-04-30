@@ -533,6 +533,7 @@
 }
 
 .pf-backlog-list {
+	position: relative;
 	padding: 0;
 	overflow-y: auto;
 	flex: 1;
@@ -1047,6 +1048,52 @@
 	padding: 12px 16px;
 	border-top: 1px solid var(--background-modifier-border);
 	background: var(--background-primary);
+}
+
+/* ── Project picker modal ──────────────────────────────────────────────────── */
+
+.pf-project-picker-modal .pf-project-picker-title {
+	margin: 0 0 12px 0;
+	font-size: var(--font-ui-medium);
+}
+
+.pf-project-picker-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pf-project-picker-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 8px 12px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	text-align: left;
+}
+
+.pf-project-picker-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-project-picker-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.pf-project-picker-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
 /* ── Empty states ────────────────────────────────────────────────────────── */
@@ -2805,7 +2852,7 @@
 /* ── Past day cells (month view) ─────────────────────────────────────────── */
 
 .pf-cal-today {
-	background: var(--pf-cal-today-bg) !important;
+	background: transparent !important;
 	box-shadow: inset 0 0 0 2px var(--pf-cal-today-border);
 }
 
@@ -2854,6 +2901,7 @@
 /* ── Ticket chip (month + sidebar) ──────────────────────────────────────── */
 
 .pf-cal-chip {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 4px;
@@ -3016,7 +3064,7 @@
 }
 
 .pf-cal-today-col {
-	background: var(--pf-cal-today-bg);
+	background: transparent;
 	border-left: 2px solid var(--pf-cal-today-border);
 	border-right: 2px solid var(--pf-cal-today-border);
 	box-sizing: border-box;
@@ -3066,9 +3114,37 @@
 	height: 64px; /* matches HOUR_HEIGHT */
 	border-top: 1px solid var(--background-modifier-border);
 	box-sizing: border-box;
-	cursor: pointer;
+	pointer-events: none;
 }
-.pf-cal-hour-line:hover { background: var(--background-modifier-hover); }
+
+/* Half-hour grid lines */
+.pf-cal-half-hour-line {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 0;
+	border-top: 1px dashed var(--background-modifier-border);
+	opacity: 0.5;
+	pointer-events: none;
+}
+
+/* Drag-create time selection preview */
+.pf-cal-drag-create-preview {
+	position: absolute;
+	left: 3px;
+	right: 3px;
+	background: var(--interactive-accent);
+	opacity: 0.25;
+	border: 2px solid var(--interactive-accent);
+	border-radius: 4px;
+	pointer-events: none;
+	z-index: 5;
+}
+
+/* Day columns use crosshair cursor for drag-create affordance */
+.pf-cal-week-day-col {
+	cursor: crosshair;
+}
 
 /* ── Timed duration block ────────────────────────────────────────────────── */
 
@@ -3104,14 +3180,13 @@
 	flex-shrink: 0;
 }
 .pf-cal-block-timerange {
-	flex: 1;
-	min-width: 0;
+	flex: 0 0 auto;
+	margin-left: auto;
 	font-size: 10px;
 	color: var(--text-muted);
-	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
 	font-weight: 500;
+	text-align: right;
 }
 
 .pf-cal-block-title { min-width: 0; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-normal); }
@@ -3378,6 +3453,129 @@
 .pf-cal-sprint-toggle { font-size: 11px; }
 .pf-cal-sprint-toggle.active { color: var(--interactive-accent); border-color: var(--interactive-accent); }
 
+/* ── Calendar settings button ──────────────────────────────────────────────── */
+
+.pf-cal-settings-btn {
+	margin-left: auto;
+}
+
+/* ── Calendar settings modal ───────────────────────────────────────────────── */
+
+.modal-content:has(.pf-cal-settings-modal) {
+	min-width: 420px;
+	max-width: 520px;
+	padding: 0;
+}
+
+.pf-cal-settings-tabs {
+	display: flex;
+	border-bottom: 1px solid var(--background-modifier-border);
+	padding: 0 16px;
+	gap: 2px;
+}
+
+.pf-cal-settings-tab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 14px;
+	background: transparent;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+	margin-bottom: -1px;
+}
+
+.pf-cal-settings-tab:hover {
+	color: var(--text-normal);
+}
+
+.pf-cal-settings-tab.active {
+	color: var(--text-normal);
+	border-bottom-color: var(--interactive-accent);
+}
+
+.pf-cal-settings-tab-icon {
+	display: flex;
+	align-items: center;
+}
+
+.pf-cal-settings-tab-icon svg {
+	width: 14px;
+	height: 14px;
+}
+
+.pf-cal-settings-content {
+	padding: 16px;
+}
+
+.pf-cal-settings-section-desc {
+	margin: 0 0 12px 0;
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+
+.pf-cal-settings-toggle-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 0;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.pf-cal-settings-toggle-row:last-child {
+	border-bottom: none;
+}
+
+.pf-cal-settings-toggle-left {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.pf-cal-settings-toggle-label {
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+}
+
+.pf-cal-settings-toggle-desc {
+	font-size: 11px;
+	color: var(--text-muted);
+}
+
+.pf-cal-settings-toggle {
+	width: 32px;
+	height: 18px;
+	border-radius: 9px;
+	background: var(--background-modifier-border);
+	flex-shrink: 0;
+	cursor: pointer;
+	position: relative;
+	transition: background 0.15s;
+}
+
+.pf-cal-settings-toggle::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	background: white;
+	transition: left 0.15s;
+}
+
+.pf-cal-settings-toggle.active {
+	background: var(--interactive-accent);
+}
+
+.pf-cal-settings-toggle.active::after {
+	left: 16px;
+}
+
 /* ── Phase 10: Agenda view ───────────────────────────────────────────────── */
 
 .pf-agenda-view {
@@ -3408,6 +3606,7 @@
 .pf-agenda-overdue-header { color: var(--text-error, #e05252); }
 .pf-agenda-items { display: flex; flex-direction: column; gap: 4px; }
 .pf-agenda-item {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -3468,7 +3667,7 @@
 	letter-spacing: 0.05em;
 	color: var(--text-faint);
 }
-.pf-cal-sidebar-done-chevron { font-size: 10px; color: var(--text-faint); }
+.pf-cal-sidebar-done-chevron { font-size: 20px; color: var(--text-faint); }
 .pf-cal-sidebar-done-list { display: flex; flex-direction: column; gap: 3px; margin-top: 3px; }
 .pf-cal-sidebar-done-list .pf-cal-chip { opacity: 0.6; }
 .pf-cal-sidebar-done-collapsed { display: none; }
@@ -3479,11 +3678,11 @@
 	padding-top: 4px;
 }
 .pf-cal-sidebar-subtask-header {
-	font-size: 10px;
-	font-weight: 600;
+	font-size: 11px;
+	font-weight: 700;
 	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: var(--text-faint);
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
 	padding: 2px 2px 4px;
 }
 
@@ -3585,6 +3784,36 @@
 }
 .pf-cal-block-inset:hover { z-index: 5; }
 
+/* Done tick — inline leading item on chips, absolute overlay on timed blocks/bars */
+.pf-cal-done-tick {
+	position: absolute;
+	top: 2px;
+	right: 2px;
+	width: 14px;
+	height: 14px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--background-primary);
+	border-radius: 50%;
+	color: #4caf7d;
+	z-index: 2;
+	pointer-events: none;
+	flex-shrink: 0;
+}
+.pf-cal-done-tick svg {
+	width: 10px;
+	height: 10px;
+	stroke-width: 3;
+}
+/* On chips (month view / sidebar) and block row1, render tick inline */
+.pf-cal-chip .pf-cal-done-tick,
+.pf-cal-block-row1 .pf-cal-done-tick {
+	position: static;
+	order: -1;
+	background: none;
+}
+
 .pf-autosched-time { flex-shrink: 0; font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 /* ── Notification Panel ─────────────────────────────────────────────────── */
 
@@ -3634,22 +3863,117 @@
 
 .pf-notif-summary {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 6px 12px;
+	flex-direction: column;
+	padding: 10px 12px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-shrink: 0;
-	flex-wrap: wrap;
 }
 
-.pf-notif-summary-pill {
+/* Dashboard stat cards grid */
+.pf-notif-dash-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 6px;
+}
+
+.pf-notif-dash-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 8px 6px 7px;
+	border-radius: var(--radius-m);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	position: relative;
+	gap: 2px;
+}
+
+.pf-notif-dash-card--clickable {
+	cursor: pointer;
+	transition: background 0.1s, border-color 0.1s;
+}
+
+.pf-notif-dash-card--clickable:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-notif-dash-card--active {
+	background: var(--interactive-accent) !important;
+	border-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent);
+}
+.pf-notif-dash-card--active .pf-notif-dash-num,
+.pf-notif-dash-card--active .pf-notif-dash-label,
+.pf-notif-dash-card--active .pf-notif-dash-icon,
+.pf-notif-dash-card--active .pf-notif-dash-chevron {
+	color: var(--text-on-accent) !important;
+}
+
+.pf-notif-dash-card--zero {
+	opacity: 0.45;
+}
+
+.pf-notif-dash-num {
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.pf-notif-dash-label-row {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.pf-notif-dash-icon {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
 }
 
+.pf-notif-dash-icon svg {
+	width: 10px;
+	height: 10px;
+}
+
+.pf-notif-dash-label {
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+}
+
+.pf-notif-dash-chevron {
+	position: absolute;
+	top: 4px;
+	right: 5px;
+	font-size: 9px;
+	opacity: 0.6;
+}
+
+/* Per-type color accents */
+.pf-notif-dash-card--overdue .pf-notif-dash-num,
+.pf-notif-dash-card--overdue .pf-notif-dash-icon,
+.pf-notif-dash-card--overdue .pf-notif-dash-label { color: var(--text-error); }
+.pf-notif-dash-card--overdue:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--text-error) 30%, transparent);
+	background: color-mix(in srgb, var(--text-error) 6%, var(--background-secondary));
+}
+
+.pf-notif-dash-card--today .pf-notif-dash-num,
+.pf-notif-dash-card--today .pf-notif-dash-icon,
+.pf-notif-dash-card--today .pf-notif-dash-label { color: var(--color-accent); }
+.pf-notif-dash-card--today:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+	background: color-mix(in srgb, var(--color-accent) 6%, var(--background-secondary));
+}
+
+.pf-notif-dash-card--sprint .pf-notif-dash-num,
+.pf-notif-dash-card--sprint .pf-notif-dash-icon,
+.pf-notif-dash-card--sprint .pf-notif-dash-label { color: var(--color-orange); }
+.pf-notif-dash-card--sprint:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--color-orange) 30%, transparent);
+	background: color-mix(in srgb, var(--color-orange) 6%, var(--background-secondary));
+}
+
+/* Legacy pill selector — keep for transition compatibility */
 .pf-notif-summary-icon {
 	display: inline-flex;
 	align-items: center;
@@ -3660,9 +3984,48 @@
 	height: 12px;
 }
 
-.pf-notif-summary-pill--overdue { color: var(--text-error); }
-.pf-notif-summary-pill--today   { color: var(--color-accent); }
-.pf-notif-summary-pill--sprint  { color: var(--color-orange); }
+.pf-notif-summary-detail {
+	margin-top: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.pf-notif-summary-detail-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 2px;
+	border-radius: var(--radius-s);
+}
+
+.pf-notif-summary-detail-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-notif-summary-detail-dot {
+	flex-shrink: 0;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--text-faint);
+}
+
+.pf-notif-summary-detail-name {
+	flex: 1;
+	min-width: 0;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.pf-notif-summary-detail-name:hover {
+	color: var(--color-accent);
+	text-decoration: underline;
+}
 
 .pf-notif-summary-clear {
 	display: inline-flex;
@@ -3762,7 +4125,34 @@
 .pf-notif-card-body {
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
-	margin: 0 0 6px;
+	margin: 0 0 4px;
+}
+
+/* Ticket date/time row on notification cards */
+.pf-notif-card-dates {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-bottom: 6px;
+}
+
+.pf-notif-date-icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.pf-notif-date-icon svg {
+	width: 11px;
+	height: 11px;
+}
+
+.pf-notif-date-range {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+	letter-spacing: 0.01em;
 }
 
 /* ── Card actions ───────────────────────────────────────────────────────── */
@@ -3794,6 +4184,12 @@
 	background: var(--background-modifier-error);
 	color: var(--text-error);
 	border-color: var(--text-error);
+}
+
+.pf-notif-action-btn--done:hover {
+	background: var(--color-green);
+	color: var(--text-on-accent);
+	border-color: var(--color-green);
 }
 
 /* ── Snooze dropdown ────────────────────────────────────────────────────── */

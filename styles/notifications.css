@@ -46,22 +46,117 @@
 
 .pf-notif-summary {
 	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 6px 12px;
+	flex-direction: column;
+	padding: 10px 12px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
 	flex-shrink: 0;
-	flex-wrap: wrap;
 }
 
-.pf-notif-summary-pill {
+/* Dashboard stat cards grid */
+.pf-notif-dash-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 6px;
+}
+
+.pf-notif-dash-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 8px 6px 7px;
+	border-radius: var(--radius-m);
+	border: 1px solid var(--background-modifier-border);
+	background: var(--background-secondary);
+	position: relative;
+	gap: 2px;
+}
+
+.pf-notif-dash-card--clickable {
+	cursor: pointer;
+	transition: background 0.1s, border-color 0.1s;
+}
+
+.pf-notif-dash-card--clickable:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-notif-dash-card--active {
+	background: var(--interactive-accent) !important;
+	border-color: var(--interactive-accent) !important;
+	color: var(--text-on-accent);
+}
+.pf-notif-dash-card--active .pf-notif-dash-num,
+.pf-notif-dash-card--active .pf-notif-dash-label,
+.pf-notif-dash-card--active .pf-notif-dash-icon,
+.pf-notif-dash-card--active .pf-notif-dash-chevron {
+	color: var(--text-on-accent) !important;
+}
+
+.pf-notif-dash-card--zero {
+	opacity: 0.45;
+}
+
+.pf-notif-dash-num {
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.pf-notif-dash-label-row {
+	display: flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.pf-notif-dash-icon {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	font-size: var(--font-ui-smaller);
-	color: var(--text-faint);
 }
 
+.pf-notif-dash-icon svg {
+	width: 10px;
+	height: 10px;
+}
+
+.pf-notif-dash-label {
+	font-size: var(--font-ui-smaller);
+	white-space: nowrap;
+}
+
+.pf-notif-dash-chevron {
+	position: absolute;
+	top: 4px;
+	right: 5px;
+	font-size: 9px;
+	opacity: 0.6;
+}
+
+/* Per-type color accents */
+.pf-notif-dash-card--overdue .pf-notif-dash-num,
+.pf-notif-dash-card--overdue .pf-notif-dash-icon,
+.pf-notif-dash-card--overdue .pf-notif-dash-label { color: var(--text-error); }
+.pf-notif-dash-card--overdue:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--text-error) 30%, transparent);
+	background: color-mix(in srgb, var(--text-error) 6%, var(--background-secondary));
+}
+
+.pf-notif-dash-card--today .pf-notif-dash-num,
+.pf-notif-dash-card--today .pf-notif-dash-icon,
+.pf-notif-dash-card--today .pf-notif-dash-label { color: var(--color-accent); }
+.pf-notif-dash-card--today:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+	background: color-mix(in srgb, var(--color-accent) 6%, var(--background-secondary));
+}
+
+.pf-notif-dash-card--sprint .pf-notif-dash-num,
+.pf-notif-dash-card--sprint .pf-notif-dash-icon,
+.pf-notif-dash-card--sprint .pf-notif-dash-label { color: var(--color-orange); }
+.pf-notif-dash-card--sprint:not(.pf-notif-dash-card--zero) {
+	border-color: color-mix(in srgb, var(--color-orange) 30%, transparent);
+	background: color-mix(in srgb, var(--color-orange) 6%, var(--background-secondary));
+}
+
+/* Legacy pill selector — keep for transition compatibility */
 .pf-notif-summary-icon {
 	display: inline-flex;
 	align-items: center;
@@ -72,9 +167,48 @@
 	height: 12px;
 }
 
-.pf-notif-summary-pill--overdue { color: var(--text-error); }
-.pf-notif-summary-pill--today   { color: var(--color-accent); }
-.pf-notif-summary-pill--sprint  { color: var(--color-orange); }
+.pf-notif-summary-detail {
+	margin-top: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.pf-notif-summary-detail-item {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 2px;
+	border-radius: var(--radius-s);
+}
+
+.pf-notif-summary-detail-item:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-notif-summary-detail-dot {
+	flex-shrink: 0;
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: var(--text-faint);
+}
+
+.pf-notif-summary-detail-name {
+	flex: 1;
+	min-width: 0;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-normal);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.pf-notif-summary-detail-name:hover {
+	color: var(--color-accent);
+	text-decoration: underline;
+}
 
 .pf-notif-summary-clear {
 	display: inline-flex;
@@ -174,7 +308,34 @@
 .pf-notif-card-body {
 	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
-	margin: 0 0 6px;
+	margin: 0 0 4px;
+}
+
+/* Ticket date/time row on notification cards */
+.pf-notif-card-dates {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-bottom: 6px;
+}
+
+.pf-notif-date-icon {
+	display: inline-flex;
+	align-items: center;
+	color: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.pf-notif-date-icon svg {
+	width: 11px;
+	height: 11px;
+}
+
+.pf-notif-date-range {
+	font-size: var(--font-ui-smaller);
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+	letter-spacing: 0.01em;
 }
 
 /* ── Card actions ───────────────────────────────────────────────────────── */
@@ -206,6 +367,12 @@
 	background: var(--background-modifier-error);
 	color: var(--text-error);
 	border-color: var(--text-error);
+}
+
+.pf-notif-action-btn--done:hover {
+	background: var(--color-green);
+	color: var(--text-on-accent);
+	border-color: var(--color-green);
 }
 
 /* ── Snooze dropdown ────────────────────────────────────────────────────── */

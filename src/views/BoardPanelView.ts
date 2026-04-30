@@ -33,7 +33,7 @@ export class BoardPanelView {
 				? store.getTickets({ projectId, sprintId: currentSprint.id })
 				: store.getTickets({ projectId })
 			).filter(t => t.status === col.id)
-			 .filter(t => useSprints || t.showOnBoard === true);
+			 .filter(t => useSprints || t.sprintId === null);
 
 			const filtered = allTickets
 				.filter(t => this.view.filterType === 'all' || t.type === this.view.filterType)
@@ -217,36 +217,41 @@ export class BoardPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint | null): void {
-		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const ap = this.view.plugin.store.getBoardCardAppearance();
+		const showEdges = ap.priorityEdge && this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
 		const card = container.createEl('div', { cls: `pf-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}` });
 		card.draggable = true;
 		card.dataset.id = ticket.id;
 
 		const cardTitleRow = card.createEl('div', { cls: 'pf-card-title-row' });
 		cardTitleRow.createEl('span', { cls: 'pf-card-title', text: ticket.title });
-		if (ticket.recurrence) cardTitleRow.createEl('span', { cls: 'pf-card-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
+		if (ap.recurrenceIcon && ticket.recurrence) cardTitleRow.createEl('span', { cls: 'pf-card-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 
-		if (ticket.description) {
+		if (ap.description && ticket.description) {
 			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });
 		}
 
 		const top = card.createEl('div', { cls: 'pf-card-top' });
-		const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
-		typeIcon.title = ticket.type;
-		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
-		if (ticket.points !== undefined) {
+		if (ap.typeIcon) {
+			const typeIcon = top.createEl('span', { cls: `pf-card-type-icon pf-type-${ticket.type}`, text: this.view.TYPE_ICONS[ticket.type] ?? ticket.type });
+			typeIcon.title = ticket.type;
+		}
+		if (ap.priorityBadge) top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
+		if (ap.points && ticket.points !== undefined) {
 			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
 		}
 
-		if (ticket.checklist && ticket.checklist.length > 0) {
+		if (ap.checklist && ticket.checklist && ticket.checklist.length > 0) {
 			const doneCount = ticket.checklist.filter(i => i.done).length;
 			card.createEl('p', { cls: 'pf-checklist-progress', text: `${doneCount}/${ticket.checklist.length} subtasks` });
 		}
 
-		const childSubtasks = this.view.plugin.store.getChildTickets(ticket.id).filter(t => t.type === 'subtask');
-		if (childSubtasks.length > 0) {
-			const doneSubtasks = childSubtasks.filter(t => t.status === 'done').length;
-			card.createEl('p', { cls: 'pf-card-subtask-count', text: `⧉ ${doneSubtasks}/${childSubtasks.length} subtasks` });
+		if (ap.subtaskCount) {
+			const childSubtasks = this.view.plugin.store.getChildTickets(ticket.id).filter(t => t.type === 'subtask');
+			if (childSubtasks.length > 0) {
+				const doneSubtasks = childSubtasks.filter(t => t.status === 'done').length;
+				card.createEl('p', { cls: 'pf-card-subtask-count', text: `⧉ ${doneSubtasks}/${childSubtasks.length} subtasks` });
+			}
 		}
 
 		card.addEventListener('dragstart', () => {

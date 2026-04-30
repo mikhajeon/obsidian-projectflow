@@ -179,54 +179,46 @@ export class TicketModal extends Modal {
 		}
 
 		// Type always goes on the right info pane
-		new Setting(infoPane)
-			.setName('Work type')
-			.addDropdown(drop => {
-				for (const [val, label] of allowedTypes) drop.addOption(val, label);
-				drop.setValue(this.type);
-				drop.onChange(val => { this.type = val as TicketType; });
-			});
+		const typeField = infoPane.createDiv('pf-field-stacked');
+		typeField.createEl('label', { cls: 'pf-field-label', text: 'Work type' });
+		const typeSel = typeField.createEl('select', { cls: 'pf-select' }) as HTMLSelectElement;
+		for (const [val, label] of allowedTypes) {
+			const opt = typeSel.createEl('option', { text: label, value: val });
+			if (val === this.type) opt.selected = true;
+		}
+		typeSel.addEventListener('change', () => { this.type = typeSel.value as TicketType; });
 
-		new Setting(infoPane)
-			.setName('Priority')
-			.addDropdown(drop => {
-				drop.addOption('low', 'Low');
-				drop.addOption('medium', 'Medium');
-				drop.addOption('high', 'High');
-				drop.addOption('critical', 'Critical');
-				drop.setValue(this.priority);
-				drop.onChange(val => { this.priority = val as TicketPriority; });
-			});
+		const priorityField = infoPane.createDiv('pf-field-stacked');
+		priorityField.createEl('label', { cls: 'pf-field-label', text: 'Priority' });
+		const prioritySel = priorityField.createEl('select', { cls: 'pf-select' }) as HTMLSelectElement;
+		for (const [val, lbl] of [['low','Low'],['medium','Medium'],['high','High'],['critical','Critical']] as [string,string][]) {
+			const opt = prioritySel.createEl('option', { text: lbl, value: val });
+			if (val === this.priority) opt.selected = true;
+		}
+		prioritySel.addEventListener('change', () => { this.priority = prioritySel.value as TicketPriority; });
 
-		new Setting(infoPane)
-			.setName('Status')
-			.addDropdown(drop => {
-				const projId = isEditContext(this.context) ? this.context.ticket.projectId : (this.context as { projectId: string }).projectId;
-				const projStatuses = this.plugin.store.getProjectStatuses(projId);
-				for (const st of projStatuses) {
-					drop.addOption(st.id, st.label);
-				}
-				drop.setValue(this.status);
-				drop.onChange(val => { this.status = val; });
-			});
+		const statusField = infoPane.createDiv('pf-field-stacked');
+		statusField.createEl('label', { cls: 'pf-field-label', text: 'Status' });
+		const statusSel = statusField.createEl('select', { cls: 'pf-select' }) as HTMLSelectElement;
+		const projId = isEditContext(this.context) ? this.context.ticket.projectId : (this.context as { projectId: string }).projectId;
+		for (const st of this.plugin.store.getProjectStatuses(projId)) {
+			const opt = statusSel.createEl('option', { text: st.label, value: st.id });
+			if (st.id === this.status) opt.selected = true;
+		}
+		statusSel.addEventListener('change', () => { this.status = statusSel.value; });
 
-		new Setting(infoPane)
-			.setName('Story points')
-			.addText(text => {
-				text.inputEl.type = 'number';
-				text.inputEl.min = '0';
-				text.inputEl.step = '1';
-				text.inputEl.addClass('pf-input-points');
-				if (this.points !== undefined) text.inputEl.value = String(this.points);
-				text.inputEl.addEventListener('input', () => {
-					const raw = text.inputEl.value.trim();
-					this.points = raw === '' ? undefined : Math.max(0, Math.round(Number(raw)));
-				});
-			});
+		const pointsField = infoPane.createDiv('pf-field-stacked');
+		pointsField.createEl('label', { cls: 'pf-field-label', text: 'Story points' });
+		const pointsInput = pointsField.createEl('input', { cls: 'pf-input pf-input-points', attr: { type: 'number', min: '0', step: '1' } }) as HTMLInputElement;
+		if (this.points !== undefined) pointsInput.value = String(this.points);
+		pointsInput.addEventListener('input', () => {
+			const raw = pointsInput.value.trim();
+			this.points = raw === '' ? undefined : Math.max(0, Math.round(Number(raw)));
+		});
 
 		// ── Start date / time ───────────────────────────────────────────────────
 		const startSection = infoPane.createEl('div', { cls: 'pf-date-section' });
-		startSection.createEl('div', { cls: 'pf-date-label', text: 'Start date' });
+		startSection.createEl('div', { cls: 'pf-field-label', text: 'Start date' });
 		const startRow = startSection.createEl('div', { cls: 'pf-date-row' });
 		const startDateInput = startRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
 		const startTimeInput = startRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
@@ -255,7 +247,7 @@ export class TicketModal extends Modal {
 
 		// ── End date / time ──────────────────────────────────────────────────
 		const dueSection = infoPane.createEl('div', { cls: 'pf-date-section' });
-		dueSection.createEl('div', { cls: 'pf-date-label', text: 'End date' });
+		dueSection.createEl('div', { cls: 'pf-field-label', text: 'End date' });
 		const dueRow = dueSection.createEl('div', { cls: 'pf-date-row' });
 		const dueDateInput = dueRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
 		const dueTimeInput = dueRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
@@ -284,7 +276,7 @@ export class TicketModal extends Modal {
 
 		// ── Recurrence ──────────────────────────────────────────────────────────
 		const recurSection = infoPane.createEl('div', { cls: 'pf-date-section pf-recur-section' });
-		recurSection.createEl('div', { cls: 'pf-date-label', text: 'Recurrence' });
+		recurSection.createEl('div', { cls: 'pf-field-label', text: 'Recurrence' });
 		const recurRow = recurSection.createEl('div', { cls: 'pf-date-row' });
 		const recurSel = recurRow.createEl('select', { cls: 'pf-select pf-select-sm' }) as HTMLSelectElement;
 		for (const [val, lbl] of [['none','None'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['custom','Custom']] as [string,string][]) {
@@ -298,7 +290,7 @@ export class TicketModal extends Modal {
 		recurIntervalWrap.style.display = this.recurrence ? '' : 'none';
 
 		const recurEndWrap = recurSection.createEl('div', { cls: 'pf-recur-end-wrap' });
-		recurEndWrap.createEl('span', { cls: 'pf-date-label', text: 'End date (optional)' });
+		recurEndWrap.createEl('span', { cls: 'pf-field-label', text: 'End date (optional)' });
 		const recurEndInput = recurEndWrap.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
 		if (this.recurrence?.endDate) recurEndInput.value = new Date(this.recurrence.endDate).toISOString().split('T')[0];
 		recurEndWrap.style.display = this.recurrence ? '' : 'none';

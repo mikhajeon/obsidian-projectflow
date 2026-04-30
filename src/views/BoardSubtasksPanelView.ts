@@ -166,30 +166,31 @@ export class BoardSubtasksPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint, parent: Ticket | undefined): void {
-		const showEdges = this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
+		const ap = this.view.plugin.store.getBoardCardAppearance();
+		const showEdges = ap.priorityEdge && this.view.plugin.store.getProjectBoardPriorityEdges(ticket.projectId);
 		const card = container.createEl('div', { cls: `pf-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}` });
 		card.draggable = true;
 		card.dataset.id = ticket.id;
 
 		const top = card.createEl('div', { cls: 'pf-card-top' });
-		top.createEl('span', { cls: `pf-badge pf-type-${ticket.type}`, text: ticket.type });
-		top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
-		if (ticket.points !== undefined) {
+		if (ap.typeIcon) top.createEl('span', { cls: `pf-badge pf-type-${ticket.type}`, text: ticket.type });
+		if (ap.priorityBadge) top.createEl('span', { cls: `pf-badge pf-pri-${ticket.priority}`, text: ticket.priority });
+		if (ap.points && ticket.points !== undefined) {
 			top.createEl('span', { cls: 'pf-badge pf-points', text: `${ticket.points} pts` });
 		}
 
 		// Parent label
-		if (parent) {
+		if (ap.parentLabel && parent) {
 			top.createEl('span', { cls: 'pf-card-parent-label', text: parent.title });
 		}
 
 		card.createEl('p', { cls: 'pf-card-title', text: ticket.title });
 
-		if (ticket.description) {
+		if (ap.description && ticket.description) {
 			card.createEl('p', { cls: 'pf-card-desc', text: ticket.description });
 		}
 
-		if (ticket.checklist && ticket.checklist.length > 0) {
+		if (ap.checklist && ticket.checklist && ticket.checklist.length > 0) {
 			const doneCount = ticket.checklist.filter(i => i.done).length;
 			card.createEl('p', { cls: 'pf-checklist-progress', text: `${doneCount}/${ticket.checklist.length} subtasks` });
 		}

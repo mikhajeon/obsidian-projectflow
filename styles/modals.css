@@ -297,3 +297,49 @@
 	background: var(--background-primary);
 }
 
+/* ── Project picker modal ──────────────────────────────────────────────────── */
+
+.pf-project-picker-modal .pf-project-picker-title {
+	margin: 0 0 12px 0;
+	font-size: var(--font-ui-medium);
+}
+
+.pf-project-picker-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pf-project-picker-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	padding: 8px 12px;
+	border: none;
+	border-radius: var(--radius-s);
+	background: transparent;
+	cursor: pointer;
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	text-align: left;
+}
+
+.pf-project-picker-row:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-project-picker-dot {
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	background: var(--color-accent);
+	flex-shrink: 0;
+}
+
+.pf-project-picker-name {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
