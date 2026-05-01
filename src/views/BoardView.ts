@@ -8,6 +8,7 @@ import { SprintModal } from '../modals/SprintModal';
 import { ProjectModal } from '../modals/ProjectModal';
 import { ProjectNotificationModal } from '../modals/ProjectNotificationModal';
 import { ProjectStatusModal } from '../modals/ProjectStatusModal';
+import { BoardSettingsModal } from '../modals/BoardSettingsModal';
 import { RetroModal } from '../modals/RetroModal';
 import { ConfirmModal } from '../modals/ConfirmModal';
 import { ticketFilePath } from '../ticketNote';
@@ -565,9 +566,9 @@ export class BoardView extends ItemView {
 
 		// ── Board settings gear (right-aligned in filter row) ───────────────
 		const statusGearBtn = filterRow.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-filter-gear', text: '⚙' });
-		statusGearBtn.setAttribute('aria-label', 'Manage statuses');
+		statusGearBtn.setAttribute('aria-label', 'Board settings');
 		statusGearBtn.addEventListener('click', () => {
-			if (projectId) new ProjectStatusModal(this.app, this.plugin, projectId, () => { this.plugin.refreshAllViews(); }).open();
+			if (projectId) new BoardSettingsModal(this.app, this.plugin, projectId, () => { this.plugin.refreshAllViews(); }).open();
 		});
 
 		}
