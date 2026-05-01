@@ -19,5 +19,6 @@
 .pf-pri-critical { background: var(--pf-pri-critical-bg); color: var(--pf-pri-critical-color); }
 .pf-pri-high     { background: var(--pf-pri-high-bg);     color: var(--pf-pri-high-color); }
 .pf-pri-medium   { background: var(--pf-pri-medium-bg);   color: var(--pf-pri-medium-color); }
-.pf-pri-low      { background: var(--background-modifier-hover); color: var(--text-muted); }
+.pf-pri-low      { background: var(--pf-pri-low-bg);      color: var(--pf-pri-low-color); }
+.pf-pri-none     { background: var(--background-modifier-hover); color: var(--text-muted); }
 

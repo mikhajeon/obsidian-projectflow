@@ -7,7 +7,7 @@ export const TYPE_FILTER_OPTIONS: [string, string][] = [
 
 export const PRIORITY_FILTER_OPTIONS: [string, string][] = [
 	['all', 'All priorities'], ['critical', 'Critical'], ['high', 'High'],
-	['medium', 'Medium'], ['low', 'Low'],
+	['medium', 'Medium'], ['low', 'Low'], ['none', 'None'],
 ];
 
 export const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

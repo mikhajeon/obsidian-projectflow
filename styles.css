@@ -10,6 +10,7 @@
 	--pf-border-critical:     #e74c3c;
 	--pf-border-high:         #e67e22;
 	--pf-border-medium:       #3498db;
+	--pf-border-low:          #1abc9c;
 
 	/* Card hover shadow */
 	--pf-card-shadow:         rgba(0, 0, 0, 0.12);
@@ -35,6 +36,8 @@
 	--pf-pri-high-color:      #d35400;
 	--pf-pri-medium-bg:       #e8f0fd;
 	--pf-pri-medium-color:    #2471a3;
+	--pf-pri-low-bg:          #e8faf5;
+	--pf-pri-low-color:       #148f77;
 
 	/* Sprint status badges */
 	--pf-status-planning-bg:  #e8f0fd;
@@ -67,6 +70,7 @@
 	--pf-border-critical:     #d95f5f;
 	--pf-border-high:         #cc7a35;
 	--pf-border-medium:       #5590c8;
+	--pf-border-low:          #1abc9c;
 
 	/* Card hover shadow */
 	--pf-card-shadow:         rgba(0, 0, 0, 0.40);
@@ -92,6 +96,8 @@
 	--pf-pri-high-color:      #d48a55;
 	--pf-pri-medium-bg:       rgba(36, 113, 163, 0.20);
 	--pf-pri-medium-color:    #80bdde;
+	--pf-pri-low-bg:          rgba(26, 188, 156, 0.20);
+	--pf-pri-low-color:       #52d9be;
 
 	/* Sprint status badges */
 	--pf-status-planning-bg:  rgba(36, 113, 163, 0.20);
@@ -442,7 +448,8 @@
 .pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
 .pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
 .pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
-.pf-priority-border-low      { border: 2px solid var(--background-modifier-border); }
+.pf-priority-border-low      { border: 2px solid var(--pf-border-low); }
+.pf-priority-border-none     { border: 2px solid var(--background-modifier-border); }
 
 .pf-card-top {
 	display: flex;
@@ -503,7 +510,8 @@
 .pf-pri-critical { background: var(--pf-pri-critical-bg); color: var(--pf-pri-critical-color); }
 .pf-pri-high     { background: var(--pf-pri-high-bg);     color: var(--pf-pri-high-color); }
 .pf-pri-medium   { background: var(--pf-pri-medium-bg);   color: var(--pf-pri-medium-color); }
-.pf-pri-low      { background: var(--background-modifier-hover); color: var(--text-muted); }
+.pf-pri-low      { background: var(--pf-pri-low-bg);      color: var(--pf-pri-low-color); }
+.pf-pri-none     { background: var(--background-modifier-hover); color: var(--text-muted); }
 
 /* ── Backlog ──────────────────────────────────────────────────────────────── */
 
@@ -2201,7 +2209,8 @@
 .pf-subtasks-card.pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
 .pf-subtasks-card.pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
 .pf-subtasks-card.pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
-.pf-subtasks-card.pf-priority-border-low      { border: 2px solid var(--background-modifier-border); }
+.pf-subtasks-card.pf-priority-border-low      { border: 2px solid var(--pf-border-low); }
+.pf-subtasks-card.pf-priority-border-none     { border: 2px solid var(--background-modifier-border); }
 
 .pf-subtasks-card:hover {
 	box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
@@ -2923,12 +2932,14 @@
 .pf-priority-edge-critical { border-left-color: var(--pf-border-critical); }
 .pf-priority-edge-high     { border-left-color: var(--pf-border-high); }
 .pf-priority-edge-medium   { border-left-color: var(--pf-border-medium); }
-.pf-priority-edge-low      { border-left-color: var(--background-modifier-border-hover); }
+.pf-priority-edge-low      { border-left-color: var(--pf-border-low); }
+.pf-priority-edge-none     { border-left-color: var(--background-modifier-border-hover); }
 /* Higher specificity for blocks — overrides .pf-cal-block's border-left shorthand */
 .pf-cal-block.pf-priority-edge-critical { border-left-color: var(--pf-border-critical); }
 .pf-cal-block.pf-priority-edge-high     { border-left-color: var(--pf-border-high); }
 .pf-cal-block.pf-priority-edge-medium   { border-left-color: var(--pf-border-medium); }
-.pf-cal-block.pf-priority-edge-low      { border-left-color: var(--background-modifier-border-hover); }
+.pf-cal-block.pf-priority-edge-low      { border-left-color: var(--pf-border-low); }
+.pf-cal-block.pf-priority-edge-none     { border-left-color: var(--background-modifier-border-hover); }
 
 .pf-cal-chip-type {
 	flex-shrink: 0;

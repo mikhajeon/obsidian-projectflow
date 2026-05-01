@@ -213,7 +213,7 @@ export class CalendarSidebar {
 		const freeSlots = this.findFreeSlots(allTimed);
 
 		// Sort by priority
-		const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+		const priorityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3, none: 4 };
 		const sorted = [...unscheduled].sort((a, b) => (priorityOrder[a.priority] ?? 4) - (priorityOrder[b.priority] ?? 4));
 
 		const suggestions: ScheduleSuggestion[] = [];

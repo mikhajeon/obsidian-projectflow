@@ -1,5 +1,5 @@
 export type TicketStatus = string;
-export type TicketPriority = 'low' | 'medium' | 'high' | 'critical';
+export type TicketPriority = 'none' | 'low' | 'medium' | 'high' | 'critical';
 export type TicketType = 'task' | 'bug' | 'story' | 'epic' | 'subtask';
 export type SprintStatus = 'planning' | 'active' | 'completed';
 
@@ -238,4 +238,4 @@ export const TICKET_STATUS_LABELS: Record<string, string> = {
 	'done': 'Done',
 };
 
-export const PRIORITY_ORDER: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
+export const PRIORITY_ORDER: TicketPriority[] = ['critical', 'high', 'medium', 'low', 'none'];

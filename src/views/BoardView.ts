@@ -444,7 +444,7 @@ export class BoardView extends ItemView {
 
 				const priLabel = dropdown.createEl('label', { cls: 'pf-filter-label', text: 'Priority' });
 				const priSel = priLabel.createEl('select', { cls: 'pf-filter-select' }) as HTMLSelectElement;
-				for (const opt of [['all', 'All priorities'], ['critical', 'Critical'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']]) {
+				for (const opt of [['all', 'All priorities'], ['critical', 'Critical'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low'], ['none', 'None']]) {
 					const o = priSel.createEl('option', { text: opt[1], value: opt[0] });
 					if (opt[0] === this.filterPriority) o.selected = true;
 				}
@@ -779,7 +779,7 @@ export class BoardView extends ItemView {
 		sortOrder: string,
 	): T[] {
 		if (sortOrder === 'manual') return tickets;
-		const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+		const PRIORITY_RANK: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3, none: 4 };
 
 		// Support both "field-asc"/"field-desc" and legacy bare field names (treated as asc)
 		const dirMatch = sortOrder.match(/^(.+)-(asc|desc)$/);

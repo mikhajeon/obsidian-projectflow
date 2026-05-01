@@ -10,6 +10,7 @@
 	--pf-border-critical:     #e74c3c;
 	--pf-border-high:         #e67e22;
 	--pf-border-medium:       #3498db;
+	--pf-border-low:          #1abc9c;
 
 	/* Card hover shadow */
 	--pf-card-shadow:         rgba(0, 0, 0, 0.12);
@@ -35,6 +36,8 @@
 	--pf-pri-high-color:      #d35400;
 	--pf-pri-medium-bg:       #e8f0fd;
 	--pf-pri-medium-color:    #2471a3;
+	--pf-pri-low-bg:          #e8faf5;
+	--pf-pri-low-color:       #148f77;
 
 	/* Sprint status badges */
 	--pf-status-planning-bg:  #e8f0fd;
@@ -67,6 +70,7 @@
 	--pf-border-critical:     #d95f5f;
 	--pf-border-high:         #cc7a35;
 	--pf-border-medium:       #5590c8;
+	--pf-border-low:          #1abc9c;
 
 	/* Card hover shadow */
 	--pf-card-shadow:         rgba(0, 0, 0, 0.40);
@@ -92,6 +96,8 @@
 	--pf-pri-high-color:      #d48a55;
 	--pf-pri-medium-bg:       rgba(36, 113, 163, 0.20);
 	--pf-pri-medium-color:    #80bdde;
+	--pf-pri-low-bg:          rgba(26, 188, 156, 0.20);
+	--pf-pri-low-color:       #52d9be;
 
 	/* Sprint status badges */
 	--pf-status-planning-bg:  rgba(36, 113, 163, 0.20);

@@ -34,7 +34,7 @@ export class TicketModal extends Modal {
 	private title = '';
 	private description = '';
 	private type: TicketType = 'task';
-	private priority: TicketPriority = 'medium';
+	private priority: TicketPriority = 'none';
 	private status: TicketStatus = 'todo';
 	private points: number | undefined = undefined;
 	private startDate: number | undefined = undefined;
@@ -191,7 +191,7 @@ export class TicketModal extends Modal {
 		const priorityField = infoPane.createDiv('pf-field-stacked');
 		priorityField.createEl('label', { cls: 'pf-field-label', text: 'Priority' });
 		const prioritySel = priorityField.createEl('select', { cls: 'pf-select' }) as HTMLSelectElement;
-		for (const [val, lbl] of [['low','Low'],['medium','Medium'],['high','High'],['critical','Critical']] as [string,string][]) {
+		for (const [val, lbl] of [['none','None'],['low','Low'],['medium','Medium'],['high','High'],['critical','Critical']] as [string,string][]) {
 			const opt = prioritySel.createEl('option', { text: lbl, value: val });
 			if (val === this.priority) opt.selected = true;
 		}

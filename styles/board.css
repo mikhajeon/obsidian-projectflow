@@ -213,7 +213,8 @@
 .pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
 .pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
 .pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
-.pf-priority-border-low      { border: 2px solid var(--background-modifier-border); }
+.pf-priority-border-low      { border: 2px solid var(--pf-border-low); }
+.pf-priority-border-none     { border: 2px solid var(--background-modifier-border); }
 
 .pf-card-top {
 	display: flex;
