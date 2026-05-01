@@ -270,6 +270,8 @@ export class CalendarWeekGrid {
 		const store = this.view.plugin.store;
 		const project = store.getProject(ticket.projectId);
 		const key = project ? `${project.tag}-${ticket.ticketNumber}` : '';
+		const ap = store.getCalendarCardAppearance()[this.view.viewMode];
+		const isDoneTicket = store.getProjectStatuses(ticket.projectId).find(s => s.id === ticket.status)?.universalId === 'done';
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const isGhost = (ticket as any).isGhost === true;
 
@@ -325,7 +327,7 @@ export class CalendarWeekGrid {
 		const cls = [
 			'pf-cal-block',
 			`pf-cal-block-${segment}`,
-			`pf-priority-edge-${ticket.priority}`,
+			ap.priorityEdge ? `pf-priority-edge-${ticket.priority}` : '',
 			`pf-type-block-${ticket.type}`,
 			hasChildren ? 'pf-cal-block-parent' : '',
 			isGhost ? 'pf-cal-block-ghost' : '',
@@ -360,9 +362,10 @@ export class CalendarWeekGrid {
 			block.style.width = `calc(${pct}% - 6px)`;
 		}
 
-		// Row 1: type badge + time range
+		// Row 1: done tick (left) + type badge + time range (right)
 		const row1 = block.createEl('div', { cls: 'pf-cal-block-row1' });
-		row1.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
+		if (isDoneTicket) row1.createEl('span', { cls: 'pf-cal-done-tick', text: '✓' });
+		if (ap.typeBadge) row1.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
 		const fmtT = (ms: number) => { const d = new Date(ms); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 		let timeRangeLabel = '';
 		if (segment === 'single') {
@@ -373,7 +376,7 @@ export class CalendarWeekGrid {
 		} else if (segment === 'end') {
 			timeRangeLabel = `→ ${fmtT(ticket.dueDate!)}`;
 		}
-		if (timeRangeLabel) row1.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
+		if (ap.timeDisplay && timeRangeLabel) row1.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
 
 		// Row 2: title
 		block.createEl('div', { cls: 'pf-cal-block-title', text: ticket.title });

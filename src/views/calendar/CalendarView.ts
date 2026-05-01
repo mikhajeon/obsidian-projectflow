@@ -473,25 +473,30 @@ export class CalendarView extends ItemView {
 		const store = this.plugin.store;
 		const project = store.getProject(ticket.projectId);
 		const key = project ? `${project.tag}-${ticket.ticketNumber}` : '';
+		const ap = store.getCalendarCardAppearance()[this.viewMode];
+		const isDoneTicket = store.getProjectStatuses(ticket.projectId).find(s => s.id === ticket.status)?.universalId === 'done';
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const isGhost = (ticket as any).isGhost === true;
+		const priorityCls = ap.priorityEdge ? ` pf-priority-edge-${ticket.priority}` : '';
 		const chip = parent.createEl('div', {
-			cls: `pf-cal-chip pf-priority-edge-${ticket.priority}${isGhost ? ' pf-cal-chip-ghost' : ''}`,
+			cls: `pf-cal-chip${priorityCls}${isGhost ? ' pf-cal-chip-ghost' : ''}`,
 			attr: { 'data-id': ticket.id, draggable: isGhost ? 'false' : 'true' },
 		});
 
+		if (isDoneTicket) chip.createEl('span', { cls: 'pf-cal-done-tick', text: '✓' });
+
 		// Show a colored project dot when multiple projects are visible
-		if (this.selectedProjectIds.size > 1 && project?.color) {
+		if (ap.projectDot && this.selectedProjectIds.size > 1 && project?.color) {
 			const dot = chip.createEl('span', { cls: 'pf-cal-project-dot pf-cal-chip-project-dot' });
 			dot.style.background = project.color;
 		}
-		chip.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
+		if (ap.typeBadge) chip.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
 		chip.createEl('span', { cls: 'pf-cal-chip-title', text: ticket.title });
-		if (ticket.recurrence) chip.createEl('span', { cls: 'pf-cal-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
+		if (ap.recurrenceIcon && ticket.recurrence) chip.createEl('span', { cls: 'pf-cal-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 
 		// Show time if set
-		if (ticket.dueDate !== undefined) {
+		if (ap.timeDisplay && ticket.dueDate !== undefined) {
 			const d = new Date(ticket.dueDate);
 			if (d.getHours() !== 0 || d.getMinutes() !== 0) {
 				const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
@@ -580,6 +585,7 @@ export class CalendarView extends ItemView {
 			return;
 		}
 
+		const ap = this.plugin.store.getCalendarCardAppearance()['agenda'];
 		const renderGroup = (dateLabel: string, items: Ticket[], isOverdue = false) => {
 			if (items.length === 0) return;
 			const section = agenda.createEl('div', { cls: 'pf-agenda-section' });
@@ -589,27 +595,32 @@ export class CalendarView extends ItemView {
 			for (const ticket of items) {
 				const project = this.plugin.store.getProject(ticket.projectId);
 				const key = project ? `${project.tag}-${ticket.ticketNumber}` : '';
-				const item = list.createEl('div', { cls: `pf-agenda-item pf-priority-edge-${ticket.priority}` });
-				if (ticket.dueDate !== undefined) {
-					const d = new Date(ticket.dueDate);
-					if (d.getHours() !== 0 || d.getMinutes() !== 0) {
-						item.createEl('span', { cls: 'pf-agenda-time', text: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` });
+				const priorityCls = ap.priorityEdge ? ` pf-priority-edge-${ticket.priority}` : '';
+				const item = list.createEl('div', { cls: `pf-agenda-item${priorityCls}` });
+				if (ap.timeDisplay) {
+					if (ticket.dueDate !== undefined) {
+						const d = new Date(ticket.dueDate);
+						if (d.getHours() !== 0 || d.getMinutes() !== 0) {
+							item.createEl('span', { cls: 'pf-agenda-time', text: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` });
+						} else {
+							item.createEl('span', { cls: 'pf-agenda-time pf-agenda-time-allday', text: 'All day' });
+						}
 					} else {
 						item.createEl('span', { cls: 'pf-agenda-time pf-agenda-time-allday', text: 'All day' });
 					}
-				} else {
-					item.createEl('span', { cls: 'pf-agenda-time pf-agenda-time-allday', text: 'All day' });
 				}
-				item.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
-				item.createEl('span', { cls: 'pf-agenda-key', text: key });
+				if (ap.typeBadge) item.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
+				if (ap.ticketKey) item.createEl('span', { cls: 'pf-agenda-key', text: key });
 				item.createEl('span', { cls: 'pf-agenda-title', text: ticket.title });
 				const statuses = this.plugin.store.getProjectStatuses(ticket.projectId);
 				const statusDef = statuses.find(s => s.id === ticket.status);
 				const statusLabel = statusDef?.label ?? ticket.status;
 				const statusColor = statusDef?.color ?? '#888888';
-				const statusBadge = item.createEl('span', { cls: 'pf-agenda-status pf-badge pf-status-badge', text: statusLabel });
-				statusBadge.style.background = `${statusColor}2e`;
-				statusBadge.style.color = statusColor;
+				if (ap.statusBadge) {
+					const statusBadge = item.createEl('span', { cls: 'pf-agenda-status pf-badge pf-status-badge', text: statusLabel });
+					statusBadge.style.background = `${statusColor}2e`;
+					statusBadge.style.color = statusColor;
+				}
 				item.addEventListener('click', () => {
 					new TicketModal(this.app, this.plugin, { ticket, sprintId: ticket.sprintId }, () => this.render()).open();
 				});
