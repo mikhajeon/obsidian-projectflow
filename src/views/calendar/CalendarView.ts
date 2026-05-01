@@ -3,6 +3,7 @@ import type ProjectFlowPlugin from '../../main';
 import type { Sprint, Ticket, TicketType } from '../../types';
 import { TicketModal } from '../../modals/TicketModal';
 import { ProjectModal } from '../../modals/ProjectModal';
+import { CalendarSettingsModal } from '../../modals/CalendarSettingsModal';
 import { generateTicketNote } from '../../ticketNote';
 import { NOTIFICATION_VIEW_TYPE } from '../NotificationPanelView';
 import {
@@ -458,6 +459,12 @@ export class CalendarView extends ItemView {
 			if (val === this.filterStatus) opt.selected = true;
 		}
 		statusSel.addEventListener('change', () => { this.filterStatus = statusSel.value; this.render(); });
+
+		const gearBtn = toolbar.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-filter-gear', text: '⚙' });
+		gearBtn.setAttribute('aria-label', 'Calendar settings');
+		gearBtn.addEventListener('click', () => {
+			new CalendarSettingsModal(this.app, this.plugin, () => this.render(), this.viewMode).open();
+		});
 	}
 
 	// ── Ticket chip (month view + sidebar) ────────────────────────────────────
