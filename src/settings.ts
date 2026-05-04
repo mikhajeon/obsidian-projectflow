@@ -61,7 +61,7 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 				btn.buttonEl.prepend(iconEl);
 				btn.setButtonText('Sponsor');
 				btn.buttonEl.addClass('pf-btn-sponsor');
-				btn.onClick(() => window.open('https://ko-fi.com/mikhajeon', '_blank'));
+				btn.onClick(() => window.open('https://github.com/sponsors/mikhajeon', '_blank'));
 			})
 			.addButton(btn => {
 				btn.setButtonText('Buy me a coffee');
