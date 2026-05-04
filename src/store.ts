@@ -51,8 +51,14 @@ export class ProjectStore {
 	}
 
 	async load(): Promise<void> {
-		const saved = await this.plugin.loadData() as Partial<AppData & { sprintHistoryFolder?: string; ticketsFolder?: string }> | null;
-		this.data = migrateAppData(saved);
+		try {
+			const saved = await this.plugin.loadData() as Partial<AppData & { sprintHistoryFolder?: string; ticketsFolder?: string }> | null;
+			this.data = migrateAppData(saved);
+		} catch {
+			// data.json is corrupt or empty — start fresh rather than crashing
+			this.data = { ...DEFAULT_DATA };
+		}
+		await this.save();
 	}
 
 	private async save(): Promise<void> {
