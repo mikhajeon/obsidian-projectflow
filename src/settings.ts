@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice, setIcon } from 'obsidian';
 import type ProjectFlowPlugin from './main';
 
 export class ProjectFlowSettingTab extends PluginSettingTab {
@@ -54,9 +54,17 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName('Support ProjectFlow')
-			.setDesc('If this plugin saves you time, consider buying me a coffee.')
+			.setDesc('If this plugin saves you time, consider sponsoring its development.')
 			.addButton(btn => {
-				btn.setButtonText('Support on Ko-fi');
+				const iconEl = btn.buttonEl.createSpan({ cls: 'pf-btn-icon-leading' });
+				setIcon(iconEl, 'heart');
+				btn.buttonEl.prepend(iconEl);
+				btn.setButtonText('Sponsor');
+				btn.buttonEl.addClass('pf-btn-sponsor');
+				btn.onClick(() => window.open('https://ko-fi.com/mikhajeon', '_blank'));
+			})
+			.addButton(btn => {
+				btn.setButtonText('Buy me a coffee');
 				btn.buttonEl.addClass('pf-btn-kofi');
 				btn.onClick(() => window.open('https://ko-fi.com/mikhajeon', '_blank'));
 			});

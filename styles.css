@@ -4348,7 +4348,25 @@
 	pointer-events: none;
 	line-height: 1;
 }
-/* ── Ko-fi support button ────────────────────────────────────────────────── */
+/* ── Support buttons ─────────────────────────────────────────────────────── */
+
+.pf-btn-sponsor {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-weight: 500;
+}
+
+.pf-btn-sponsor .pf-btn-icon-leading {
+	display: flex;
+	align-items: center;
+	color: #e05a6e;
+}
+
+.pf-btn-sponsor .pf-btn-icon-leading svg {
+	width: 14px;
+	height: 14px;
+}
 
 .pf-btn-kofi {
 	background: #FF5E5B !important;
