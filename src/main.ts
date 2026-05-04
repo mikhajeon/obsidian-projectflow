@@ -1,5 +1,5 @@
 import { Plugin, WorkspaceLeaf, Notice } from 'obsidian';
-import { ProjectStore } from './store';
+import { ProjectStore, defaultTagFromName } from './store';
 import { BoardView, BOARD_VIEW } from './views/BoardView';
 import { BacklogView, BACKLOG_VIEW } from './views/BacklogView';
 import { SprintPanelView, SPRINT_VIEW } from './views/SprintPanelView';
@@ -35,7 +35,7 @@ export default class ProjectFlowPlugin extends Plugin {
 
 	async onload(): Promise<void> {
 		this.store = new ProjectStore(this);
-		await this.store.load();
+		const wasCorrupt = await this.store.load();
 		this.store.setTicketDeleteHook(id => deleteTicketNote(this, id));
 
 		this.registerView(BOARD_VIEW, (leaf) => new BoardView(leaf, this));
@@ -141,7 +141,7 @@ export default class ProjectFlowPlugin extends Plugin {
 		new NoteSyncWatcher(this).register();
 
 		this.app.workspace.onLayoutReady(() => {
-			this.recaptureOrphanedNotes().catch(() => { /* silent */ });
+			this.recaptureOrphanedNotes(wasCorrupt).catch(() => { /* silent */ });
 		});
 	}
 
@@ -221,12 +221,33 @@ export default class ProjectFlowPlugin extends Plugin {
 	 * as a ticket. This recovers tickets whose store entry was lost while their
 	 * note file survived (e.g. after a data.json reset or partial migration).
 	 */
-	private async recaptureOrphanedNotes(): Promise<void> {
+	private async recaptureOrphanedNotes(rebuildProjects = false): Promise<void> {
 		const { vault, metadataCache } = this.app;
 		const baseFolder = this.store.getBaseFolder();
 		const prefix = baseFolder + '/';
 
 		const files = vault.getMarkdownFiles().filter(f => f.path.startsWith(prefix));
+
+		// When recovering from a corrupt/empty data.json, rebuild projects from note frontmatter
+		// before attempting to restore tickets (which require matching projects to exist).
+		if (rebuildProjects && files.length > 0) {
+			const seenNames = new Map<string, string>(); // name → tag
+			for (const file of files) {
+				const fm = metadataCache.getFileCache(file)?.frontmatter;
+				const name = typeof fm?.project === 'string' ? fm.project.trim() : '';
+				if (!name || seenNames.has(name)) continue;
+				const tagMatch = typeof fm?.key === 'string' ? /^([^-]+)-\d+$/.exec(fm.key) : null;
+				seenNames.set(name, tagMatch ? tagMatch[1] : defaultTagFromName(name));
+			}
+			for (const [name, tag] of seenNames) {
+				if (!this.store.getAllProjects().find(p => p.name === name)) {
+					await this.store.createProject({ name, tag, cycleDays: 14, description: '' });
+				}
+			}
+			if (seenNames.size > 0) {
+				new Notice(`ProjectFlow: rebuilt ${seenNames.size} project${seenNames.size !== 1 ? 's' : ''} from notes.`);
+			}
+		}
 
 		const validStatuses  = new Set(['todo', 'in-progress', 'in-review', 'done']);
 		const validPriorities = new Set<TicketPriority>(['low', 'medium', 'high', 'critical']);

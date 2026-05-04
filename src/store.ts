@@ -50,15 +50,19 @@ export class ProjectStore {
 		return { prev, next: this.data.tickets };
 	}
 
-	async load(): Promise<void> {
+	/** Returns true if data.json was corrupt/empty and recovery from notes is needed. */
+	async load(): Promise<boolean> {
 		try {
 			const saved = await this.plugin.loadData() as Partial<AppData & { sprintHistoryFolder?: string; ticketsFolder?: string }> | null;
 			this.data = migrateAppData(saved);
+			await this.save();
+			return false;
 		} catch {
 			// data.json is corrupt or empty — start fresh rather than crashing
 			this.data = { ...DEFAULT_DATA };
+			await this.save();
+			return true;
 		}
-		await this.save();
 	}
 
 	private async save(): Promise<void> {
