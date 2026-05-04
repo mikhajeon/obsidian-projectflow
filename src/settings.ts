@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, Notice, setIcon } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice, setIcon, normalizePath } from 'obsidian';
 import type ProjectFlowPlugin from './main';
 
 export class ProjectFlowSettingTab extends PluginSettingTab {
@@ -57,15 +57,32 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 			.setDesc('Vault folder that contains all ProjectFlow data. Files are stored under {Base folder}/{Project}/Tickets/ and {Base folder}/{Project}/Sprint Histories/.')
 			.addText(text => {
 				text
-					.setPlaceholder('ProjectFlow')
+					.setPlaceholder('.ProjectFlow')
 					.setValue(this.plugin.store.getBaseFolder());
 				text.inputEl.addClass('pf-input-full');
 				text.inputEl.addEventListener('blur', async () => {
-					const val = text.getValue().trim();
-					if (val) {
-						new Notice('Note: Renaming the base folder does not move existing vault files. You may need to move them manually.');
-						await this.plugin.store.setBaseFolder(val);
+					const newFolder = text.getValue().trim();
+					if (!newFolder) return;
+					const oldFolder = this.plugin.store.getBaseFolder();
+					if (newFolder === oldFolder) return;
+
+					const oldPath = normalizePath(oldFolder);
+					const newPath = normalizePath(newFolder);
+
+					const folderExists = await this.app.vault.adapter.exists(oldPath);
+					if (folderExists) {
+						try {
+							await this.app.vault.adapter.rename(oldPath, newPath);
+							new Notice(`Base folder renamed to "${newFolder}".`);
+						} catch (e) {
+							new Notice(`Could not rename folder: ${(e as Error).message}`);
+							text.setValue(oldFolder);
+							return;
+						}
 					}
+
+					await this.plugin.store.setBaseFolder(newFolder);
+					this.plugin.refreshAllViews();
 				});
 			});
 

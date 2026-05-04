@@ -225,7 +225,7 @@ export const DEFAULT_DATA: AppData = {
 	sprints: [],
 	tickets: [],
 	activeProjectId: null,
-	baseFolder: 'ProjectFlow',
+	baseFolder: '.ProjectFlow',
 	colWidths: {},
 };
 
