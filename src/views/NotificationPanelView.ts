@@ -1,6 +1,6 @@
 import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import type ProjectFlowPlugin from '../main';
-import type { StoredNotification, SnoozeInterval } from '../types';
+import type { StoredNotification, SnoozeInterval, Ticket } from '../types';
 
 export const NOTIFICATION_VIEW_TYPE = 'pf-notifications';
 
@@ -100,31 +100,72 @@ export class NotificationPanelView extends ItemView {
 	}
 
 	private renderSummaryBanner(parent: HTMLElement): void {
-		const { overdue, dueToday, endingSoon } = this.plugin.notificationManager?.getSummaryStats()
-			?? { overdue: 0, dueToday: 0, endingSoon: 0 };
+		const { overdueTickets, dueTodayTickets, endingSoon } =
+			this.plugin.notificationManager?.getDetailedSummary()
+			?? { overdueTickets: [], dueTodayTickets: [], endingSoon: 0 };
 
 		const banner = parent.createDiv('pf-notif-summary');
 
-		if (overdue === 0 && dueToday === 0 && endingSoon === 0) {
+		if (overdueTickets.length === 0 && dueTodayTickets.length === 0 && endingSoon === 0) {
 			const clear = banner.createEl('span', { cls: 'pf-notif-summary-clear' });
 			setIcon(clear.createEl('span', { cls: 'pf-notif-summary-icon' }), 'check-circle');
 			clear.createEl('span', { text: 'All clear' });
 			return;
 		}
 
-		const pills: { icon: string; count: number; label: string; mod: string }[] = [
-			{ icon: 'alert-circle', count: overdue,    label: 'overdue',       mod: 'overdue' },
-			{ icon: 'clock',        count: dueToday,   label: 'due today',     mod: 'today'   },
-			{ icon: 'zap',          count: endingSoon, label: 'sprint ending', mod: 'sprint'  },
-		];
+		const grid = banner.createDiv('pf-notif-dash-grid');
 
-		for (const pill of pills) {
-			const el = banner.createEl('span', {
-				cls: `pf-notif-summary-pill${pill.count > 0 ? ` pf-notif-summary-pill--${pill.mod}` : ''}`,
-			});
-			setIcon(el.createEl('span', { cls: 'pf-notif-summary-icon' }), pill.icon);
-			el.createEl('span', { text: `${pill.count} ${pill.label}` });
-		}
+		const makeCard = (
+			mod: string,
+			count: number,
+			icon: string,
+			label: string,
+			tickets?: Ticket[],
+		) => {
+			const zeroCls = count === 0 ? ' pf-notif-dash-card--zero' : '';
+			const card = grid.createDiv({ cls: `pf-notif-dash-card pf-notif-dash-card--${mod}${zeroCls}` });
+
+			card.createEl('span', { cls: 'pf-notif-dash-num', text: String(count) });
+
+			const labelRow = card.createDiv('pf-notif-dash-label-row');
+			setIcon(labelRow.createEl('span', { cls: 'pf-notif-dash-icon' }), icon);
+			labelRow.createEl('span', { cls: 'pf-notif-dash-label', text: label });
+
+			if (tickets && tickets.length > 0) {
+				card.addClass('pf-notif-dash-card--clickable');
+				card.createEl('span', { cls: 'pf-notif-dash-chevron', text: '▾' });
+
+				const detail = banner.createDiv('pf-notif-summary-detail');
+				detail.style.display = 'none';
+
+				for (const ticket of tickets.slice(0, 5)) {
+					const item = detail.createDiv('pf-notif-summary-detail-item');
+					const dot = item.createEl('span', { cls: 'pf-notif-summary-detail-dot' });
+					const proj = this.plugin.store.getProject(ticket.projectId);
+					if (proj?.color) dot.style.background = proj.color;
+					item.createEl('span', { cls: 'pf-notif-summary-detail-name', text: ticket.title })
+						.addEventListener('click', () => this.plugin.openTicketModal(ticket));
+				}
+				if (tickets.length > 5) {
+					const more = detail.createDiv('pf-notif-summary-detail-item');
+					more.style.paddingLeft = '13px';
+					more.createEl('span', {
+						cls: 'pf-notif-summary-detail-name',
+						text: `+${tickets.length - 5} more`,
+					}).style.color = 'var(--text-faint)';
+				}
+
+				card.addEventListener('click', () => {
+					const isOpen = detail.style.display !== 'none';
+					detail.style.display = isOpen ? 'none' : 'block';
+					card.toggleClass('pf-notif-dash-card--active', !isOpen);
+				});
+			}
+		};
+
+		makeCard('overdue', overdueTickets.length, 'alert-circle', 'overdue',       overdueTickets);
+		makeCard('today',   dueTodayTickets.length, 'clock',        'due today',     dueTodayTickets);
+		makeCard('sprint',  endingSoon,              'zap',          'sprint ending');
 	}
 
 	private renderCard(parent: HTMLElement, n: StoredNotification): void {
