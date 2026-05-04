@@ -13,6 +13,19 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		// ── Support bar ───────────────────────────────────────────────────────
+		const supportBar = containerEl.createDiv('pf-support-bar');
+
+		const sponsorBtn = supportBar.createEl('button', { cls: 'pf-support-btn pf-support-btn--sponsor' });
+		setIcon(sponsorBtn.createSpan({ cls: 'pf-support-btn-icon' }), 'heart');
+		sponsorBtn.createSpan({ text: 'Sponsor' });
+		sponsorBtn.addEventListener('click', () => window.open('https://github.com/sponsors/mikhajeon', '_blank'));
+
+		const kofiBtn = supportBar.createEl('button', { cls: 'pf-support-btn pf-support-btn--kofi' });
+		setIcon(kofiBtn.createSpan({ cls: 'pf-support-btn-icon' }), 'coffee');
+		kofiBtn.createSpan({ text: 'Buy me a coffee' });
+		kofiBtn.addEventListener('click', () => window.open('https://ko-fi.com/mikhajeon', '_blank'));
+
 		// ── Notifications ─────────────────────────────────────────────────────
 		new Setting(containerEl).setName('Notifications').setHeading();
 
@@ -49,25 +62,6 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 				});
 			});
 
-		// ── Support ───────────────────────────────────────────────────────────
-		new Setting(containerEl).setName('Support').setHeading();
-
-		new Setting(containerEl)
-			.setName('Support ProjectFlow')
-			.setDesc('If this plugin saves you time, consider sponsoring its development.')
-			.addButton(btn => {
-				const iconEl = btn.buttonEl.createSpan({ cls: 'pf-btn-icon-leading' });
-				setIcon(iconEl, 'heart');
-				btn.buttonEl.prepend(iconEl);
-				btn.setButtonText('Sponsor');
-				btn.buttonEl.addClass('pf-btn-sponsor');
-				btn.onClick(() => window.open('https://github.com/sponsors/mikhajeon', '_blank'));
-			})
-			.addButton(btn => {
-				btn.setButtonText('Buy me a coffee');
-				btn.buttonEl.addClass('pf-btn-kofi');
-				btn.onClick(() => window.open('https://ko-fi.com/mikhajeon', '_blank'));
-			});
 	}
 
 }
