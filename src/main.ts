@@ -141,7 +141,8 @@ export default class ProjectFlowPlugin extends Plugin {
 		new NoteSyncWatcher(this).register();
 
 		this.app.workspace.onLayoutReady(() => {
-			this.recaptureOrphanedNotes(wasCorrupt).catch(() => { /* silent */ });
+			const needsRebuild = wasCorrupt || this.store.getAllProjects().length === 0;
+			this.recaptureOrphanedNotes(needsRebuild).catch(() => { /* silent */ });
 		});
 	}
 
