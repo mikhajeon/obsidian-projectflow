@@ -48,6 +48,18 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 					}
 				});
 			});
+
+		// ── Support ───────────────────────────────────────────────────────────
+		new Setting(containerEl).setName('Support').setHeading();
+
+		new Setting(containerEl)
+			.setName('Support ProjectFlow')
+			.setDesc('If this plugin saves you time, consider buying me a coffee.')
+			.addButton(btn => {
+				btn.setButtonText('Support on Ko-fi');
+				btn.buttonEl.addClass('pf-btn-kofi');
+				btn.onClick(() => window.open('https://ko-fi.com/mikhajeon', '_blank'));
+			});
 	}
 
 }

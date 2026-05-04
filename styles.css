@@ -4348,6 +4348,19 @@
 	pointer-events: none;
 	line-height: 1;
 }
+/* ── Ko-fi support button ────────────────────────────────────────────────── */
+
+.pf-btn-kofi {
+	background: #FF5E5B !important;
+	color: #fff !important;
+	border: none;
+	font-weight: 500;
+}
+
+.pf-btn-kofi:hover {
+	opacity: 0.88;
+}
+
 /* ── Sprint settings toggles ─────────────────────────────────────────────── */
 
 .pf-sprint-setting-note {
