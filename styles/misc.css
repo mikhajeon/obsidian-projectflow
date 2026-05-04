@@ -48,6 +48,19 @@
 	color: #1a1a1a;
 }
 
+.pf-support-credit {
+	margin-left: auto;
+	align-self: center;
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+	text-decoration: none;
+}
+
+.pf-support-credit:hover {
+	color: var(--text-muted);
+	text-decoration: underline;
+}
+
 /* ── Sprint settings toggles ─────────────────────────────────────────────── */
 
 .pf-sprint-setting-note {
