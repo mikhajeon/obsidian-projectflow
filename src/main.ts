@@ -223,31 +223,51 @@ export default class ProjectFlowPlugin extends Plugin {
 	 */
 	private async recaptureOrphanedNotes(rebuildProjects = false): Promise<void> {
 		const { vault, metadataCache } = this.app;
-		const baseFolder = this.store.getBaseFolder();
-		const prefix = baseFolder + '/';
 
-		const files = vault.getMarkdownFiles().filter(f => f.path.startsWith(prefix));
+		// When recovering from corruption, the configured base folder may be wrong (e.g. reset to
+		// '.ProjectFlow' while notes actually live in 'ProjectFlow'). Scan the whole vault for
+		// ticket notes, infer the real base folder from their paths, then rebuild everything.
+		if (rebuildProjects) {
+			const ticketFiles = vault.getMarkdownFiles().filter(f => {
+				const fm = metadataCache.getFileCache(f)?.frontmatter;
+				return fm?.id && fm?.project && fm?.key;
+			});
 
-		// When recovering from a corrupt/empty data.json, rebuild projects from note frontmatter
-		// before attempting to restore tickets (which require matching projects to exist).
-		if (rebuildProjects && files.length > 0) {
-			const seenNames = new Map<string, string>(); // name → tag
-			for (const file of files) {
-				const fm = metadataCache.getFileCache(file)?.frontmatter;
-				const name = typeof fm?.project === 'string' ? fm.project.trim() : '';
-				if (!name || seenNames.has(name)) continue;
-				const tagMatch = typeof fm?.key === 'string' ? /^([^-]+)-\d+$/.exec(fm.key) : null;
-				seenNames.set(name, tagMatch ? tagMatch[1] : defaultTagFromName(name));
-			}
-			for (const [name, tag] of seenNames) {
-				if (!this.store.getAllProjects().find(p => p.name === name)) {
-					await this.store.createProject({ name, tag, cycleDays: 14, description: '' });
+			if (ticketFiles.length > 0) {
+				// Infer base folder: tally the root path segment from each ticket note
+				const rootCounts = new Map<string, number>();
+				for (const f of ticketFiles) {
+					const root = f.path.split('/')[0];
+					rootCounts.set(root, (rootCounts.get(root) ?? 0) + 1);
 				}
-			}
-			if (seenNames.size > 0) {
-				new Notice(`ProjectFlow: rebuilt ${seenNames.size} project${seenNames.size !== 1 ? 's' : ''} from notes.`);
+				const inferredBase = [...rootCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+
+				// Update store if it differs from current setting
+				if (inferredBase !== this.store.getBaseFolder()) {
+					await this.store.setBaseFolder(inferredBase);
+				}
+
+				// Rebuild projects from frontmatter
+				const seenNames = new Map<string, string>(); // name → tag
+				for (const file of ticketFiles) {
+					const fm = metadataCache.getFileCache(file)?.frontmatter;
+					const name = typeof fm?.project === 'string' ? fm.project.trim() : '';
+					if (!name || seenNames.has(name)) continue;
+					const tagMatch = typeof fm?.key === 'string' ? /^([^-]+)-\d+$/.exec(fm.key) : null;
+					seenNames.set(name, tagMatch ? tagMatch[1] : defaultTagFromName(name));
+				}
+				for (const [name, tag] of seenNames) {
+					if (!this.store.getAllProjects().find(p => p.name === name)) {
+						await this.store.createProject({ name, tag, cycleDays: 14, description: '' });
+					}
+				}
+				new Notice(`ProjectFlow: recovered ${seenNames.size} project${seenNames.size !== 1 ? 's' : ''} and scanning tickets…`);
 			}
 		}
+
+		const baseFolder = this.store.getBaseFolder();
+		const prefix = baseFolder + '/';
+		const files = vault.getMarkdownFiles().filter(f => f.path.startsWith(prefix));
 
 		const validStatuses  = new Set(['todo', 'in-progress', 'in-review', 'done']);
 		const validPriorities = new Set<TicketPriority>(['low', 'medium', 'high', 'critical']);
