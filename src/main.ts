@@ -225,32 +225,31 @@ export default class ProjectFlowPlugin extends Plugin {
 	private async recaptureOrphanedNotes(rebuildProjects = false): Promise<void> {
 		const { vault, metadataCache } = this.app;
 
-		// When recovering from corruption, the configured base folder may be wrong (e.g. reset to
-		// '.ProjectFlow' while notes actually live in 'ProjectFlow'). Scan the whole vault for
-		// ticket notes, infer the real base folder from their paths, then rebuild everything.
+		// When recovering (no projects in store), try to rebuild from notes.
+		// Priority: configured base folder first. Vault-wide scan only as fallback
+		// if the configured folder yields no ticket files (e.g. base folder was reset).
 		if (rebuildProjects) {
-			const ticketFiles = vault.getMarkdownFiles().filter(f => {
+			const configuredBase = this.store.getBaseFolder();
+			const configuredPrefix = configuredBase + '/';
+
+			let candidateFiles = vault.getMarkdownFiles().filter(f => {
+				if (!f.path.startsWith(configuredPrefix)) return false;
 				const fm = metadataCache.getFileCache(f)?.frontmatter;
 				return fm?.id && fm?.project && fm?.key;
 			});
 
-			if (ticketFiles.length > 0) {
-				// Infer base folder: tally the root path segment from each ticket note
-				const rootCounts = new Map<string, number>();
-				for (const f of ticketFiles) {
-					const root = f.path.split('/')[0];
-					rootCounts.set(root, (rootCounts.get(root) ?? 0) + 1);
-				}
-				const inferredBase = [...rootCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+			// Fallback: vault-wide scan if configured folder has no ticket notes
+			if (candidateFiles.length === 0) {
+				candidateFiles = vault.getMarkdownFiles().filter(f => {
+					const fm = metadataCache.getFileCache(f)?.frontmatter;
+					return fm?.id && fm?.project && fm?.key;
+				});
+			}
 
-				// Update store if it differs from current setting
-				if (inferredBase !== this.store.getBaseFolder()) {
-					await this.store.setBaseFolder(inferredBase);
-				}
-
+			if (candidateFiles.length > 0) {
 				// Rebuild projects from frontmatter
 				const seenNames = new Map<string, string>(); // name → tag
-				for (const file of ticketFiles) {
+				for (const file of candidateFiles) {
 					const fm = metadataCache.getFileCache(file)?.frontmatter;
 					const name = typeof fm?.project === 'string' ? fm.project.trim() : '';
 					if (!name || seenNames.has(name)) continue;
