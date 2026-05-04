@@ -34,6 +34,7 @@ export class NotificationPanelView extends ItemView {
 
 	async onOpen(): Promise<void> {
 		this.render();
+		this.registerInterval(window.setInterval(() => this.render(), 60_000));
 	}
 
 	async onClose(): Promise<void> {
