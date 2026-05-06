@@ -189,12 +189,13 @@
 /* ── Ticket cards ────────────────────────────────────────────────────────── */
 
 .pf-card {
+	--pf-card-inset: inset 0 0 0 0 transparent;
 	background: var(--background-primary);
 	border-radius: 6px;
 	padding: 10px;
 	border: 1px solid var(--background-modifier-border);
 	cursor: pointer;
-	box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+	box-shadow: var(--pf-card-inset), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
 	transition: box-shadow 0.15s, opacity 0.15s;
 	min-width: 0;
 	box-sizing: border-box;
@@ -203,18 +204,18 @@
 }
 
 .pf-card:hover {
-	box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
+	box-shadow: var(--pf-card-inset), 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
 }
 
 .pf-card.pf-dragging {
 	opacity: 0.4;
 }
 
-.pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
-.pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
-.pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
-.pf-priority-border-low      { border: 2px solid var(--pf-border-low); }
-.pf-priority-border-none     { border: 2px solid var(--background-modifier-border); }
+.pf-priority-border-critical { --pf-card-inset: inset 0 0 0 2px var(--pf-border-critical); }
+.pf-priority-border-high     { --pf-card-inset: inset 0 0 0 2px var(--pf-border-high); }
+.pf-priority-border-medium   { --pf-card-inset: inset 0 0 0 2px var(--pf-border-medium); }
+.pf-priority-border-low      { --pf-card-inset: inset 0 0 0 2px var(--pf-border-low); }
+.pf-priority-border-none     { --pf-card-inset: inset 0 0 0 2px var(--background-modifier-border); }
 
 .pf-card-top {
 	display: flex;

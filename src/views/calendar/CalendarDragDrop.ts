@@ -1,6 +1,6 @@
 import type { CalendarView } from './CalendarView';
 import type { Ticket } from '../../types';
-import { generateTicketNote } from '../../ticketNote';
+import { generateTicketNote } from '../../notes/ticketNote';
 import { HOUR_HEIGHT, hasTime, dateOnlyMs } from './CalendarUtils';
 
 export class CalendarDragDrop {
@@ -19,7 +19,7 @@ export class CalendarDragDrop {
 				const rect = cell.getBoundingClientRect();
 				const yInCol = e.clientY - rect.top;
 				const rawMinutes = yInCol / PX_PER_MIN;
-				// snappedMinutes = the FINISH time (dueDate) that will be set on drop
+				// snappedMinutes = the FINISH time (endDate) that will be set on drop
 				const snappedMinutes = Math.max(0, Math.min(24 * 60 - 1, Math.round(rawMinutes / 15) * 15));
 				const durationPx = Math.max(15 * PX_PER_MIN, this.view.draggedTicketDuration * PX_PER_MIN);
 				// Ghost top = finish position minus duration = start position (matching render)
@@ -95,20 +95,20 @@ export class CalendarDragDrop {
 			} else if (isAllDayRow) {
 				// All-day row drop: strip time, use midnight of the column's day
 				newDueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
-			} else if (existing?.dueDate !== undefined && hasTime(existing.dueDate)) {
+			} else if (existing?.endDate !== undefined && hasTime(existing.endDate)) {
 				// Month cell drop: keep existing time, just move the date
-				const old = new Date(existing.dueDate);
+				const old = new Date(existing.endDate);
 				newDueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), old.getHours(), old.getMinutes()).getTime();
 			} else {
 				newDueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
 			}
 			// Also shift startDate if it exists (preserve duration); set it if missing
-			const updates: { dueDate?: number; startDate?: number } = { dueDate: newDueDate };
+			const updates: { endDate?: number; startDate?: number } = { endDate: newDueDate };
 			if (isAllDayRow) {
 				// All-day row: startDate = same midnight (just a date, no time)
 				updates.startDate = newDueDate;
 			} else if (existing?.startDate !== undefined) {
-				const dayDiff = newDueDate - (existing.dueDate ?? newDueDate);
+				const dayDiff = newDueDate - (existing.endDate ?? newDueDate);
 				updates.startDate = existing.startDate + dayDiff;
 			} else if (isTimeGrid) {
 				// All-day ticket dropped into time grid: give it a 30-minute window
@@ -238,7 +238,7 @@ export class CalendarDragDrop {
 
 				await this.view.plugin.store.updateTicket(ticket.id, {
 					startDate: newStartDate,
-					dueDate:   newDueDate,
+					endDate:   newDueDate,
 				});
 				generateTicketNote(this.view.plugin, ticket.id).catch(() => {});
 				// Preserve scroll + drag guard
@@ -280,7 +280,7 @@ export class CalendarDragDrop {
 
 			// Column indices at mousedown
 			const origStartCol = Math.round((Math.max(dateOnlyMs(new Date(ticket.startDate!)), weekStartMs) - weekStartMs) / 86400000);
-			const origEndCol   = Math.round((Math.min(dateOnlyMs(new Date(ticket.dueDate!)),   weekEndMs)   - weekStartMs) / 86400000);
+			const origEndCol   = Math.round((Math.min(dateOnlyMs(new Date(ticket.endDate!)),   weekEndMs)   - weekStartMs) / 86400000);
 
 			let curStartCol = origStartCol;
 			let curEndCol   = origEndCol;
@@ -314,16 +314,16 @@ export class CalendarDragDrop {
 				window.setTimeout(() => { this.view.dragJustEnded = false; }, 300);
 
 				let newStartDate = ticket.startDate!;
-				let newDueDate   = ticket.dueDate!;
+				let newDueDate   = ticket.endDate!;
 				if (edge === 'left'  && dateOnlyMs(new Date(ticket.startDate!)) >= weekStartMs) {
 					newStartDate = colToMs(curStartCol);
 				}
-				if (edge === 'right' && dateOnlyMs(new Date(ticket.dueDate!)) <= weekEndMs) {
+				if (edge === 'right' && dateOnlyMs(new Date(ticket.endDate!)) <= weekEndMs) {
 					newDueDate = colToMs(curEndCol);
 				}
 				if (newStartDate >= newDueDate) return;
 
-				await this.view.plugin.store.updateTicket(ticket.id, { startDate: newStartDate, dueDate: newDueDate });
+				await this.view.plugin.store.updateTicket(ticket.id, { startDate: newStartDate, endDate: newDueDate });
 				generateTicketNote(this.view.plugin, ticket.id).catch(() => {});
 				this.view.render();
 				this.view.plugin.refreshAllViews();

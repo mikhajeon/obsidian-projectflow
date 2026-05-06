@@ -16,7 +16,7 @@ export interface Project {
 	autoCreateSprint?: boolean; // default false
 	autoSpillover?: boolean;    // default false
 	autoArchiveDone?: boolean;  // default false — auto-archive 'done' tickets on sprint complete
-	boardPriorityEdges?: boolean; // default true — show priority-coloured border edges on board cards
+	boardPriorityEdges?: boolean; // default true — show priority-colored border edges on board cards
 	color?: string;               // hex color for project, e.g. "#4c9be8"
 	archived?: boolean;           // true = hidden from project selector and all active views
 	archivedAt?: number;          // unix ms timestamp, set when project is archived
@@ -57,11 +57,10 @@ export interface Ticket {
 	checklist?: ChecklistItem[];
 	parentId?: string | null;
 	completedAt?: number;  // unix ms timestamp, set when status transitions to 'done'
-	showOnBoard?: boolean; // no-sprint mode: true = ticket appears on Board/Subtasks views
 	archived?: boolean;    // true = hidden from all active views, visible only in Archive tab
 	archivedAt?: number;   // unix ms timestamp, set when ticket is archived
 	startDate?: number;    // unix ms timestamp, optional start date/time (enables duration block in week view)
-	dueDate?: number;      // unix ms timestamp, optional due date/time for calendar display
+	endDate?: number;      // unix ms timestamp, optional end date/time for calendar display
 	reminders?: TicketReminder[];
 	snoozeIntervals?: SnoozeInterval[];
 	recurrence?: {

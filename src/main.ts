@@ -1,16 +1,17 @@
-import { Plugin, WorkspaceLeaf, Notice } from 'obsidian';
+import { Plugin, WorkspaceLeaf, Notice, MarkdownView } from 'obsidian';
 import { ProjectStore, defaultTagFromName } from './store';
-import { BoardView, BOARD_VIEW } from './views/BoardView';
-import { BacklogView, BACKLOG_VIEW } from './views/BacklogView';
-import { SprintPanelView, SPRINT_VIEW } from './views/SprintPanelView';
+import { BoardView, BOARD_VIEW } from './views/project/BoardView';
+import { BacklogView, BACKLOG_VIEW } from './views/project/BacklogView';
+import { SprintPanelView, SPRINT_VIEW } from './views/project/SprintPanelView';
 import { CalendarView, CALENDAR_VIEW } from './views/calendar/CalendarView';
-import { NotificationPanelView, NOTIFICATION_VIEW_TYPE } from './views/NotificationPanelView';
+import { NotificationPanelView, NOTIFICATION_VIEW_TYPE } from './views/notifications/NotificationPanelView';
+import { TicketNoteView, TICKET_NOTE_VIEW_TYPE, openTicketNoteView } from './views/TicketNoteView';
 import { NotificationManager } from './notifications/NotificationManager';
 import { ProjectFlowSettingTab } from './settings';
-import { ProjectModal } from './modals/ProjectModal';
-import { TicketModal } from './modals/TicketModal';
-import { generateTicketNote, deleteTicketNote, ticketFilePath } from './ticketNote';
-import { NoteSyncWatcher } from './noteSyncWatcher';
+import { ProjectModal } from './modals/project/ProjectModal';
+import { TicketModal } from './modals/shared/TicketModal';
+import { generateTicketNote, deleteTicketNote, ticketFilePath } from './notes/ticketNote';
+import { NoteSyncWatcher } from './notes/noteSyncWatcher';
 import type { Ticket, TicketPriority, TicketType } from './types';
 
 export default class ProjectFlowPlugin extends Plugin {
@@ -43,6 +44,7 @@ export default class ProjectFlowPlugin extends Plugin {
 		this.registerView(SPRINT_VIEW, (leaf) => new SprintPanelView(leaf, this));
 		this.registerView(CALENDAR_VIEW, (leaf) => new CalendarView(leaf, this));
 		this.registerView(NOTIFICATION_VIEW_TYPE, (leaf) => new NotificationPanelView(leaf, this));
+		this.registerView(TICKET_NOTE_VIEW_TYPE, (leaf) => new TicketNoteView(leaf, this));
 
 		this.addRibbonIcon('layout-dashboard', 'ProjectFlow board', () =>
 			this.activateView(BOARD_VIEW)
@@ -138,6 +140,50 @@ export default class ProjectFlowPlugin extends Plugin {
 
 		this.addSettingTab(new ProjectFlowSettingTab(this.app, this));
 
+		// Follow active leaf — open/update ticket properties split for ticket files,
+		// close it when navigating to non-ticket files. Uses active-leaf-change so
+		// tab switches (already-open files) are reliably detected.
+		this.registerEvent(
+			this.app.workspace.on('active-leaf-change', (leaf: WorkspaceLeaf | null) => {
+				if (!leaf) return;
+				// Ignore clicks on the properties panel itself
+				if (leaf.view.getViewType() === TICKET_NOTE_VIEW_TYPE) return;
+				// Only react to leaves in the main editor area, not sidebars/panels
+				if (leaf.getRoot() !== this.app.workspace.rootSplit) return;
+
+				const file = leaf.view instanceof MarkdownView ? leaf.view.file : null;
+
+				if (!file) {
+					if (this.app.workspace.getLeavesOfType(TICKET_NOTE_VIEW_TYPE).length > 0)
+						this.app.workspace.detachLeavesOfType(TICKET_NOTE_VIEW_TYPE);
+					return;
+				}
+
+				const fm = this.app.metadataCache.getFileCache(file)?.frontmatter;
+				const id = typeof fm?.id === 'string' ? fm.id : null;
+				const ticket = id ? this.store.getTicket(id) : null;
+
+				if (!ticket) {
+					if (this.app.workspace.getLeavesOfType(TICKET_NOTE_VIEW_TYPE).length > 0)
+						this.app.workspace.detachLeavesOfType(TICKET_NOTE_VIEW_TYPE);
+					return;
+				}
+
+				// Ticket file — update existing sidebar or open in right sidebar
+				const existing = this.app.workspace.getLeavesOfType(TICKET_NOTE_VIEW_TYPE)[0];
+				if (existing) {
+					existing.setViewState({ type: TICKET_NOTE_VIEW_TYPE, state: { ticketId: id }, active: false });
+					this.app.workspace.revealLeaf(existing);
+				} else {
+					const rightLeaf = this.app.workspace.getRightLeaf(false);
+					if (rightLeaf) {
+						rightLeaf.setViewState({ type: TICKET_NOTE_VIEW_TYPE, state: { ticketId: id }, active: false });
+						this.app.workspace.revealLeaf(rightLeaf);
+					}
+				}
+			})
+		);
+
 		new NoteSyncWatcher(this).register();
 
 		this.app.workspace.onLayoutReady(() => {
@@ -153,6 +199,7 @@ export default class ProjectFlowPlugin extends Plugin {
 		this.app.workspace.detachLeavesOfType(SPRINT_VIEW);
 		this.app.workspace.detachLeavesOfType(CALENDAR_VIEW);
 		this.app.workspace.detachLeavesOfType(NOTIFICATION_VIEW_TYPE);
+		this.app.workspace.detachLeavesOfType(TICKET_NOTE_VIEW_TYPE);
 	}
 
 	openTicketModal(ticket: Ticket): void {
@@ -161,8 +208,9 @@ export default class ProjectFlowPlugin extends Plugin {
 
 	refreshNotificationPanel(): void {
 		for (const leaf of this.app.workspace.getLeavesOfType(NOTIFICATION_VIEW_TYPE)) {
-			const view = leaf.view as NotificationPanelView;
-			view.render();
+			if (leaf.view instanceof NotificationPanelView) {
+				leaf.view.render();
+			}
 		}
 	}
 
@@ -347,7 +395,7 @@ export default class ProjectFlowPlugin extends Plugin {
 	}
 
 	refreshAllViews(): void {
-		const types = [BOARD_VIEW, BACKLOG_VIEW, SPRINT_VIEW, CALENDAR_VIEW, NOTIFICATION_VIEW_TYPE];
+		const types = [BOARD_VIEW, BACKLOG_VIEW, SPRINT_VIEW, CALENDAR_VIEW, NOTIFICATION_VIEW_TYPE, TICKET_NOTE_VIEW_TYPE];
 		for (const type of types) {
 			for (const leaf of this.app.workspace.getLeavesOfType(type)) {
 				const view = leaf.view as { refresh?: () => void };

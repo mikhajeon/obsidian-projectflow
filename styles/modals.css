@@ -214,6 +214,56 @@
 	padding-left: 20px;
 }
 
+/* ── Modal subtasks section ─────────────────────────────────────────────── */
+
+.pf-modal-subtasks-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.pf-modal-subtasks-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.pf-modal-subtask-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-subtask-status-badge {
+	font-size: 0.68em;
+	flex-shrink: 0;
+}
+
+.pf-modal-subtask-title {
+	font-size: var(--font-ui-small);
+	color: var(--text-normal);
+	cursor: pointer;
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.pf-modal-subtask-title:hover {
+	color: var(--text-accent);
+	text-decoration: underline;
+}
+
+.pf-modal-subtasks-empty {
+	font-size: var(--font-ui-small);
+	color: var(--text-faint);
+	font-style: italic;
+}
+
+/* ── Details heading ─────────────────────────────────────────────────────── */
+
 .pf-info-pane-heading {
 	font-size: var(--font-ui-small);
 	font-weight: 600;
@@ -284,6 +334,33 @@
 }
 .pf-btn-open-note:hover {
 	background: var(--background-modifier-hover);
+	color: var(--text-normal);
+}
+
+.pf-confirm-impact {
+	background: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: 8px 12px;
+	margin-bottom: 12px;
+}
+
+.pf-confirm-impact-label {
+	font-size: var(--font-small);
+	color: var(--text-muted);
+	margin: 0 0 6px;
+}
+
+.pf-confirm-impact-list {
+	margin: 0;
+	padding-left: 16px;
+	font-size: var(--font-small);
+	max-height: 140px;
+	overflow-y: auto;
+}
+
+.pf-confirm-impact-list li {
+	margin-bottom: 2px;
 	color: var(--text-normal);
 }
 

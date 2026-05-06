@@ -1,11 +1,11 @@
 import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import type ProjectFlowPlugin from '../../main';
 import type { Sprint, Ticket, TicketType } from '../../types';
-import { TicketModal } from '../../modals/TicketModal';
-import { ProjectModal } from '../../modals/ProjectModal';
-import { CalendarSettingsModal } from '../../modals/CalendarSettingsModal';
-import { generateTicketNote } from '../../ticketNote';
-import { NOTIFICATION_VIEW_TYPE } from '../NotificationPanelView';
+import { TicketModal } from '../../modals/shared/TicketModal';
+import { ProjectModal } from '../../modals/project/ProjectModal';
+import { CalendarSettingsModal } from '../../modals/settings/CalendarSettingsModal';
+import { generateTicketNote } from '../../notes/ticketNote';
+import { NOTIFICATION_VIEW_TYPE } from '../notifications/NotificationPanelView';
 import {
 	TYPE_FILTER_OPTIONS,
 	PRIORITY_FILTER_OPTIONS,
@@ -143,6 +143,7 @@ export class CalendarView extends ItemView {
 
 		// Collect tickets + sprints from all selected projects
 		const allCalendarTickets: Ticket[] = [];
+		const allProjectTickets: Ticket[] = [];
 		const sprints: Sprint[] = [];
 		let anyUseSprints = false;
 		for (const pid of this.selectedProjectIds) {
@@ -150,8 +151,14 @@ export class CalendarView extends ItemView {
 			const useSprints = proj?.useSprints !== false;
 			if (useSprints) anyUseSprints = true;
 			const allTickets = store.getTickets({ projectId: pid }).filter(t => !t.archived);
+			allProjectTickets.push(...allTickets);
+			const backlogStatusIds = new Set(
+				store.getProjectStatuses(pid)
+					.filter(s => s.universalId === "backlog")
+					.map(s => s.id)
+			);
 			const boardTickets = allTickets.filter(t =>
-				useSprints ? t.sprintId !== null : t.showOnBoard === true
+				useSprints ? t.sprintId !== null : !backlogStatusIds.has(t.status)
 			);
 			const boardTicketIds = new Set(boardTickets.map(t => t.id));
 			const subtaskTickets = allTickets.filter(t =>
@@ -166,8 +173,10 @@ export class CalendarView extends ItemView {
 		const { rangeStart, rangeEnd } = getVisibleRange(this.viewMode, this.currentDate);
 		const expandedTickets = expandRecurrences(this.applyFilters(allCalendarTickets), rangeStart, rangeEnd);
 		const filtered = expandedTickets;
-		const scheduled = filtered.filter(t => t.dueDate !== undefined);
-		const unscheduled = allCalendarTickets.filter(t => t.dueDate === undefined && this.applyFilters([t]).length > 0);
+		const scheduled = filtered.filter(t => t.endDate !== undefined);
+		// Unscheduled sidebar uses all project tickets (not just sprint/board) so backlog
+		// tickets without an endDate are always visible and can be dragged onto the calendar.
+		const unscheduled = allProjectTickets.filter(t => t.endDate === undefined && this.applyFilters([t]).length > 0);
 
 		// Union of statuses from all selected projects (deduplicated by id)
 		const statusMap = new Map<string, string>();
@@ -199,7 +208,7 @@ export class CalendarView extends ItemView {
 			this.sidebar.render(content, unscheduled);
 		}
 
-		// Sidebar as drop zone to clear dueDate
+		// Sidebar as drop zone to clear endDate
 		const sidebarEl = content.querySelector('.pf-cal-sidebar') as HTMLElement | null;
 		if (sidebarEl) {
 			sidebarEl.addEventListener('dragover', (e) => { e.preventDefault(); sidebarEl.addClass('pf-cal-drop-target'); });
@@ -210,7 +219,7 @@ export class CalendarView extends ItemView {
 				if (!this.draggedTicketId) return;
 				const ticketId = this.draggedTicketId;
 				this.draggedTicketId = null;
-				await this.plugin.store.updateTicket(ticketId, { dueDate: undefined, startDate: undefined });
+				await this.plugin.store.updateTicket(ticketId, { endDate: undefined, startDate: undefined });
 				generateTicketNote(this.plugin, ticketId).catch(() => { /* silent */ });
 				this.render();
 				this.plugin.refreshAllViews();
@@ -496,8 +505,8 @@ export class CalendarView extends ItemView {
 		if (ap.recurrenceIcon && ticket.recurrence) chip.createEl('span', { cls: 'pf-cal-repeat-icon', text: '↻', attr: { title: `Repeats ${ticket.recurrence.rule}` } });
 
 		// Show time if set
-		if (ap.timeDisplay && ticket.dueDate !== undefined) {
-			const d = new Date(ticket.dueDate);
+		if (ap.timeDisplay && ticket.endDate !== undefined) {
+			const d = new Date(ticket.endDate);
 			if (d.getHours() !== 0 || d.getMinutes() !== 0) {
 				const timeStr = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 				chip.createEl('span', { cls: 'pf-cal-chip-time', text: timeStr });
@@ -545,11 +554,11 @@ export class CalendarView extends ItemView {
 
 	// ── Ticket create context ──────────────────────────────────────────────────
 
-	/** Returns the sprintId + showOnBoard context so calendar-created tickets pass the board filter. */
-	ticketCreateCtx(projectId: string): { sprintId: string | null; showOnBoard?: boolean } {
+	/** Returns the sprintId context so calendar-created tickets are assigned to the active sprint. */
+	ticketCreateCtx(projectId: string): { sprintId: string | null } {
 		const proj = this.plugin.store.getProject(projectId);
 		if (!proj || proj.useSprints === false) {
-			return { sprintId: null, showOnBoard: true };
+			return { sprintId: null };
 		}
 		const sprint = this.plugin.store.getActiveSprint(projectId)
 			?? this.plugin.store.getSprints(projectId).find(s => s.status === 'planning');
@@ -571,14 +580,14 @@ export class CalendarView extends ItemView {
 
 		// Gather tickets with due dates — overdue + next 60 days; exclude done tickets
 		const rangeEnd = todayMs + 60 * 86400000;
-		const scheduled = tickets.filter(t => t.dueDate !== undefined && !isDone(t));
-		const overdue = scheduled.filter(t => new Date(t.dueDate!.valueOf()).setHours(0,0,0,0) < todayMs)
-			.sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
+		const scheduled = tickets.filter(t => t.endDate !== undefined && !isDone(t));
+		const overdue = scheduled.filter(t => new Date(t.endDate!.valueOf()).setHours(0,0,0,0) < todayMs)
+			.sort((a, b) => (a.endDate ?? 0) - (b.endDate ?? 0));
 		const upcoming = scheduled.filter(t => {
-			const d = new Date(t.dueDate!);
+			const d = new Date(t.endDate!);
 			const dMs = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 			return dMs >= todayMs && dMs <= rangeEnd;
-		}).sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
+		}).sort((a, b) => (a.endDate ?? 0) - (b.endDate ?? 0));
 
 		if (overdue.length === 0 && upcoming.length === 0) {
 			agenda.createEl('div', { cls: 'pf-agenda-empty', text: 'No upcoming tickets with due dates.' });
@@ -598,8 +607,8 @@ export class CalendarView extends ItemView {
 				const priorityCls = ap.priorityEdge ? ` pf-priority-edge-${ticket.priority}` : '';
 				const item = list.createEl('div', { cls: `pf-agenda-item${priorityCls}` });
 				if (ap.timeDisplay) {
-					if (ticket.dueDate !== undefined) {
-						const d = new Date(ticket.dueDate);
+					if (ticket.endDate !== undefined) {
+						const d = new Date(ticket.endDate);
 						if (d.getHours() !== 0 || d.getMinutes() !== 0) {
 							item.createEl('span', { cls: 'pf-agenda-time', text: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}` });
 						} else {
@@ -632,7 +641,7 @@ export class CalendarView extends ItemView {
 		// Group upcoming by date
 		const byDate = new Map<number, Ticket[]>();
 		for (const t of upcoming) {
-			const d = new Date(t.dueDate!);
+			const d = new Date(t.endDate!);
 			const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 			const arr = byDate.get(key) ?? [];
 			arr.push(t);

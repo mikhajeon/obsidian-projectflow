@@ -1,6 +1,6 @@
 import type { CalendarView } from './CalendarView';
 import type { Ticket, Sprint } from '../../types';
-import { TicketModal } from '../../modals/TicketModal';
+import { TicketModal } from '../../modals/shared/TicketModal';
 import {
 	WEEKDAY_LABELS,
 	dateOnlyMs,
@@ -13,7 +13,7 @@ export class CalendarMonthGrid {
 
 	// ── Month grid ─────────────────────────────────────────────────────────────
 	//
-	// Multi-day tickets (startDate on a different calendar day than dueDate)
+	// Multi-day tickets (startDate on a different calendar day than endDate)
 	// render as horizontal bars spanning the columns they occupy within each
 	// week row. Single-day tickets render as chips inside the day cell.
 	// Week rows are separate divs so bars can span via percentage widths.
@@ -26,9 +26,9 @@ export class CalendarMonthGrid {
 
 		// Split into multi-day vs single-day tickets
 		const multiDay = tickets.filter(t =>
-			t.dueDate !== undefined &&
+			t.endDate !== undefined &&
 			t.startDate !== undefined &&
-			dateOnlyMs(new Date(t.startDate)) < dateOnlyMs(new Date(t.dueDate!))
+			dateOnlyMs(new Date(t.startDate)) < dateOnlyMs(new Date(t.endDate!))
 		);
 		const singleDay = tickets.filter(t => !multiDay.includes(t));
 
@@ -49,7 +49,7 @@ export class CalendarMonthGrid {
 			// so overlapping bars don't stack on top of each other.
 			const overlapping = multiDay.filter(t => {
 				const s = dateOnlyMs(new Date(t.startDate!));
-				const e = dateOnlyMs(new Date(t.dueDate!));
+				const e = dateOnlyMs(new Date(t.endDate!));
 				return s <= weekEndMs && e >= weekStartMs;
 			});
 
@@ -60,7 +60,7 @@ export class CalendarMonthGrid {
 				const s = Math.max(dateOnlyMs(new Date(overlapping[i].startDate!)), weekStartMs);
 				let lane = laneEnds.findIndex(endMs => endMs < s);
 				if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
-				laneEnds[lane] = Math.min(dateOnlyMs(new Date(overlapping[i].dueDate!)), weekEndMs);
+				laneEnds[lane] = Math.min(dateOnlyMs(new Date(overlapping[i].endDate!)), weekEndMs);
 				lanes[i] = lane;
 			}
 
@@ -75,7 +75,7 @@ export class CalendarMonthGrid {
 			const maxLanePerCol = new Array(7).fill(-1);
 			for (let i = 0; i < overlapping.length; i++) {
 				const cs = Math.max(dateOnlyMs(new Date(overlapping[i].startDate!)), weekStartMs);
-				const ce = Math.min(dateOnlyMs(new Date(overlapping[i].dueDate!)),   weekEndMs);
+				const ce = Math.min(dateOnlyMs(new Date(overlapping[i].endDate!)),   weekEndMs);
 				const c0 = Math.round((cs - weekStartMs) / 86400000);
 				const c1 = Math.round((ce - weekStartMs) / 86400000);
 				for (let col = c0; col <= c1; col++) {
@@ -101,8 +101,8 @@ export class CalendarMonthGrid {
 
 				// ── Single-day chips ──────────────────────────────────────
 				const dayTickets = singleDay
-					.filter(t => t.dueDate !== undefined && isSameDay(new Date(t.dueDate!), day))
-					.sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
+					.filter(t => t.endDate !== undefined && isSameDay(new Date(t.endDate!), day))
+					.sort((a, b) => (a.endDate ?? 0) - (b.endDate ?? 0));
 
 				const chipContainer = cell.createEl('div', { cls: 'pf-cal-day-tickets' });
 				// Only push chips down in columns where a bar actually crosses this day
@@ -128,8 +128,8 @@ export class CalendarMonthGrid {
 					if ((e.target as HTMLElement).closest('.pf-cal-chip,.pf-cal-multiday-bar')) return;
 					const pid = this.view.plugin.store.getActiveProjectId();
 					if (!pid) return;
-					const dueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
-					new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), dueDate, startDate: dueDate }, () => this.view.render()).open();
+					const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
+					new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 				});
 
 				this.view.dragDrop.setupDayDropZone(cell, day);
@@ -143,12 +143,12 @@ export class CalendarMonthGrid {
 				const key = project ? `${project.tag}-${ticket.ticketNumber}` : '';
 				const lane = lanes[i];
 				const clampedStart = Math.max(dateOnlyMs(new Date(ticket.startDate!)), weekStartMs);
-				const clampedEnd   = Math.min(dateOnlyMs(new Date(ticket.dueDate!)),   weekEndMs);
+				const clampedEnd   = Math.min(dateOnlyMs(new Date(ticket.endDate!)),   weekEndMs);
 				const colStart = Math.round((clampedStart - weekStartMs) / 86400000);
 				const colEnd   = Math.round((clampedEnd   - weekStartMs) / 86400000);
 				const spanCols = colEnd - colStart + 1;
 				const isFirstSeg = dateOnlyMs(new Date(ticket.startDate!)) >= weekStartMs;
-				const isLastSeg  = dateOnlyMs(new Date(ticket.dueDate!))   <= weekEndMs;
+				const isLastSeg  = dateOnlyMs(new Date(ticket.endDate!))   <= weekEndMs;
 
 				const bar = cellsRow.createEl('div', {
 					cls: [

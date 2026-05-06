@@ -49,7 +49,10 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	cursor: pointer;
 }
+
+.pf-subtasks-block-title:hover { color: var(--text-accent); }
 
 .pf-subtasks-block-progress {
 	font-size: 11px;
@@ -78,6 +81,7 @@
 }
 
 .pf-subtasks-card {
+	--pf-card-inset: inset 0 0 0 0 transparent;
 	display: flex;
 	flex-direction: column;
 	gap: 5px;
@@ -86,17 +90,17 @@
 	background: var(--background-primary);
 	border: 1px solid var(--background-modifier-border);
 	border-radius: 6px;
-	box-shadow: 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+	box-shadow: var(--pf-card-inset), 0 0 0 1px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
 	transition: box-shadow 0.15s, opacity 0.15s;
 }
-.pf-subtasks-card.pf-priority-border-critical { border: 2px solid var(--pf-border-critical); }
-.pf-subtasks-card.pf-priority-border-high     { border: 2px solid var(--pf-border-high); }
-.pf-subtasks-card.pf-priority-border-medium   { border: 2px solid var(--pf-border-medium); }
-.pf-subtasks-card.pf-priority-border-low      { border: 2px solid var(--pf-border-low); }
-.pf-subtasks-card.pf-priority-border-none     { border: 2px solid var(--background-modifier-border); }
+.pf-subtasks-card.pf-priority-border-critical { --pf-card-inset: inset 0 0 0 2px var(--pf-border-critical); }
+.pf-subtasks-card.pf-priority-border-high     { --pf-card-inset: inset 0 0 0 2px var(--pf-border-high); }
+.pf-subtasks-card.pf-priority-border-medium   { --pf-card-inset: inset 0 0 0 2px var(--pf-border-medium); }
+.pf-subtasks-card.pf-priority-border-low      { --pf-card-inset: inset 0 0 0 2px var(--pf-border-low); }
+.pf-subtasks-card.pf-priority-border-none     { --pf-card-inset: inset 0 0 0 2px var(--background-modifier-border); }
 
 .pf-subtasks-card:hover {
-	box-shadow: 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
+	box-shadow: var(--pf-card-inset), 0 0 0 1px rgba(0,0,0,0.06), 0 2px 8px var(--pf-card-shadow);
 }
 
 .pf-subtasks-status {
@@ -173,22 +177,25 @@
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	padding: 5px 10px;
-	background: var(--background-secondary);
+	padding: 10px 12px 8px;
 	border-bottom: 1px solid var(--background-modifier-border);
+	flex-shrink: 0;
 }
 
 .pf-subtasks-col-title {
-	font-size: 10px;
+	font-size: var(--font-ui-small);
 	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.04em;
-	color: var(--text-normal);
+	flex: 1;
+	color: var(--pf-col-color, var(--text-muted));
 }
 
 .pf-subtasks-col-count {
-	font-size: 10px;
+	font-size: var(--font-ui-smaller);
 	color: var(--text-muted);
+	background: var(--background-modifier-hover);
+	padding: 1px 7px;
+	border-radius: 10px;
+	flex-shrink: 0;
 }
 
 .pf-subtasks-col-body {
@@ -239,6 +246,32 @@
 .pf-subtasks-col-add-btn:hover {
 	background: var(--background-modifier-hover);
 	color: var(--text-normal);
+}
+
+/* ── Collapsed subtask column ────────────────────────────────────────────── */
+
+.pf-subtasks-col.pf-subtasks-col-collapsed {
+	overflow: hidden;
+	cursor: pointer;
+	align-self: start;
+}
+
+.pf-subtasks-col-collapsed .pf-subtasks-col-head {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	padding: 10px 8px;
+	border-bottom: none;
+	justify-content: flex-start;
+	gap: 8px;
+}
+
+.pf-subtasks-col-collapsed .pf-subtasks-col-title {
+	white-space: nowrap;
+	flex: unset;
+}
+
+.pf-subtasks-col-collapsed .pf-subtasks-col-count {
+	writing-mode: horizontal-tb;
 }
 
 .pf-subtasks-col-drop-active > .pf-subtasks-col-body {

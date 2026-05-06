@@ -132,8 +132,8 @@ export class NotificationManager {
 			const doneIds = new Set(projectStatuses.filter(s => s.universalId === 'done').map(s => s.id));
 			const tickets = this.plugin.store.getTickets({ projectId: project.id })
 				.filter(t => !t.archived && !doneIds.has(t.status));
-			overdueTickets.push(...tickets.filter(t => t.dueDate && t.dueDate < todayStart.getTime()));
-			dueTodayTickets.push(...tickets.filter(t => t.dueDate && t.dueDate >= todayStart.getTime() && t.dueDate <= todayEnd.getTime()));
+			overdueTickets.push(...tickets.filter(t => t.endDate && t.endDate < todayStart.getTime()));
+			dueTodayTickets.push(...tickets.filter(t => t.endDate && t.endDate >= todayStart.getTime() && t.endDate <= todayEnd.getTime()));
 			const sprint = this.plugin.store.getSprints(project.id).find(s => s.status === 'active');
 			if (sprint && sprint.endDate - now <= 2 * 86400000 && sprint.endDate > now) endingSoon++;
 		}
@@ -167,8 +167,8 @@ export class NotificationManager {
 			const doneIds = new Set(projectStatuses.filter(s => s.universalId === 'done').map(s => s.id));
 			const tickets = this.plugin.store.getTickets({ projectId: project.id })
 				.filter(t => !t.archived && !doneIds.has(t.status));
-			overdue   += tickets.filter(t => t.dueDate && t.dueDate < todayStart.getTime()).length;
-			dueToday  += tickets.filter(t => t.dueDate && t.dueDate >= todayStart.getTime() && t.dueDate <= todayEnd.getTime()).length;
+			overdue   += tickets.filter(t => t.endDate && t.endDate < todayStart.getTime()).length;
+			dueToday  += tickets.filter(t => t.endDate && t.endDate >= todayStart.getTime() && t.endDate <= todayEnd.getTime()).length;
 			const sprint = this.plugin.store.getSprints(project.id).find(s => s.status === 'active');
 			if (sprint && sprint.endDate - now <= 2 * 86400000 && sprint.endDate > now) endingSoon++;
 		}
@@ -228,7 +228,7 @@ export class NotificationManager {
 		for (const ticket of allTickets) {
 			if (!ticket.reminders?.length) continue;
 			for (const reminder of ticket.reminders) {
-				const anchorTime = reminder.anchor === 'start' ? ticket.startDate : ticket.dueDate;
+				const anchorTime = reminder.anchor === 'start' ? ticket.startDate : ticket.endDate;
 				if (!anchorTime) continue;
 				const fireAt = anchorTime - reminder.offsetMinutes * 60000;
 				if (now < fireAt) continue;

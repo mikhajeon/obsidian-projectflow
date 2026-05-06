@@ -113,7 +113,7 @@ export function buildOverlapLayout(tickets: Ticket[], day: Date): Map<string, Bl
 	// Compute [topPx, bottomPx] for each ticket on this day
 	const ranges = new Map<string, [number, number]>();
 	for (const t of tickets) {
-		const due = new Date(t.dueDate!);
+		const due = new Date(t.endDate!);
 		const dueMin = due.getHours() * 60 + due.getMinutes();
 		let topMin: number, botMin: number;
 		if (t.startDate === undefined) {
@@ -210,11 +210,11 @@ export function isHiddenChild(ticketId: string, layoutMap: Map<string, BlockLayo
 export function expandRecurrences(tickets: Ticket[], rangeStart: number, rangeEnd: number): (Ticket & { isGhost?: boolean; originalId?: string })[] {
 	const result: (Ticket & { isGhost?: boolean; originalId?: string })[] = [...tickets];
 	for (const t of tickets) {
-		if (!t.recurrence || t.dueDate === undefined) continue;
+		if (!t.recurrence || t.endDate === undefined) continue;
 		const { rule, interval, endDate, customDays } = t.recurrence;
 		const end = Math.min(endDate ?? rangeEnd, rangeEnd);
-		let cursor = new Date(t.dueDate);
-		const duration = t.startDate !== undefined ? t.dueDate - t.startDate : 0;
+		let cursor = new Date(t.endDate);
+		const duration = t.startDate !== undefined ? t.endDate - t.startDate : 0;
 		let safety = 0;
 		while (safety++ < 365) {
 			// Advance cursor
@@ -242,7 +242,7 @@ export function expandRecurrences(tickets: Ticket[], rangeStart: number, rangeEn
 				id: `${t.id}-ghost-${curMs}`,
 				originalId: t.id,
 				isGhost: true,
-				dueDate: curMs,
+				endDate: curMs,
 				startDate: duration > 0 ? curMs - duration : undefined,
 			};
 			result.push(ghost);

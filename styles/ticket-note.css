@@ -1,0 +1,274 @@
+/* ── Hide frontmatter panel when ticket note is opened via ProjectFlow ───── */
+/* Applied to contentEl after leaf.openFile() resolves */
+
+.pf-ticket-note .metadata-container,
+.pf-ticket-note .inline-title {
+	display: none !important;
+}
+
+/* ── Ticket properties panel (right sidebar) ────────────────────────────── */
+
+.pf-tnv-panel {
+	padding: 16px 14px 40px;
+	font-size: var(--font-small);
+	overflow-y: auto;
+	height: 100%;
+	box-sizing: border-box;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+.pf-tnv-panel-header {
+	margin-bottom: 10px;
+}
+
+.pf-tnv-key {
+	display: block;
+	font-size: 0.72em;
+	font-weight: 600;
+	color: var(--text-muted);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	margin-bottom: 4px;
+}
+
+.pf-tnv-title-wrap {
+	position: relative;
+	border-radius: var(--radius-s);
+	transition: background 0.1s;
+}
+
+.pf-tnv-title-wrap:hover {
+	background: var(--background-modifier-hover);
+}
+
+.pf-tnv-title-edit-icon {
+	position: absolute;
+	right: 4px;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 14px;
+	height: 14px;
+	color: var(--text-muted);
+	opacity: 0;
+	transition: opacity 0.1s;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pf-tnv-title-edit-icon svg {
+	width: 12px;
+	height: 12px;
+}
+
+.pf-tnv-title-wrap:hover .pf-tnv-title-edit-icon {
+	opacity: 1;
+}
+
+.pf-tnv-title-wrap.pf-tnv-title-editing {
+	background: var(--background-modifier-form-field);
+	outline: 1px solid var(--interactive-accent);
+	border-radius: var(--radius-s);
+}
+
+.pf-tnv-title-wrap.pf-tnv-title-editing .pf-tnv-title-edit-icon {
+	opacity: 0;
+}
+
+.pf-tnv-panel-title {
+	font-size: 1em;
+	font-weight: 600;
+	margin: 0;
+	padding: 4px 24px 4px 4px;
+	line-height: 1.4;
+	word-break: break-word;
+	cursor: text;
+	outline: none;
+	border-radius: var(--radius-s);
+}
+
+.pf-tnv-divider {
+	border: none;
+	border-top: 1px solid var(--background-modifier-border);
+	margin: 10px 0 14px;
+}
+
+/* ── Property rows ──────────────────────────────────────────────────────── */
+
+.pf-tnv-prop {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	margin-bottom: 12px;
+}
+
+.pf-tnv-prop-key {
+	font-size: 0.7em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+}
+
+.pf-tnv-prop-val {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px;
+}
+
+/* ── Controls ───────────────────────────────────────────────────────────── */
+
+.pf-tnv-select {
+	font-size: var(--font-small);
+	background: var(--background-modifier-form-field);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: 2px 6px;
+	color: var(--text-normal);
+	width: 100%;
+}
+
+.pf-tnv-select:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.pf-tnv-input {
+	font-size: var(--font-small);
+	background: var(--background-modifier-form-field);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	padding: 2px 6px;
+	color: var(--text-normal);
+}
+
+.pf-tnv-input:focus {
+	outline: none;
+	border-color: var(--interactive-accent);
+}
+
+.pf-tnv-input[type="number"] { width: 70px; }
+.pf-tnv-input[type="date"]   { width: 130px; }
+.pf-tnv-time                 { width: 72px; }
+
+/* ── Text / links ───────────────────────────────────────────────────────── */
+
+.pf-tnv-text  { font-size: var(--font-small); color: var(--text-normal); }
+.pf-tnv-muted { color: var(--text-muted); font-size: 0.82em; }
+
+.pf-tnv-link {
+	font-size: var(--font-small);
+	color: var(--text-accent);
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.pf-tnv-link:hover { text-decoration: underline; }
+
+/* ── Child list ─────────────────────────────────────────────────────────── */
+
+.pf-tnv-child-list {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+.pf-tnv-child-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-tnv-child-status {
+	font-size: 0.68em;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	white-space: nowrap;
+}
+
+/* ── Clear buttons on date fields ───────────────────────────────────────── */
+
+.pf-tnv-clear-btn {
+	font-size: 0.85em;
+	padding: 1px 5px;
+	background: none;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: var(--radius-s);
+	color: var(--text-muted);
+	cursor: pointer;
+	line-height: 1;
+}
+
+.pf-tnv-clear-btn:hover { color: var(--text-normal); }
+
+/* ── Recurrence ─────────────────────────────────────────────────────────── */
+
+.pf-tnv-section-head {
+	margin-bottom: 6px;
+}
+
+.pf-tnv-recur-wrap {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 12px;
+}
+
+.pf-tnv-recur-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+/* ── Reminders / snooze ─────────────────────────────────────────────────── */
+
+.pf-tnv-setting-head {
+	padding: 0 !important;
+	border: none !important;
+	margin-bottom: 6px;
+}
+
+.pf-tnv-reminder-rows,
+.pf-tnv-snooze-rows {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	margin-bottom: 8px;
+}
+
+.pf-tnv-reminder-row,
+.pf-tnv-snooze-row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+
+.pf-tnv-select-sm {
+	width: auto !important;
+	padding: 2px 4px;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+
+.pf-tnv-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding-top: 4px;
+}
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+
+.pf-tnv-empty {
+	color: var(--text-muted);
+	font-style: italic;
+	padding: 12px 0;
+}

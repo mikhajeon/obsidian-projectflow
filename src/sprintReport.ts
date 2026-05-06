@@ -1,7 +1,7 @@
 import { normalizePath, Notice, TFile } from 'obsidian';
 import type ProjectFlowPlugin from './main';
 import type { Ticket } from './types';
-import { ensureFolder, safeFileName } from './ticketNote';
+import { ensureFolder, safeFileName } from './notes/ticketNote';
 
 export async function generateSprintReport(plugin: ProjectFlowPlugin, sprintId: string): Promise<void> {
 	const store = plugin.store;

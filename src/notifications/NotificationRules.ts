@@ -29,8 +29,8 @@ const ticketDueToday: TriggerRule = {
 	type: 'ticket_due_today',
 	check({ projectId, projectTag, now: _now, todayMs, tickets, triggers }) {
 		const out: PartialNotif[] = [];
-		for (const t of tickets.filter(t => t.dueDate)) {
-			const dueDay = new Date(t.dueDate!); dueDay.setHours(0, 0, 0, 0);
+		for (const t of tickets.filter(t => t.endDate)) {
+			const dueDay = new Date(t.endDate!); dueDay.setHours(0, 0, 0, 0);
 			if (dueDay.getTime() === todayMs) {
 				out.push({
 					projectId, ticketId: t.id, type: 'ticket_due_today',
@@ -49,8 +49,8 @@ const ticketDueApproaching: TriggerRule = {
 		const days = triggers['ticket_due_approaching']?.daysBeforeDue ?? 2;
 		const windowMs = days * 86400000;
 		const out: PartialNotif[] = [];
-		for (const t of tickets.filter(t => t.dueDate)) {
-			const diff = t.dueDate! - now;
+		for (const t of tickets.filter(t => t.endDate)) {
+			const diff = t.endDate! - now;
 			if (diff > 0 && diff <= windowMs) {
 				const daysLeft = Math.ceil(diff / 86400000);
 				out.push({
@@ -68,7 +68,7 @@ const ticketOverdue: TriggerRule = {
 	type: 'ticket_overdue',
 	check({ projectId, now, tickets }) {
 		return tickets
-			.filter(t => t.dueDate && t.dueDate < now)
+			.filter(t => t.endDate && t.endDate < now)
 			.map(t => ({
 				projectId, ticketId: t.id, type: 'ticket_overdue' as const,
 				title: `Overdue: ${t.title}`,
@@ -100,7 +100,7 @@ const ticketNoDueDate: TriggerRule = {
 	type: 'ticket_no_due_date',
 	check({ projectId, tickets }) {
 		return tickets
-			.filter(t => !t.dueDate)
+			.filter(t => !t.endDate)
 			.map(t => ({
 				projectId, ticketId: t.id, type: 'ticket_no_due_date' as const,
 				title: `No due date: ${t.title}`,
@@ -184,7 +184,7 @@ const sprintOverdue: TriggerRule = {
 const projectOverdueTickets: TriggerRule = {
 	type: 'project_overdue_tickets',
 	check({ projectId, projectName, now, tickets }) {
-		const overdueCount = tickets.filter(t => t.dueDate && t.dueDate < now).length;
+		const overdueCount = tickets.filter(t => t.endDate && t.endDate < now).length;
 		if (overdueCount === 0) return [];
 		return [{
 			projectId, type: 'project_overdue_tickets',

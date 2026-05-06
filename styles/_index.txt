@@ -15,4 +15,5 @@ subtasks.css
 status-settings.css
 calendar.css
 notifications.css
+ticket-note.css
 misc.css

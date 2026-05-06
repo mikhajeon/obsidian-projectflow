@@ -1,6 +1,6 @@
 import type { CalendarView } from './CalendarView';
 import type { Ticket, Sprint } from '../../types';
-import { TicketModal } from '../../modals/TicketModal';
+import { TicketModal } from '../../modals/shared/TicketModal';
 import {
 	WEEKDAY_LABELS,
 	HOUR_HEIGHT,
@@ -25,10 +25,10 @@ export class CalendarWeekGrid {
 		const today = new Date();
 		const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-		// Split tickets: all-day (no time or dueDate-only at midnight) vs timed
-		const allDayTickets = tickets.filter(t => t.dueDate !== undefined && !hasTime(t.dueDate!));
-		const timedTickets  = tickets.filter(t => t.dueDate !== undefined && hasTime(t.dueDate!));
-		// Tickets with no dueDate go to sidebar, not here
+		// Split tickets: all-day (no time or endDate-only at midnight) vs timed
+		const allDayTickets = tickets.filter(t => t.endDate !== undefined && !hasTime(t.endDate!));
+		const timedTickets  = tickets.filter(t => t.endDate !== undefined && hasTime(t.endDate!));
+		// Tickets with no endDate go to sidebar, not here
 		// (unscheduled tickets are rendered in the sidebar, not here)
 
 		// ── Header row: time spacer + day labels ─────────────────────────────
@@ -56,17 +56,17 @@ export class CalendarWeekGrid {
 				cls: 'pf-cal-allday-col' + (isPast ? ' pf-cal-past-allday' : ''),
 			});
 			const dayAllDay = allDayTickets
-				.filter(t => isSameDay(new Date(t.dueDate!), day))
-				.sort((a, b) => (a.dueDate ?? 0) - (b.dueDate ?? 0));
+				.filter(t => isSameDay(new Date(t.endDate!), day))
+				.sort((a, b) => (a.endDate ?? 0) - (b.endDate ?? 0));
 			for (const ticket of dayAllDay) this.view.renderTicketChip(col, ticket);
 			col.addEventListener('click', (e) => {
 				if ((e.target as HTMLElement).closest('.pf-cal-chip')) return;
 				const pid = this.view.plugin.store.getActiveProjectId();
 				if (!pid) return;
-				const dueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
-				new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), dueDate, startDate: dueDate }, () => this.view.render()).open();
+				const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
+				new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 			});
-			// isAllDayRow=true: drops strip time and set startDate=dueDate=midnight
+			// isAllDayRow=true: drops strip time and set startDate=endDate=midnight
 			this.view.dragDrop.setupDayDropZone(col, day, false, true);
 		}
 
@@ -116,15 +116,15 @@ export class CalendarWeekGrid {
 				line.addEventListener('click', () => {
 					const pid = this.view.plugin.store.getActiveProjectId();
 					if (!pid) return;
-					const dueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
-					new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), dueDate, startDate: dueDate }, () => this.view.render()).open();
+					const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
+					new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 				});
 			}
 
 			// Timed ticket blocks — include any ticket whose span overlaps this day
 			const dayMs = dateOnlyMs(day);
 			const dayTimed = timedTickets.filter(t => {
-				const dueMs  = dateOnlyMs(new Date(t.dueDate!));
+				const dueMs  = dateOnlyMs(new Date(t.endDate!));
 				const startMs = t.startDate !== undefined
 					? dateOnlyMs(new Date(t.startDate))
 					: dueMs;
@@ -167,8 +167,8 @@ export class CalendarWeekGrid {
 		const today = new Date();
 		const isToday = isSameDay(day, today);
 
-		const allDayTickets = tickets.filter(t => t.dueDate !== undefined && !hasTime(t.dueDate!) && isSameDay(new Date(t.dueDate!), day));
-		const timedTickets  = tickets.filter(t => t.dueDate !== undefined && hasTime(t.dueDate!));
+		const allDayTickets = tickets.filter(t => t.endDate !== undefined && !hasTime(t.endDate!) && isSameDay(new Date(t.endDate!), day));
+		const timedTickets  = tickets.filter(t => t.endDate !== undefined && hasTime(t.endDate!));
 
 		// Header row
 		const headerRow = container.createEl('div', { cls: 'pf-cal-week-header-row' });
@@ -188,8 +188,8 @@ export class CalendarWeekGrid {
 			if ((e.target as HTMLElement).closest('.pf-cal-chip')) return;
 			const pid = this.view.plugin.store.getActiveProjectId();
 			if (!pid) return;
-			const dueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
-			new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), dueDate, startDate: dueDate }, () => this.view.render()).open();
+			const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), 0, 0, 0).getTime();
+			new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 		});
 
 		// Scrollable time body
@@ -229,14 +229,14 @@ export class CalendarWeekGrid {
 			line.addEventListener('click', () => {
 				const pid = this.view.plugin.store.getActiveProjectId();
 				if (!pid) return;
-				const dueDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
-				new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), dueDate, startDate: dueDate }, () => this.view.render()).open();
+				const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
+				new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 			});
 		}
 
 		const dayMs = dateOnlyMs(day);
 		const dayTimed = timedTickets.filter(t => {
-			const dueMs   = dateOnlyMs(new Date(t.dueDate!));
+			const dueMs   = dateOnlyMs(new Date(t.endDate!));
 			const startMs = t.startDate !== undefined ? dateOnlyMs(new Date(t.startDate)) : dueMs;
 			return dayMs >= startMs && dayMs <= dueMs;
 		});
@@ -261,7 +261,7 @@ export class CalendarWeekGrid {
 	// ── Timed block (week view) ────────────────────────────────────────────────
 	//
 	// Segment types for multi-day blocks:
-	//   'single' — startDate and dueDate on the same day (or no startDate)
+	//   'single' — startDate and endDate on the same day (or no startDate)
 	//   'start'  — this is the first day; block runs from startTime to bottom of column
 	//   'middle' — intermediate day; block fills the entire column
 	//   'end'    — this is the due day; block runs from top of column to dueTime
@@ -275,7 +275,7 @@ export class CalendarWeekGrid {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const isGhost = (ticket as any).isGhost === true;
 
-		const due = new Date(ticket.dueDate!);
+		const due = new Date(ticket.endDate!);
 		const dueMinutes = due.getHours() * 60 + due.getMinutes();
 		const PX_PER_MIN = HOUR_HEIGHT / 60;
 		const FULL_DAY_PX = 24 * 60 * PX_PER_MIN;
@@ -369,12 +369,12 @@ export class CalendarWeekGrid {
 		const fmtT = (ms: number) => { const d = new Date(ms); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 		let timeRangeLabel = '';
 		if (segment === 'single') {
-			const startMs = ticket.startDate !== undefined ? ticket.startDate : ticket.dueDate! - 60 * 60000;
-			timeRangeLabel = `${fmtT(startMs)} – ${fmtT(ticket.dueDate!)}`;
+			const startMs = ticket.startDate !== undefined ? ticket.startDate : ticket.endDate! - 60 * 60000;
+			timeRangeLabel = `${fmtT(startMs)} – ${fmtT(ticket.endDate!)}`;
 		} else if (segment === 'start' && ticket.startDate !== undefined) {
 			timeRangeLabel = `${fmtT(ticket.startDate)} →`;
 		} else if (segment === 'end') {
-			timeRangeLabel = `→ ${fmtT(ticket.dueDate!)}`;
+			timeRangeLabel = `→ ${fmtT(ticket.endDate!)}`;
 		}
 		if (ap.timeDisplay && timeRangeLabel) row1.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
 
@@ -424,7 +424,7 @@ export class CalendarWeekGrid {
 			this.view.draggedTicketId = ticket.id;
 			// Store duration for ghost preview sizing
 			this.view.draggedTicketDuration = ticket.startDate !== undefined
-				? Math.max(30, Math.round((ticket.dueDate! - ticket.startDate) / 60000))
+				? Math.max(30, Math.round((ticket.endDate! - ticket.startDate) / 60000))
 				: 60;
 			block.addClass('pf-dragging');
 			if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';

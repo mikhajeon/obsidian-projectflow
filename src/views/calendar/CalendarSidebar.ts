@@ -1,6 +1,6 @@
 import type { CalendarView } from './CalendarView';
 import type { Ticket } from '../../types';
-import { AutoScheduleModal, ScheduleSuggestion } from '../../modals/AutoScheduleModal';
+import { AutoScheduleModal, ScheduleSuggestion } from '../../modals/shared/AutoScheduleModal';
 import { dateOnlyMs, hasTime, isSameDay, getMonthWeeks } from './CalendarUtils';
 
 export class CalendarSidebar {
@@ -15,7 +15,7 @@ export class CalendarSidebar {
 		const store = this.view.plugin.store;
 		const projectId = store.getActiveProjectId();
 		const allScheduled = projectId
-			? store.getTickets({ projectId }).filter(t => !t.archived && t.dueDate !== undefined)
+			? store.getTickets({ projectId }).filter(t => !t.archived && t.endDate !== undefined)
 			: [];
 		this.renderMiniCalendar(sidebar, allScheduled);
 
@@ -119,8 +119,8 @@ export class CalendarSidebar {
 		// Ticket day set for dot indicators
 		const ticketDays = new Set(
 			scheduledTickets
-				.filter(t => t.dueDate !== undefined)
-				.map(t => dateOnlyMs(new Date(t.dueDate!)))
+				.filter(t => t.endDate !== undefined)
+				.map(t => dateOnlyMs(new Date(t.endDate!)))
 		);
 
 		const weeks = getMonthWeeks(year, month);
@@ -181,11 +181,11 @@ export class CalendarSidebar {
 			const busyMs = dateOnlyMs(day);
 			const busy: { s: number; e: number }[] = [];
 			for (const t of existingTimed) {
-				if (t.dueDate === undefined) continue;
-				const dueMs = dateOnlyMs(new Date(t.dueDate));
+				if (t.endDate === undefined) continue;
+				const dueMs = dateOnlyMs(new Date(t.endDate));
 				if (dueMs !== busyMs) continue;
-				const startMs = t.startDate !== undefined ? t.startDate : t.dueDate - 3600000;
-				busy.push({ s: Math.max(startMs, workStart), e: Math.min(t.dueDate, workEnd) });
+				const startMs = t.startDate !== undefined ? t.startDate : t.endDate - 3600000;
+				busy.push({ s: Math.max(startMs, workStart), e: Math.min(t.endDate, workEnd) });
 			}
 			busy.sort((a, b) => a.s - b.s);
 
@@ -209,7 +209,7 @@ export class CalendarSidebar {
 		if (!projectId) return [];
 
 		const allTimed = store.getTickets({ projectId })
-			.filter(t => !t.archived && t.dueDate !== undefined && hasTime(t.dueDate));
+			.filter(t => !t.archived && t.endDate !== undefined && hasTime(t.endDate));
 		const freeSlots = this.findFreeSlots(allTimed);
 
 		// Sort by priority

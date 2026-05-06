@@ -22,10 +22,10 @@
 	--pf-type-bug-color:      #c0392b;
 	--pf-type-feature-bg:     #e8fde8;
 	--pf-type-feature-color:  #27ae60;
-	--pf-type-story-bg:       #f4e8fd;
-	--pf-type-story-color:    #8e44ad;
-	--pf-type-epic-bg:        #fdf5e8;
-	--pf-type-epic-color:     #b7791f;
+	--pf-type-story-bg:       #dcfce7;
+	--pf-type-story-color:    #16a34a;
+	--pf-type-epic-bg:        #f3e8ff;
+	--pf-type-epic-color:     #7c3aed;
 	--pf-type-subtask-bg:     #e8f4f4;
 	--pf-type-subtask-color:  #1a7a7a;
 
@@ -82,10 +82,10 @@
 	--pf-type-bug-color:      #de8080;
 	--pf-type-feature-bg:     rgba(39, 174, 96, 0.20);
 	--pf-type-feature-color:  #6dcc8d;
-	--pf-type-story-bg:       rgba(142, 68, 173, 0.22);
-	--pf-type-story-color:    #c07de0;
-	--pf-type-epic-bg:        rgba(183, 121, 31, 0.20);
-	--pf-type-epic-color:     #d4a84b;
+	--pf-type-story-bg:       rgba(16, 185, 129, 0.20);
+	--pf-type-story-color:    #34d399;
+	--pf-type-epic-bg:        rgba(139, 92, 246, 0.22);
+	--pf-type-epic-color:     #c084fc;
 	--pf-type-subtask-bg:     rgba(26, 122, 122, 0.20);
 	--pf-type-subtask-color:  #5aadad;
 
