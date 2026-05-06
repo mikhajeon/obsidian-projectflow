@@ -581,6 +581,16 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	getHiddenSubtaskColumns(projectId: string): string[] {
+		return this.data.hiddenSubtaskColumns?.[projectId] ?? [];
+	}
+
+	async setHiddenSubtaskColumns(projectId: string, ids: string[]): Promise<void> {
+		if (!this.data.hiddenSubtaskColumns) this.data.hiddenSubtaskColumns = {};
+		this.data.hiddenSubtaskColumns[projectId] = ids;
+		await this.save();
+	}
+
 	// ── Collapsed board columns ──────────────────────────────────────────────
 
 	getCollapsedBoardColumns(projectId: string): string[] {

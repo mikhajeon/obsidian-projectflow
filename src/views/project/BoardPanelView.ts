@@ -281,13 +281,6 @@ export class BoardPanelView {
 					await this.view.openTicketNote(ticket)
 				)
 			);
-			menu.addItem(item =>
-				item.setTitle('Move to backlog').setIcon('archive').onClick(async () => {
-					await this.view.plugin.store.moveTicket(ticket.id, null, 'todo', ticket.order);
-					await generateTicketNote(this.view.plugin, ticket.id);
-					this.view.render();
-				})
-			);
 			if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
 				menu.addItem(item =>
 					item.setTitle('Add subtask').setIcon('plus').onClick(() =>

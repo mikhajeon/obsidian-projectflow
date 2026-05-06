@@ -132,7 +132,8 @@ export class SubtasksPanelView {
 
 			if (isCollapsed) continue;
 
-			const COLS = this.view.plugin.store.getProjectStatuses(projectId);
+			const ALL_COLS = this.view.plugin.store.getProjectStatuses(projectId);
+			const COLS = ALL_COLS.filter(c => !this.view.hiddenSubtaskColumns.has(c.id));
 
 			// Dynamic-column grid — collapsed columns get 36px, open columns get colW
 			const colW = this.view.boardColWidth;
@@ -352,11 +353,6 @@ export class SubtasksPanelView {
 			menu.addItem(i => i.setTitle('Open note').setIcon('file-text').onClick(async () =>
 				await this.view.openTicketNote(ticket)
 			));
-			menu.addItem(i => i.setTitle('Move to backlog').setIcon('archive').onClick(async () => {
-				await this.view.plugin.store.moveTicket(ticket.id, null, 'todo', ticket.order);
-				await generateTicketNote(this.view.plugin, ticket.id);
-				this.view.render();
-			}));
 			menu.addSeparator();
 			menu.addItem(i => i.setTitle('Delete ticket').setIcon('trash').onClick(() => {
 				new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {

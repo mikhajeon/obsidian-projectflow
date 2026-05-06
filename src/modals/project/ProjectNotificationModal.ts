@@ -37,7 +37,6 @@ const TRIGGER_GROUPS: { heading: string; rows: TriggerRow[] }[] = [
 	{
 		heading: 'Project',
 		rows: [
-			{ id: 'project_overdue_tickets', label: 'Has overdue tickets', desc: 'Alert when any ticket in the project is past its due date.' },
 			{ id: 'project_idle', label: 'Idle project', desc: 'Flag projects with no ticket activity in the last N days.', threshold: { key: 'idleThresholdDays', label: 'Days', min: 1, max: 90 } },
 			{ id: 'project_no_active_sprint', label: 'No active sprint', desc: 'Notify when a project has been without an active sprint for a while.' },
 		],

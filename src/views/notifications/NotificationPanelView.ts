@@ -197,8 +197,11 @@ export class NotificationPanelView extends ItemView {
 		if (n.projectId) {
 			const project = this.plugin.store.getProject(n.projectId);
 			if (project) {
-				const chip = content.createEl('span', { cls: 'pf-notif-chip', text: project.tag });
-				if (project.color) chip.style.background = project.color + '33';
+				const chip = content.createEl('span', { cls: 'pf-notif-chip', text: project.name });
+				if (project.color) {
+					chip.style.background = project.color + '33';
+					chip.style.color = project.color;
+				}
 			}
 		}
 
@@ -213,18 +216,6 @@ export class NotificationPanelView extends ItemView {
 			openBtn.addEventListener('click', () => {
 				const ticket = this.plugin.store.getTicket(n.ticketId!);
 				if (ticket) this.plugin.openTicketModal(ticket);
-			});
-
-			const boardBtn = actionRow.createEl('button', { cls: 'pf-notif-action-btn', text: 'Go to board' });
-			boardBtn.addEventListener('click', () => {
-				this.plugin.activateView('board');
-			});
-		}
-
-		if (n.sprintId) {
-			const sprintBtn = actionRow.createEl('button', { cls: 'pf-notif-action-btn', text: 'Open sprint' });
-			sprintBtn.addEventListener('click', () => {
-				this.plugin.activateView('board');
 			});
 		}
 

@@ -66,13 +66,13 @@ const ticketDueApproaching: TriggerRule = {
 
 const ticketOverdue: TriggerRule = {
 	type: 'ticket_overdue',
-	check({ projectId, now, tickets }) {
+	check({ projectId, projectName, now, tickets }) {
 		return tickets
 			.filter(t => t.endDate && t.endDate < now)
 			.map(t => ({
 				projectId, ticketId: t.id, type: 'ticket_overdue' as const,
 				title: `Overdue: ${t.title}`,
-				body: `This ticket passed its due date.`,
+				body: `[${projectName}] This ticket passed its due date.`,
 			}));
 	},
 };
@@ -181,18 +181,8 @@ const sprintOverdue: TriggerRule = {
 
 // ── Project rules ──────────────────────────────────────────────────────────
 
-const projectOverdueTickets: TriggerRule = {
-	type: 'project_overdue_tickets',
-	check({ projectId, projectName, now, tickets }) {
-		const overdueCount = tickets.filter(t => t.endDate && t.endDate < now).length;
-		if (overdueCount === 0) return [];
-		return [{
-			projectId, type: 'project_overdue_tickets',
-			title: `${overdueCount} overdue ticket${overdueCount !== 1 ? 's' : ''}`,
-			body: `Project "${projectName}" has ${overdueCount} overdue ticket${overdueCount !== 1 ? 's' : ''}.`,
-		}];
-	},
-};
+// project_overdue_tickets intentionally removed — ticket_overdue fires per-ticket
+// and now includes the project name in the body, making the summary redundant.
 
 const projectIdle: TriggerRule = {
 	type: 'project_idle',
@@ -226,6 +216,5 @@ export const ALL_PROJECT_RULES: TriggerRule[] = [
 	sprintEndingSoon,
 	sprintEndsToday,
 	sprintOverdue,
-	projectOverdueTickets,
 	projectIdle,
 ];

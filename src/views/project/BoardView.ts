@@ -65,8 +65,9 @@ export class BoardView extends ItemView {
 	// Column width (persisted per view, shared with panel delegates)
 	boardColWidth = 240;
 
-	// Hidden board columns (persisted per project)
+	// Hidden board columns (persisted per project, separate for board vs subtask view)
 	hiddenBoardColumns: Set<string> = new Set();
+	hiddenSubtaskColumns: Set<string> = new Set();
 
 	// Notification badge in header (re-registered on each render)
 	private headerBadgeEl: HTMLElement | null = null;
@@ -148,6 +149,7 @@ export class BoardView extends ItemView {
 		const projectId = store.getActiveProjectId();
 		if (projectId) {
 			this.hiddenBoardColumns = new Set(store.getHiddenBoardColumns(projectId));
+			this.hiddenSubtaskColumns = new Set(store.getHiddenSubtaskColumns(projectId));
 			// Restore persisted collapsed board columns into collapsedSections
 			for (const id of store.getCollapsedBoardColumns(projectId)) {
 				this.collapsedSections.add(`board-col-${id}`);
@@ -565,12 +567,15 @@ export class BoardView extends ItemView {
 				document.addEventListener('click', onOutsideClick, true);
 			});
 
-		// ── Board settings gear (right-aligned in filter row) ───────────────
-		const statusGearBtn = filterRow.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-filter-gear', text: '⚙' });
-		statusGearBtn.setAttribute('aria-label', 'Board settings');
-		statusGearBtn.addEventListener('click', () => {
-			if (projectId) new BoardSettingsModal(this.app, this.plugin, projectId, () => { this.plugin.refreshAllViews(); }).open();
-		});
+		// ── Settings gear (right-aligned in filter row) ─────────────────────
+		{
+			const isSubtaskView = this.viewMode === 'parent';
+			const statusGearBtn = filterRow.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-filter-gear', text: '⚙' });
+			statusGearBtn.setAttribute('aria-label', isSubtaskView ? 'Subtask column settings' : 'Board settings');
+			statusGearBtn.addEventListener('click', () => {
+				if (projectId) new BoardSettingsModal(this.app, this.plugin, projectId, isSubtaskView ? 'subtask' : 'board', () => { this.plugin.refreshAllViews(); }).open();
+			});
+		}
 
 		}
 		} // end if (this.viewMode !== 'archive')

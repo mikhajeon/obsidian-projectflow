@@ -149,7 +149,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
 		sprint_completed:          { enabled: true },
 		sprint_started:            { enabled: true },
 		sprint_none_active:        { enabled: false },
-		project_overdue_tickets:   { enabled: true },
+		project_overdue_tickets:   { enabled: false }, // retired — superseded by per-ticket ticket_overdue
 		project_idle:              { enabled: false, idleThresholdDays: 7 },
 		project_no_active_sprint:  { enabled: false },
 		ticket_reminder:           { enabled: true },
@@ -210,7 +210,8 @@ export interface AppData {
 	boardGrouping?: string;               // 'default' | 'by-parent' | 'subtasks-only'
 	filterStates?: Record<string, { type: string; priority: string; status: string; hasSubtasks?: boolean }>;
 	boardColWidth?: Record<string, number>; // viewKey -> column width in px
-	hiddenBoardColumns?: Record<string, string[]>; // projectId -> array of hidden status IDs
+	hiddenBoardColumns?: Record<string, string[]>;    // projectId -> array of hidden status IDs (board view)
+	hiddenSubtaskColumns?: Record<string, string[]>; // projectId -> array of hidden status IDs (subtask view)
 	collapsedBoardColumns?: Record<string, string[]>; // projectId -> array of collapsed status IDs
 	calendarProjectIds?: string[];  // project IDs visible in Calendar Flow; null = active project only
 	calendarCardAppearance?: Partial<CalendarViewAppearance>;

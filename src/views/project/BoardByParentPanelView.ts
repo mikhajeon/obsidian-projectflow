@@ -221,11 +221,6 @@ export class BoardByParentPanelView {
 			menu.addItem(i => i.setTitle('Open note').setIcon('file-text').onClick(async () =>
 				await this.view.openTicketNote(ticket)
 			));
-			menu.addItem(i => i.setTitle('Move to backlog').setIcon('archive').onClick(async () => {
-				await this.view.plugin.store.moveTicket(ticket.id, null, 'todo', ticket.order);
-				await generateTicketNote(this.view.plugin, ticket.id);
-				this.view.render();
-			}));
 			menu.addSeparator();
 			menu.addItem(i => i.setTitle('Delete ticket').setIcon('trash').onClick(() => {
 				new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {

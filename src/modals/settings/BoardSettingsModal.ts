@@ -24,11 +24,13 @@ const APPEARANCE_TOGGLES: { key: keyof BoardCardAppearance; label: string; desc:
 ];
 
 type TabId = 'appearance' | 'columns';
+type BoardView = 'board' | 'subtask';
 
 export class BoardSettingsModal extends Modal {
 	private plugin: ProjectFlowPlugin;
 	private onUpdate: () => void;
 	private projectId: string;
+	private boardView: BoardView;
 	static lastTab: TabId = 'appearance';
 	private activeTab: TabId;
 
@@ -40,11 +42,12 @@ export class BoardSettingsModal extends Modal {
 	private statusListContainer: HTMLElement | null = null;
 	private deletedStatuses: Array<{ id: string; targetId: string }> = [];
 
-	constructor(app: App, plugin: ProjectFlowPlugin, projectId: string, onUpdate: () => void) {
+	constructor(app: App, plugin: ProjectFlowPlugin, projectId: string, boardView: BoardView, onUpdate: () => void) {
 		super(app);
 		this.plugin = plugin;
 		this.onUpdate = onUpdate;
 		this.projectId = projectId;
+		this.boardView = boardView;
 		this.activeTab = BoardSettingsModal.lastTab;
 	}
 
@@ -56,7 +59,11 @@ export class BoardSettingsModal extends Modal {
 
 		// Load columns state fresh on open
 		this.statuses = this.plugin.store.getProjectStatuses(this.projectId).map(s => ({ ...s }));
-		this.hiddenColumns = new Set(this.plugin.store.getHiddenBoardColumns(this.projectId));
+		this.hiddenColumns = new Set(
+			this.boardView === 'subtask'
+				? this.plugin.store.getHiddenSubtaskColumns(this.projectId)
+				: this.plugin.store.getHiddenBoardColumns(this.projectId)
+		);
 		this.boardColWidth = this.plugin.store.getBoardColWidth('board');
 		this.deletedStatuses = [];
 
@@ -123,14 +130,14 @@ export class BoardSettingsModal extends Modal {
 		const options = container.createDiv('pf-status-options');
 
 		const widthRow = options.createDiv('pf-status-option-row');
-		const widthLabel = widthRow.createEl('span', { cls: 'pf-status-option-label', text: `Board column width: ${this.boardColWidth}px` });
+		const widthLabel = widthRow.createEl('span', { cls: 'pf-status-option-label', text: `Column width: ${this.boardColWidth}px` });
 		const widthSlider = widthRow.createEl('input', { cls: 'pf-col-width-slider pf-status-width-slider' }) as HTMLInputElement;
 		widthSlider.type = 'range';
 		widthSlider.min = '160'; widthSlider.max = '420'; widthSlider.step = '10';
 		widthSlider.value = String(this.boardColWidth);
 		widthSlider.addEventListener('input', () => {
 			this.boardColWidth = parseInt(widthSlider.value);
-			widthLabel.setText(`Board column width: ${this.boardColWidth}px`);
+			widthLabel.setText(`Column width: ${this.boardColWidth}px`);
 		});
 
 		const footer = container.createDiv('pf-modal-footer');
@@ -140,7 +147,11 @@ export class BoardSettingsModal extends Modal {
 				for (const { id, targetId } of this.deletedStatuses) {
 					await this.plugin.store.migrateTicketStatus(this.projectId, id, targetId);
 				}
-				await this.plugin.store.setHiddenBoardColumns(this.projectId, [...this.hiddenColumns]);
+				if (this.boardView === 'subtask') {
+					await this.plugin.store.setHiddenSubtaskColumns(this.projectId, [...this.hiddenColumns]);
+				} else {
+					await this.plugin.store.setHiddenBoardColumns(this.projectId, [...this.hiddenColumns]);
+				}
 				await this.plugin.store.setBoardColWidth('board', this.boardColWidth);
 				await this.plugin.store.setBoardColWidth('parent', this.boardColWidth);
 				injectStatusColors(this.statuses);

@@ -30,7 +30,7 @@ export class BoardSubtasksPanelView {
 
 		const COLUMNS = store.getProjectStatuses(projectId);
 		for (const col of COLUMNS) {
-			if (this.view.hiddenBoardColumns.has(col.id)) continue;
+			if (this.view.hiddenSubtaskColumns.has(col.id)) continue;
 
 			const allInCol = subtasks.filter(t => t.status === col.id);
 
@@ -219,13 +219,6 @@ export class BoardSubtasksPanelView {
 				item.setTitle('Open note').setIcon('file-text').onClick(async () =>
 					await this.view.openTicketNote(ticket)
 				)
-			);
-			menu.addItem(item =>
-				item.setTitle('Move to backlog').setIcon('archive').onClick(async () => {
-					await this.view.plugin.store.moveTicket(ticket.id, null, 'todo', ticket.order);
-					await generateTicketNote(this.view.plugin, ticket.id);
-					this.view.render();
-				})
 			);
 			menu.addSeparator();
 			menu.addItem(item =>

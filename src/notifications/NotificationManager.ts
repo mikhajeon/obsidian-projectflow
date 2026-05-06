@@ -148,6 +148,26 @@ export class NotificationManager {
 
 		const projects = this.plugin.store.getProjects();
 		const now = Date.now();
+
+		// Auto-dismiss notifications whose rule type no longer exists or is disabled
+		const activeRuleTypes = new Set(ALL_PROJECT_RULES.map(r => r.type));
+		for (const n of this.plugin.store.getNotifications()) {
+			if (n.dismissed) continue;
+			// Retire notifications for removed rules
+			if (!activeRuleTypes.has(n.type) && n.type !== 'ticket_reminder') {
+				this.plugin.store.updateNotification(n.id, { dismissed: true });
+				continue;
+			}
+			// Retire notifications for rules that are currently disabled
+			const project = projects.find(p => p.id === n.projectId);
+			if (project) {
+				const ps = this.plugin.store.getProjectNotificationSettings(project.id);
+				const effective = ps.useGlobal ? settings.triggers : { ...settings.triggers, ...ps.triggers };
+				if (effective[n.type] && !effective[n.type].enabled) {
+					this.plugin.store.updateNotification(n.id, { dismissed: true });
+				}
+			}
+		}
 		const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
 		const todayEnd   = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
