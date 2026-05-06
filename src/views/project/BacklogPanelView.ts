@@ -549,33 +549,6 @@ export class BacklogPanelView {
 					await this.view.openTicketNote(ticket)
 				)
 			);
-			if (!this._useSprints) {
-				if (!this._backlogStatusIds.has(ticket.status)) {
-					menu.addItem(item =>
-						item.setTitle('Move to product backlog').setIcon('archive').onClick(async () => {
-							await store.updateTicket(ticket.id, { status: this._backlogStatusId });
-							await generateTicketNote(this.view.plugin, ticket.id);
-							this.view.render();
-						})
-					);
-				} else {
-					menu.addItem(item =>
-						item.setTitle('Show on board').setIcon('layout-dashboard').onClick(async () => {
-							await store.updateTicket(ticket.id, { status: this._todoStatusId });
-							await generateTicketNote(this.view.plugin, ticket.id);
-							this.view.render();
-						})
-					);
-				}
-			} else if (sprint) {
-				menu.addItem(item =>
-					item.setTitle('Move to product backlog').setIcon('archive').onClick(async () => {
-						await store.moveTicket(ticket.id, null, this._backlogStatusId, ticket.order);
-						await generateTicketNote(this.view.plugin, ticket.id);
-						this.view.render();
-					})
-				);
-			}
 			if (ticket.type === 'task' || ticket.type === 'bug' || ticket.type === 'story') {
 				menu.addItem(item =>
 					item.setTitle('Add subtask').setIcon('plus').onClick(() =>
