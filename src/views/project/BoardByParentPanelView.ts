@@ -93,6 +93,14 @@ export class BoardByParentPanelView {
 			});
 
 			blockHeader.createSpan({ cls: `pf-badge pf-type-${parent.type}`, text: parent.type });
+			const COLS = this.view.plugin.store.getProjectStatuses(projectId);
+			const parentStatus = COLS.find(s => s.id === parent.status);
+			if (parentStatus) {
+				const statusBadge = blockHeader.createSpan({ cls: 'pf-byparent-status-badge', text: parentStatus.label });
+				statusBadge.style.background = parentStatus.color + '33';
+				statusBadge.style.color = parentStatus.color;
+				statusBadge.style.borderColor = parentStatus.color;
+			}
 			if (!parent.sprintId) {
 				blockHeader.createSpan({ cls: 'pf-byparent-backlog-badge', text: 'backlog' });
 			}
@@ -111,8 +119,6 @@ export class BoardByParentPanelView {
 			});
 
 			if (isCollapsed) continue;
-
-			const COLS = this.view.plugin.store.getProjectStatuses(projectId);
 
 			// Dynamic-column grid — column width matches board view setting
 			const colW = this.view.boardColWidth;
