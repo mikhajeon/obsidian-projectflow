@@ -273,6 +273,11 @@
 .pf-subtasks-col-collapsed .pf-subtasks-col-count {
 	writing-mode: horizontal-tb;
 }
+.pf-subtasks-col-collapsed.pf-subtasks-col-drag-over {
+	background: color-mix(in srgb, var(--pf-col-color) 30%, transparent) !important;
+	outline: 2px solid var(--pf-col-color);
+	outline-offset: -2px;
+}
 
 .pf-subtasks-col-drop-active > .pf-subtasks-col-body {
 	outline: 2px dashed var(--interactive-accent);

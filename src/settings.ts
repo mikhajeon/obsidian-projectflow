@@ -13,6 +13,14 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
+		// ── Back button ────────────────────────────────────
+		const backBtn = containerEl.createEl('button', { cls: 'pf-settings-back-btn' });
+		setIcon(backBtn.createSpan({ cls: 'pf-settings-back-btn-icon' }), 'arrow-left');
+		backBtn.createSpan({ text: 'Back' });
+		backBtn.addEventListener('click', () => {
+			(this.app as any).setting.openTabById('community-plugins');
+		});
+
 		// ── Support bar ───────────────────────────────────────────────────────
 		const supportBar = containerEl.createDiv('pf-support-bar');
 
@@ -57,7 +65,7 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 			.setDesc('Vault folder that contains all ProjectFlow data. Files are stored under {Base folder}/{Project}/Tickets/ and {Base folder}/{Project}/Sprint Histories/.')
 			.addText(text => {
 				text
-					.setPlaceholder('.ProjectFlow')
+					.setPlaceholder('_ProjectFlow')
 					.setValue(this.plugin.store.getBaseFolder());
 				text.inputEl.addClass('pf-input-full');
 				text.inputEl.addEventListener('blur', async () => {
@@ -83,6 +91,7 @@ export class ProjectFlowSettingTab extends PluginSettingTab {
 
 					await this.plugin.store.setBaseFolder(newFolder);
 					this.plugin.refreshAllViews();
+					this.plugin.recaptureOrphanedNotes().catch(() => { /* silent */ });
 				});
 			});
 

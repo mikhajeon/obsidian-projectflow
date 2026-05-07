@@ -119,6 +119,10 @@ export class CalendarWeekGrid {
 					const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
 					new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 				});
+				for (const [min, cls] of [[30, 'pf-cal-half-hour-line'], [15, 'pf-cal-quarter-line'], [45, 'pf-cal-quarter-line']] as [number, string][]) {
+					const sub = col.createEl('div', { cls });
+					sub.style.top = `${hour * HOUR_HEIGHT + Math.round(min / 60 * HOUR_HEIGHT)}px`;
+				}
 			}
 
 			// Timed ticket blocks — include any ticket whose span overlaps this day
@@ -232,6 +236,10 @@ export class CalendarWeekGrid {
 				const endDate = new Date(day.getFullYear(), day.getMonth(), day.getDate(), h, 0, 0).getTime();
 				new TicketModal(this.view.app, this.view.plugin, { projectId: pid, ...this.view.ticketCreateCtx(pid), endDate, startDate: endDate }, () => this.view.render()).open();
 			});
+			for (const [min, cls] of [[30, 'pf-cal-half-hour-line'], [15, 'pf-cal-quarter-line'], [45, 'pf-cal-quarter-line']] as [number, string][]) {
+				const sub = col.createEl('div', { cls });
+				sub.style.top = `${hour * HOUR_HEIGHT + Math.round(min / 60 * HOUR_HEIGHT)}px`;
+			}
 		}
 
 		const dayMs = dateOnlyMs(day);
@@ -302,7 +310,7 @@ export class CalendarWeekGrid {
 				segment = 'single';
 				const startMinutes = startDate.getHours() * 60 + startDate.getMinutes();
 				topPx    = startMinutes * PX_PER_MIN;
-				heightPx = Math.max(30 * PX_PER_MIN, (dueMinutes - startMinutes) * PX_PER_MIN);
+				heightPx = Math.max(15 * PX_PER_MIN, (dueMinutes - startMinutes) * PX_PER_MIN);
 			} else if (startOnThisDay) {
 				// First day of a multi-day block
 				segment = 'start';
@@ -313,7 +321,7 @@ export class CalendarWeekGrid {
 				// Last day of a multi-day block
 				segment = 'end';
 				topPx    = 0;
-				heightPx = Math.max(30 * PX_PER_MIN, dueMinutes * PX_PER_MIN);
+				heightPx = Math.max(15 * PX_PER_MIN, dueMinutes * PX_PER_MIN);
 			} else {
 				// Intermediate day — fill entire column
 				segment = 'middle';
@@ -362,10 +370,6 @@ export class CalendarWeekGrid {
 			block.style.width = `calc(${pct}% - 6px)`;
 		}
 
-		// Row 1: done tick (left) + type badge + time range (right)
-		const row1 = block.createEl('div', { cls: 'pf-cal-block-row1' });
-		if (isDoneTicket) row1.createEl('span', { cls: 'pf-cal-done-tick', text: '✓' });
-		if (ap.typeBadge) row1.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
 		const fmtT = (ms: number) => { const d = new Date(ms); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
 		let timeRangeLabel = '';
 		if (segment === 'single') {
@@ -376,10 +380,24 @@ export class CalendarWeekGrid {
 		} else if (segment === 'end') {
 			timeRangeLabel = `→ ${fmtT(ticket.endDate!)}`;
 		}
-		if (ap.timeDisplay && timeRangeLabel) row1.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
 
-		// Row 2: title
-		block.createEl('div', { cls: 'pf-cal-block-title', text: ticket.title });
+		// Compact layout for short blocks (≤30 min): title + time range on one line
+		const isCompact = heightPx <= 16;
+		if (isCompact) {
+			block.addClass('pf-cal-block-compact');
+			const compactRow = block.createEl('div', { cls: 'pf-cal-block-compact-row' });
+			if (isDoneTicket) compactRow.createEl('span', { cls: 'pf-cal-done-tick', text: '✓' });
+			compactRow.createEl('span', { cls: 'pf-cal-block-title', text: ticket.title });
+			if (ap.timeDisplay && timeRangeLabel) compactRow.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
+		} else {
+			// Row 1: done tick (left) + type badge + time range (right)
+			const row1 = block.createEl('div', { cls: 'pf-cal-block-row1' });
+			if (isDoneTicket) row1.createEl('span', { cls: 'pf-cal-done-tick', text: '✓' });
+			if (ap.typeBadge) row1.createEl('span', { cls: `pf-cal-chip-type pf-type-badge-${ticket.type}`, text: ticket.type.charAt(0).toUpperCase() });
+			if (ap.timeDisplay && timeRangeLabel) row1.createEl('span', { cls: 'pf-cal-block-timerange', text: timeRangeLabel });
+			// Row 2: title
+			block.createEl('div', { cls: 'pf-cal-block-title', text: ticket.title });
+		}
 
 		// Child badge: shows +N and toggles expanded children
 		if (hasChildren) {

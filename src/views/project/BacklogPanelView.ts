@@ -71,8 +71,7 @@ export class BacklogPanelView {
 
 		// ── No-sprint mode: two flat sections (Board list + Product Backlog) ─
 		if (!useSprints) {
-			const allUnassigned = store.getTickets({ projectId, sprintId: null })
-				.filter(t => t.type !== 'epic' && t.type !== 'subtask');
+			const allUnassigned = store.getTickets({ projectId, sprintId: null });
 
 			const boardTickets   = allUnassigned.filter(t => !this._backlogStatusIds.has(t.status));
 			const backlogTickets = allUnassigned.filter(t => this._backlogStatusIds.has(t.status));
@@ -149,7 +148,6 @@ export class BacklogPanelView {
 		const unassignedForOrder = this.sortBacklogTickets(
 			this.applyFilters(
 				store.getTickets({ projectId })
-					.filter(t => t.type !== 'epic' && t.type !== 'subtask')
 					.filter(t => t.sprintId === null || this._backlogStatusIds.has(t.status))
 			)
 		);
@@ -175,7 +173,6 @@ export class BacklogPanelView {
 		const unassigned = this.sortBacklogTickets(
 			this.applyFilters(
 				store.getTickets({ projectId })
-					.filter(t => t.type !== 'epic' && t.type !== 'subtask')
 					.filter(t => t.sprintId === null || this._backlogStatusIds.has(t.status))
 			)
 		);

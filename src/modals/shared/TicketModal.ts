@@ -287,7 +287,7 @@ export class TicketModal extends Modal {
 		startSection.createEl('div', { cls: 'pf-field-label', text: 'Start date' });
 		const startRow = startSection.createEl('div', { cls: 'pf-date-row' });
 		const startDateInput = startRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
-		const startTimeInput = startRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
+		const startTimeInput = startRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time', step: '900' } }) as HTMLInputElement;
 		const clearStartBtn = startRow.createEl('button', { cls: 'pf-date-clear-btn', text: '× Clear' });
 
 		if (this.startDate !== undefined) {
@@ -316,7 +316,7 @@ export class TicketModal extends Modal {
 		dueSection.createEl('div', { cls: 'pf-field-label', text: 'End date' });
 		const dueRow = dueSection.createEl('div', { cls: 'pf-date-row' });
 		const dueDateInput = dueRow.createEl('input', { cls: 'pf-input pf-input-date', attr: { type: 'date' } }) as HTMLInputElement;
-		const dueTimeInput = dueRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time' } }) as HTMLInputElement;
+		const dueTimeInput = dueRow.createEl('input', { cls: 'pf-input pf-input-time', attr: { type: 'time', step: '900' } }) as HTMLInputElement;
 		const clearDueBtn = dueRow.createEl('button', { cls: 'pf-date-clear-btn', text: '× Clear' });
 
 		if (this.endDate !== undefined) {

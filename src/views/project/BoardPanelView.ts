@@ -78,6 +78,33 @@ export class BoardPanelView {
 					this.persistCollapsedColumns(projectId);
 					this.view.render();
 				});
+				colEl.addEventListener('dragover', (e) => {
+					e.preventDefault();
+					if (!this.view.draggedTicketId) return;
+					colEl.addClass('pf-column-drag-over');
+				});
+				colEl.addEventListener('dragleave', (e) => {
+					if (!colEl.contains(e.relatedTarget as Node)) {
+						colEl.removeClass('pf-column-drag-over');
+					}
+				});
+				colEl.addEventListener('drop', async (e) => {
+					e.preventDefault();
+					colEl.removeClass('pf-column-drag-over');
+					if (!this.view.draggedTicketId) return;
+					const droppedId = this.view.draggedTicketId;
+					this.view.draggedTicketId = null;
+					const sprintId = currentSprint ? currentSprint.id : null;
+					const colTickets = (sprintId
+						? store.getTickets({ sprintId })
+						: store.getTickets({ projectId })
+					).filter(t => t.status === col.id && t.id !== droppedId)
+					 .sort((a, b) => a.order - b.order);
+					const newOrder = colTickets.length > 0 ? colTickets[colTickets.length - 1].order + 1 : 0;
+					await store.moveTicket(droppedId, sprintId, col.id, newOrder);
+					this.view.render();
+					generateTicketNote(this.view.plugin, droppedId).catch(() => { /* silent */ });
+				});
 				continue;
 			}
 

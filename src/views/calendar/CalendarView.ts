@@ -145,6 +145,7 @@ export class CalendarView extends ItemView {
 		const allCalendarTickets: Ticket[] = [];
 		const allProjectTickets: Ticket[] = [];
 		const sprints: Sprint[] = [];
+		const allBacklogStatusIds = new Set<string>();
 		let anyUseSprints = false;
 		for (const pid of this.selectedProjectIds) {
 			const proj = store.getProject(pid);
@@ -157,6 +158,7 @@ export class CalendarView extends ItemView {
 					.filter(s => s.universalId === "backlog")
 					.map(s => s.id)
 			);
+			for (const id of backlogStatusIds) allBacklogStatusIds.add(id);
 			const boardTickets = allTickets.filter(t =>
 				useSprints ? t.sprintId !== null : !backlogStatusIds.has(t.status)
 			);
@@ -174,9 +176,11 @@ export class CalendarView extends ItemView {
 		const expandedTickets = expandRecurrences(this.applyFilters(allCalendarTickets), rangeStart, rangeEnd);
 		const filtered = expandedTickets;
 		const scheduled = filtered.filter(t => t.endDate !== undefined);
-		// Unscheduled sidebar uses all project tickets (not just sprint/board) so backlog
-		// tickets without an endDate are always visible and can be dragged onto the calendar.
-		const unscheduled = allProjectTickets.filter(t => t.endDate === undefined && this.applyFilters([t]).length > 0);
+		const unscheduled = allProjectTickets.filter(t =>
+			t.endDate === undefined &&
+			!allBacklogStatusIds.has(t.status) &&
+			this.applyFilters([t]).length > 0
+		);
 
 		// Union of statuses from all selected projects (deduplicated by id)
 		const statusMap = new Map<string, string>();

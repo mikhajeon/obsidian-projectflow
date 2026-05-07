@@ -182,6 +182,36 @@ export class SubtasksPanelView {
 						const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
 						if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
 					});
+					colEl.addEventListener('dragover', (e) => {
+						e.preventDefault();
+						if (!this.view.draggedTicketId) return;
+						colEl.addClass('pf-subtasks-col-drag-over');
+					});
+					colEl.addEventListener('dragleave', (e) => {
+						if (!colEl.contains(e.relatedTarget as Node)) {
+							colEl.removeClass('pf-subtasks-col-drag-over');
+						}
+					});
+					colEl.addEventListener('drop', async (e) => {
+						e.preventDefault();
+						colEl.removeClass('pf-subtasks-col-drag-over');
+						if (!this.view.draggedTicketId) return;
+						const droppedId = this.view.draggedTicketId;
+						this.view.draggedTicketId = null;
+						const sprintId = currentSprint ? currentSprint.id : null;
+						const colTicketsNow = allChildren
+							.filter(t => t.status === col.id && t.id !== droppedId)
+							.sort((a, b) => a.order - b.order);
+						const newOrder = colTicketsNow.length > 0 ? colTicketsNow[colTicketsNow.length - 1].order + 1 : 0;
+						await store.moveTicket(droppedId, sprintId, col.id, newOrder);
+						generateTicketNote(this.view.plugin, droppedId).catch(() => {});
+						const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
+						const savedTop = scrollEl?.scrollTop ?? 0;
+						const savedLeft = scrollEl?.scrollLeft ?? 0;
+						this.view.render();
+						const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
+						if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+					});
 					continue;
 				}
 

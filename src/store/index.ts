@@ -519,7 +519,7 @@ export class ProjectStore {
 
 	getUnparentedTickets(projectId: string): Ticket[] {
 		return this.data.tickets
-			.filter(t => t.projectId === projectId && t.type !== 'epic' && t.type !== 'subtask' && !t.parentId && !t.archived)
+			.filter(t => t.projectId === projectId && t.type !== 'epic' && !t.parentId && !t.archived)
 			.sort((a, b) => a.order - b.order);
 	}
 

@@ -270,7 +270,7 @@ export default class ProjectFlowPlugin extends Plugin {
 	 * as a ticket. This recovers tickets whose store entry was lost while their
 	 * note file survived (e.g. after a data.json reset or partial migration).
 	 */
-	private async recaptureOrphanedNotes(rebuildProjects = false): Promise<void> {
+	async recaptureOrphanedNotes(rebuildProjects = false): Promise<void> {
 		const { vault, metadataCache } = this.app;
 
 		// When recovering (no projects in store), try to rebuild from notes.
@@ -317,7 +317,6 @@ export default class ProjectFlowPlugin extends Plugin {
 		const prefix = baseFolder + '/';
 		const files = vault.getMarkdownFiles().filter(f => f.path.startsWith(prefix));
 
-		const validStatuses  = new Set(['todo', 'in-progress', 'in-review', 'done']);
 		const validPriorities = new Set<TicketPriority>(['low', 'medium', 'high', 'critical']);
 		const validTypes      = new Set<TicketType>(['task', 'bug', 'story', 'epic', 'subtask']);
 
@@ -358,19 +357,44 @@ export default class ProjectFlowPlugin extends Plugin {
 				description = (nextSection === -1 ? body : body.slice(0, nextSection)).trim();
 			} catch { /* silent */ }
 
-			const status     = validStatuses.has(fm.status)     ? fm.status     : 'todo';
-			const priority   = validPriorities.has(fm.priority) ? fm.priority as TicketPriority : 'medium';
-			const type       = validTypes.has(fm.type)          ? fm.type as TicketType : 'task';
+			// Status: validate against this project's actual status IDs to preserve
+			// custom statuses (e.g. 'backlog') that are not in the generic set
+			const projectStatusIds = new Set(project.statuses?.map(s => s.id) ?? []);
+			const defaultStatus = project.statuses?.find(s => s.universalId === 'todo')?.id ?? 'todo';
+			const status = typeof fm.status === 'string' && projectStatusIds.has(fm.status) ? fm.status : defaultStatus;
+
+			const priority = validPriorities.has(fm.priority) ? fm.priority as TicketPriority : 'medium';
+			const type     = validTypes.has(fm.type)          ? fm.type as TicketType : 'task';
 			const points: number | undefined =
 				typeof fm.points === 'number' && fm.points >= 0 ? Math.round(fm.points) : undefined;
 
 			const createdAt = fm.created ? new Date(String(fm.created)).getTime() || Date.now() : Date.now();
 			const updatedAt = fm.updated ? new Date(String(fm.updated)).getTime() || Date.now() : Date.now();
 
+			// Dates (for calendar)
+			const parseDate = (dateStr: unknown, timeStr: unknown): number | undefined => {
+				if (!dateStr || typeof dateStr !== 'string') return undefined;
+				const combined = timeStr && typeof timeStr === 'string' && timeStr
+					? `${dateStr}T${timeStr}` : dateStr;
+				const ms = new Date(combined).getTime();
+				return isNaN(ms) ? undefined : ms;
+			};
+			const startDate = parseDate(fm.start_date, fm.start_time);
+			const endDate   = parseDate(fm.end_date,   fm.end_time);
+
+			// Parent relationship (for subtasks)
+			const parentId = typeof fm.parent_id === 'string' && fm.parent_id.trim()
+				? fm.parent_id.trim() : undefined;
+
+			// Ordering
+			const order        = typeof fm.order        === 'number' ? fm.order        : ticketNumber;
+			const backlogOrder = typeof fm.backlog_order === 'number' ? fm.backlog_order : ticketNumber;
+
 			const ticket: Ticket = {
 				id: ticketId,
 				projectId: project.id,
 				sprintId,
+				parentId,
 				title: typeof fm.title === 'string' && fm.title.trim() ? fm.title.trim() : file.basename,
 				description,
 				status,
@@ -378,8 +402,10 @@ export default class ProjectFlowPlugin extends Plugin {
 				type,
 				createdAt,
 				updatedAt,
-				order: ticketNumber,
-				backlogOrder: ticketNumber,
+				startDate,
+				endDate,
+				order,
+				backlogOrder,
 				ticketNumber,
 				points,
 			};

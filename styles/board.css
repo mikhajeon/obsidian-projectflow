@@ -128,6 +128,11 @@
 .pf-column-collapsed .pf-column-count {
 	writing-mode: horizontal-tb;
 }
+.pf-column-collapsed.pf-column-drag-over {
+	background: color-mix(in srgb, var(--pf-col-color) 30%, transparent) !important;
+	outline: 2px solid var(--pf-col-color);
+	outline-offset: -2px;
+}
 
 .pf-column-body {
 	position: relative;

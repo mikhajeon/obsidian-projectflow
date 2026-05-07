@@ -66,9 +66,9 @@ const ticketDueApproaching: TriggerRule = {
 
 const ticketOverdue: TriggerRule = {
 	type: 'ticket_overdue',
-	check({ projectId, projectName, now, tickets }) {
+	check({ projectId, projectName, todayMs, tickets }) {
 		return tickets
-			.filter(t => t.endDate && t.endDate < now)
+			.filter(t => t.endDate && t.endDate < todayMs)
 			.map(t => ({
 				projectId, ticketId: t.id, type: 'ticket_overdue' as const,
 				title: `Overdue: ${t.title}`,

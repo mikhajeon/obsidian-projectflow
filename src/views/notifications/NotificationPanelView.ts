@@ -33,8 +33,12 @@ export class NotificationPanelView extends ItemView {
 	getIcon(): string { return 'bell'; }
 
 	async onOpen(): Promise<void> {
+		this.plugin.notificationManager?.checkNow();
 		this.render();
-		this.registerInterval(window.setInterval(() => this.render(), 60_000));
+		this.registerInterval(window.setInterval(() => {
+			this.plugin.notificationManager?.checkNow();
+			this.render();
+		}, 60_000));
 	}
 
 	async onClose(): Promise<void> {
