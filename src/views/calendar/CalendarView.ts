@@ -1,11 +1,10 @@
 import { ItemView, WorkspaceLeaf, setIcon } from 'obsidian';
 import type ProjectFlowPlugin from '../../main';
-import type { Sprint, Ticket, TicketType } from '../../types';
+import type { Sprint, Ticket, TicketType, StoredNotification, SnoozeInterval } from '../../types';
 import { TicketModal } from '../../modals/shared/TicketModal';
 import { ProjectModal } from '../../modals/project/ProjectModal';
 import { CalendarSettingsModal } from '../../modals/settings/CalendarSettingsModal';
 import { generateTicketNote } from '../../notes/ticketNote';
-import { NOTIFICATION_VIEW_TYPE } from '../notifications/NotificationPanelView';
 import {
 	TYPE_FILTER_OPTIONS,
 	PRIORITY_FILTER_OPTIONS,
@@ -59,7 +58,7 @@ export class CalendarView extends ItemView {
 	}
 
 	getViewType(): string { return CALENDAR_VIEW; }
-	getDisplayText(): string { return 'Calendar Flow'; }
+	getDisplayText(): string { return 'CalendarFlow'; }
 	getIcon(): string { return 'calendar-days'; }
 
 	async onOpen(): Promise<void> {
@@ -367,23 +366,6 @@ export class CalendarView extends ItemView {
 			setTimeout(() => document.addEventListener('click', outsideHandler!), 0);
 		});
 
-		// Edit button — only when exactly 1 project selected
-		if (this.selectedProjectIds.size === 1) {
-			const singleId = [...this.selectedProjectIds][0];
-			const editBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
-			setIcon(editBtn, 'pencil');
-			editBtn.setAttribute('aria-label', 'Edit project');
-			editBtn.addEventListener('click', () => {
-				const current = store.getProject(singleId);
-				if (current) new ProjectModal(this.app, this.plugin, current, () => this.plugin.refreshAllViews()).open();
-			});
-		}
-
-		projectArea.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Project' })
-			.addEventListener('click', () =>
-				new ProjectModal(this.app, this.plugin, null, () => this.plugin.refreshAllViews()).open()
-			);
-
 		// Date title
 		let title: string;
 		if (this.viewMode === 'month' || this.viewMode === 'agenda') {
@@ -408,7 +390,7 @@ export class CalendarView extends ItemView {
 		const bellBtn = bellWrap.createEl('button', { cls: 'pf-btn pf-btn-icon pf-header-bell' });
 		bellBtn.setAttribute('aria-label', 'Notifications');
 		setIcon(bellBtn, 'bell');
-		bellBtn.addEventListener('click', () => this.plugin.activateView(NOTIFICATION_VIEW_TYPE));
+		bellBtn.addEventListener('click', () => { this.viewMode = 'agenda'; this.render(); });
 		const headerBadge = bellWrap.createEl('span', { cls: 'pf-ribbon-badge' });
 		headerBadge.style.display = 'none';
 		this.headerBadgeEl = headerBadge;
@@ -571,8 +553,159 @@ export class CalendarView extends ItemView {
 
 	// ── Agenda view ────────────────────────────────────────────────────────────
 
+	private renderAgendaNotifications(parent: HTMLElement): void {
+		const nm = this.plugin.notificationManager;
+		const store = this.plugin.store;
+		const now = Date.now();
+		const all = store.getNotifications()
+			.filter(n => !n.dismissed && (!n.snoozedUntil || n.snoozedUntil <= now))
+			.sort((a, b) => b.createdAt - a.createdAt);
+
+		const { overdueTickets, dueTodayTickets, endingSoon } =
+			nm?.getDetailedSummary() ?? { overdueTickets: [], dueTodayTickets: [], endingSoon: 0 };
+
+		const hasContent = all.length > 0 || overdueTickets.length > 0 || dueTodayTickets.length > 0 || endingSoon > 0;
+		if (!hasContent) return;
+
+		const section = parent.createEl('div', { cls: 'pf-agenda-notif-section' });
+
+		// Header row
+		const headerRow = section.createEl('div', { cls: 'pf-agenda-notif-header-row' });
+		headerRow.createEl('span', { cls: 'pf-agenda-notif-title', text: 'Notifications' });
+		const headerActions = headerRow.createEl('div', { cls: 'pf-agenda-notif-actions' });
+		if (all.length > 0) {
+			const markAllBtn = headerActions.createEl('button', { cls: 'pf-notif-btn-sm', text: 'Mark all read' });
+			markAllBtn.addEventListener('click', async () => {
+				await nm?.markAllRead();
+				this.render();
+			});
+		}
+		const clearBtn = headerActions.createEl('button', { cls: 'pf-notif-btn-sm', text: 'Clear dismissed' });
+		clearBtn.addEventListener('click', async () => {
+			await store.clearDismissed();
+			nm?.updateBadge();
+			this.render();
+		});
+
+		// Summary dashboard
+		if (overdueTickets.length > 0 || dueTodayTickets.length > 0 || endingSoon > 0) {
+			const grid = section.createDiv('pf-notif-dash-grid');
+			const makeCard = (mod: string, count: number, icon: string, label: string, tickets?: Ticket[]) => {
+				const zeroCls = count === 0 ? ' pf-notif-dash-card--zero' : '';
+				const card = grid.createDiv({ cls: `pf-notif-dash-card pf-notif-dash-card--${mod}${zeroCls}` });
+				card.createEl('span', { cls: 'pf-notif-dash-num', text: String(count) });
+				const labelRow = card.createDiv('pf-notif-dash-label-row');
+				setIcon(labelRow.createEl('span', { cls: 'pf-notif-dash-icon' }), icon);
+				labelRow.createEl('span', { cls: 'pf-notif-dash-label', text: label });
+				if (tickets && tickets.length > 0) {
+					card.addClass('pf-notif-dash-card--clickable');
+					card.createEl('span', { cls: 'pf-notif-dash-chevron', text: '▾' });
+					const detail = section.createDiv('pf-notif-summary-detail');
+					detail.style.display = 'none';
+					for (const ticket of tickets.slice(0, 5)) {
+						const item = detail.createDiv('pf-notif-summary-detail-item');
+						const dot = item.createEl('span', { cls: 'pf-notif-summary-detail-dot' });
+						const proj = store.getProject(ticket.projectId);
+						if (proj?.color) dot.style.background = proj.color;
+						item.createEl('span', { cls: 'pf-notif-summary-detail-name', text: ticket.title })
+							.addEventListener('click', () => this.plugin.openTicketModal(ticket));
+					}
+					if (tickets.length > 5) {
+						const more = detail.createDiv('pf-notif-summary-detail-item');
+						more.style.paddingLeft = '13px';
+						more.createEl('span', { cls: 'pf-notif-summary-detail-name', text: `+${tickets.length - 5} more` }).style.color = 'var(--text-faint)';
+					}
+					card.addEventListener('click', () => {
+						const isOpen = detail.style.display !== 'none';
+						detail.style.display = isOpen ? 'none' : 'block';
+						card.toggleClass('pf-notif-dash-card--active', !isOpen);
+					});
+				}
+			};
+			makeCard('overdue', overdueTickets.length, 'alert-circle', 'overdue', overdueTickets);
+			makeCard('today', dueTodayTickets.length, 'clock', 'due today', dueTodayTickets);
+			makeCard('sprint', endingSoon, 'zap', 'sprint ending');
+		}
+
+		// Notification cards
+		for (const n of all) {
+			this.renderAgendaNotifCard(section, n);
+		}
+	}
+
+	private renderAgendaNotifCard(parent: HTMLElement, n: StoredNotification): void {
+		const nm = this.plugin.notificationManager;
+		const store = this.plugin.store;
+		if (!n.read) {
+			store.updateNotification(n.id, { read: true });
+			nm?.updateBadge();
+		}
+		const card = parent.createDiv({ cls: `pf-notif-card${n.read ? ' pf-notif-card--read' : ''}` });
+		const dot = card.createEl('span', { cls: 'pf-notif-card-dot' });
+		if (n.projectId) {
+			const project = store.getProject(n.projectId);
+			if (project?.color) dot.style.background = project.color;
+		}
+		const content = card.createDiv('pf-notif-card-content');
+		const top = content.createDiv('pf-notif-card-top');
+		const diff = Date.now() - n.createdAt;
+		const mins = Math.floor(diff / 60000);
+		const timeAgoStr = mins < 1 ? 'just now' : mins < 60 ? `${mins}m ago` : mins < 1440 ? `${Math.floor(mins / 60)}h ago` : `${Math.floor(mins / 1440)}d ago`;
+		top.createEl('span', { cls: 'pf-notif-card-title', text: n.title });
+		top.createEl('span', { cls: 'pf-notif-card-time', text: timeAgoStr });
+		if (n.projectId) {
+			const project = store.getProject(n.projectId);
+			if (project) {
+				const chip = content.createEl('span', { cls: 'pf-notif-chip', text: project.name });
+				if (project.color) {
+					chip.style.background = project.color + '33';
+					chip.style.color = project.color;
+				}
+			}
+		}
+		content.createEl('p', { cls: 'pf-notif-card-body', text: n.body });
+		const actionRow = content.createDiv('pf-notif-card-actions');
+		if (n.ticketId) {
+			const openBtn = actionRow.createEl('button', { cls: 'pf-notif-action-btn', text: 'Open ticket' });
+			openBtn.addEventListener('click', () => {
+				const ticket = store.getTicket(n.ticketId!);
+				if (ticket) this.plugin.openTicketModal(ticket);
+			});
+		}
+		const snoozeIntervals = nm?.resolveSnoozeIntervals(n) ?? [];
+		if (snoozeIntervals.length > 0) {
+			const snoozeWrap = actionRow.createDiv('pf-notif-snooze-wrap');
+			const snoozeBtn = snoozeWrap.createEl('button', { cls: 'pf-notif-action-btn', text: 'Snooze ▾' });
+			const snoozeMenu = snoozeWrap.createDiv('pf-notif-snooze-menu');
+			snoozeMenu.style.display = 'none';
+			for (const interval of snoozeIntervals) {
+				const item = snoozeMenu.createEl('div', { cls: 'pf-notif-snooze-item', text: interval.label });
+				item.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					await nm?.snooze(n.id, interval);
+					this.render();
+				});
+			}
+			snoozeBtn.addEventListener('click', (e) => {
+				e.stopPropagation();
+				const isOpen = snoozeMenu.style.display !== 'none';
+				snoozeMenu.style.display = isOpen ? 'none' : 'block';
+			});
+			document.addEventListener('click', () => { snoozeMenu.style.display = 'none'; }, { once: true });
+		}
+		const dismissBtn = actionRow.createEl('button', { cls: 'pf-notif-action-btn pf-notif-action-btn--dismiss', text: 'Dismiss' });
+		dismissBtn.addEventListener('click', async () => {
+			await nm?.dismiss(n.id);
+			this.render();
+		});
+	}
+
 	private renderAgendaView(container: HTMLElement, tickets: Ticket[]): void {
 		const agenda = container.createEl('div', { cls: 'pf-agenda-view' });
+
+		// ── Notification section ───────────────────────────────────────────────
+		this.renderAgendaNotifications(agenda);
+
 		const today = new Date();
 		const todayMs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
 

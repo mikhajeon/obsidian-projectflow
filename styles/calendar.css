@@ -673,7 +673,36 @@
 	flex-direction: column;
 	overflow: hidden;
 	background: var(--background-primary);
-	transition: background 0.1s, box-shadow 0.1s;
+	transition: width 0.2s ease, background 0.1s, box-shadow 0.1s;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed {
+	width: 32px;
+	min-width: 32px;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-mini-cal,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-list,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-title,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-autosched-btn {
+	display: none;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-header-row {
+	flex-direction: column;
+	padding: 8px 4px;
+}
+.pf-cal-sidebar-collapse-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-faint);
+	padding: 2px 4px;
+	border-radius: 3px;
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+.pf-cal-sidebar-collapse-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
 }
 .pf-cal-sidebar.pf-cal-drop-target {
 	background: var(--pf-cal-drop-bg) !important;
@@ -1052,6 +1081,33 @@
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+}
+
+/* ── Agenda notification section ─────────────────────────────────────────── */
+.pf-agenda-notif-section {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+.pf-agenda-notif-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.pf-agenda-notif-title {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+}
+.pf-agenda-notif-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 .pf-agenda-empty {
 	font-size: 13px;

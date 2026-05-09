@@ -180,6 +180,16 @@
 	border-radius: 10px;
 }
 
+.pf-project-area-desktop-btns {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-hamburger-btn { display: none; }
+.is-mobile .pf-hamburger-btn { display: flex; }
+.is-mobile .pf-desktop-only  { display: none !important; }
+
 .pf-view-title {
 	font-size: var(--font-ui-medium);
 	font-weight: 600;
@@ -764,6 +774,12 @@
 	font-size: 11px;
 	padding: 1px 4px;
 }
+
+/* ── Mobile button overrides ─────────────────────────────────────────────── */
+
+.is-mobile .pf-btn      { padding: 2px 10px; }
+.is-mobile .pf-btn-sm   { padding: 1px 7px; }
+.is-mobile .pf-btn-icon { padding: 1px 6px; }
 
 /* ── Modals ──────────────────────────────────────────────────────────────── */
 
@@ -2315,6 +2331,14 @@
 	color: var(--text-muted);
 }
 
+.pf-subtasks-status-badge {
+	font-size: 10px;
+	padding: 1px 5px;
+	border-radius: 10px;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+
 .pf-subtasks-backlog-badge {
 	font-size: 10px;
 	padding: 1px 6px;
@@ -2491,13 +2515,9 @@
 	display: flex;
 	align-items: center;
 	gap: 1px;
-	opacity: 0;
-	transition: opacity 0.15s, color 0.15s, background 0.15s;
+	transition: color 0.15s, background 0.15s;
 	flex-shrink: 0;
 	line-height: 1;
-}
-.pf-subtasks-col:hover .pf-subtasks-col-add-btn {
-	opacity: 1;
 }
 .pf-subtasks-col-add-btn:hover {
 	background: var(--background-modifier-hover);
@@ -3435,7 +3455,36 @@
 	flex-direction: column;
 	overflow: hidden;
 	background: var(--background-primary);
-	transition: background 0.1s, box-shadow 0.1s;
+	transition: width 0.2s ease, background 0.1s, box-shadow 0.1s;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed {
+	width: 32px;
+	min-width: 32px;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-mini-cal,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-list,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-title,
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-autosched-btn {
+	display: none;
+}
+.pf-cal-sidebar.pf-cal-sidebar-collapsed .pf-cal-sidebar-header-row {
+	flex-direction: column;
+	padding: 8px 4px;
+}
+.pf-cal-sidebar-collapse-btn {
+	background: none;
+	border: none;
+	cursor: pointer;
+	color: var(--text-faint);
+	padding: 2px 4px;
+	border-radius: 3px;
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+.pf-cal-sidebar-collapse-btn:hover {
+	color: var(--text-normal);
+	background: var(--background-modifier-hover);
 }
 .pf-cal-sidebar.pf-cal-drop-target {
 	background: var(--pf-cal-drop-bg) !important;
@@ -3814,6 +3863,33 @@
 	display: flex;
 	flex-direction: column;
 	gap: 20px;
+}
+
+/* ── Agenda notification section ─────────────────────────────────────────── */
+.pf-agenda-notif-section {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--background-modifier-border);
+}
+.pf-agenda-notif-header-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.pf-agenda-notif-title {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var(--text-muted);
+}
+.pf-agenda-notif-actions {
+	display: flex;
+	align-items: center;
+	gap: 6px;
 }
 .pf-agenda-empty {
 	font-size: 13px;
@@ -4511,6 +4587,38 @@
 	padding: 0 3px;
 	pointer-events: none;
 	line-height: 1;
+}
+
+/* ── Upcoming agenda section ─────────────────────────────────────────────── */
+.pf-notif-upcoming-divider {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 16px 4px;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+}
+.pf-notif-upcoming-divider::before {
+	content: '';
+	flex: 0 0 3px;
+	height: 3px;
+	border-radius: 2px;
+	background: var(--background-modifier-border);
+}
+.pf-notif-upcoming-divider::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--background-modifier-border);
+}
+.pf-notif-upcoming {
+	padding: 4px 8px 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
 }
 /* ── Hide frontmatter panel when ticket note is opened via ProjectFlow ───── */
 /* Applied to contentEl after leaf.openFile() resolves */

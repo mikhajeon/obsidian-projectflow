@@ -58,6 +58,16 @@
 	border-radius: 10px;
 }
 
+.pf-project-area-desktop-btns {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.pf-hamburger-btn { display: none; }
+.is-mobile .pf-hamburger-btn { display: flex; }
+.is-mobile .pf-desktop-only  { display: none !important; }
+
 .pf-view-title {
 	font-size: var(--font-ui-medium);
 	font-weight: 600;

@@ -108,7 +108,7 @@ export class BoardView extends ItemView {
 	}
 
 	getViewType(): string { return BOARD_VIEW; }
-	getDisplayText(): string { return 'Project Flow'; }
+	getDisplayText(): string { return 'ProjectFlow'; }
 	getIcon(): string { return 'layout-dashboard'; }
 
 	async onOpen(): Promise<void> {
@@ -193,24 +193,46 @@ export class BoardView extends ItemView {
 			await store.setActiveProject(projectSel.value);
 			this.plugin.refreshAllViews();
 		});
-		const editProjectBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
+		// Desktop buttons (hidden on mobile)
+		const desktopBtns = projectArea.createEl('div', { cls: 'pf-desktop-only pf-project-area-desktop-btns' });
+		const editProjectBtn = desktopBtns.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
 		setIcon(editProjectBtn, 'pencil');
 		editProjectBtn.setAttribute('aria-label', 'Edit project');
 		editProjectBtn.addEventListener('click', () => {
 			const current = store.getProject(store.getActiveProjectId() ?? '');
 			if (current) new ProjectModal(this.app, this.plugin, current, () => this.plugin.refreshAllViews()).open();
 		});
-		const notifProjectBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
+		const notifProjectBtn = desktopBtns.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm' });
 		setIcon(notifProjectBtn, 'bell');
 		notifProjectBtn.setAttribute('aria-label', 'Notification settings');
 		notifProjectBtn.addEventListener('click', () => {
 			const current = store.getProject(store.getActiveProjectId() ?? '');
 			if (current) new ProjectNotificationModal(this.app, this.plugin, current.id, current.name).open();
 		});
-		projectArea.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Project' })
+		desktopBtns.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Project' })
 			.addEventListener('click', () =>
 				new ProjectModal(this.app, this.plugin, null, () => this.plugin.refreshAllViews()).open()
 			);
+
+		// Hamburger menu (shown on mobile only)
+		const hamburgerBtn = projectArea.createEl('button', { cls: 'pf-btn pf-btn-icon pf-btn-sm pf-hamburger-btn' });
+		setIcon(hamburgerBtn, 'menu');
+		hamburgerBtn.setAttribute('aria-label', 'Project actions');
+		hamburgerBtn.addEventListener('click', (e) => {
+			const menu = new Menu();
+			menu.addItem(i => i.setTitle('Edit project').setIcon('pencil').onClick(() => {
+				const current = store.getProject(store.getActiveProjectId() ?? '');
+				if (current) new ProjectModal(this.app, this.plugin, current, () => this.plugin.refreshAllViews()).open();
+			}));
+			menu.addItem(i => i.setTitle('Notifications').setIcon('bell').onClick(() => {
+				const current = store.getProject(store.getActiveProjectId() ?? '');
+				if (current) new ProjectNotificationModal(this.app, this.plugin, current.id, current.name).open();
+			}));
+			menu.addItem(i => i.setTitle('New project').setIcon('plus').onClick(() => {
+				new ProjectModal(this.app, this.plugin, null, () => this.plugin.refreshAllViews()).open();
+			}));
+			menu.showAtMouseEvent(e);
+		});
 
 		const actions = titleRow.createEl('div', { cls: 'pf-header-actions' });
 
@@ -311,7 +333,7 @@ export class BoardView extends ItemView {
 		const bellBtn = bellWrap.createEl('button', { cls: 'pf-btn pf-btn-icon pf-header-bell' });
 		bellBtn.setAttribute('aria-label', 'Notifications');
 		setIcon(bellBtn, 'bell');
-		bellBtn.addEventListener('click', () => this.plugin.activateView(NOTIFICATION_VIEW_TYPE));
+		bellBtn.addEventListener('click', () => this.plugin.activateCalendarAgenda());
 		const headerBadge = bellWrap.createEl('span', { cls: 'pf-ribbon-badge' });
 		headerBadge.style.display = 'none';
 		this.headerBadgeEl = headerBadge;

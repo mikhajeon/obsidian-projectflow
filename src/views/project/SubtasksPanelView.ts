@@ -14,6 +14,15 @@ export class SubtasksPanelView {
 		this.view = view;
 	}
 
+	private renderWithScroll(): void {
+		const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
+		const savedTop = scrollEl?.scrollTop ?? 0;
+		const savedLeft = scrollEl?.scrollLeft ?? 0;
+		this.view.render();
+		const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
+		if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+	}
+
 	render(
 		container: HTMLElement,
 		store: ProjectStore,
@@ -96,25 +105,24 @@ export class SubtasksPanelView {
 			titleSpan.setText(parent.title);
 			titleSpan.addEventListener('click', (e) => {
 				e.stopPropagation();
-				new TicketModal(this.view.app, this.view.plugin, { ticket: parent, sprintId: currentSprint?.id ?? null }, () => this.view.render()).open();
+				new TicketModal(this.view.app, this.view.plugin, { ticket: parent, sprintId: currentSprint?.id ?? null }, () => this.renderWithScroll()).open();
 			});
 			blockHeader.createSpan('pf-subtasks-block-progress').setText(`${doneCount}/${allChildren.length}`);
+		const statusDef = store.getProjectStatuses(projectId).find(s => s.id === parent.status);
+		if (statusDef) {
+			const badge = blockHeader.createEl('span', { cls: 'pf-badge pf-status-badge pf-subtasks-status-badge', text: statusDef.label });
+			if (statusDef.color) {
+				badge.style.background = statusDef.color + '2e';
+				badge.style.color = statusDef.color;
+				badge.style.borderColor = statusDef.color + '66';
+			}
+		}
 
-			const addBtn = blockHeader.createEl('button', { cls: 'pf-btn pf-btn-sm', text: '+ Subtask' });
-			addBtn.addEventListener('click', (e) => {
-				e.stopPropagation();
-				new TicketModal(this.view.app, this.view.plugin, {
-					projectId,
-					sprintId: currentSprint ? currentSprint.id : null,
-					defaultType: 'subtask',
-					parentId: parent.id,
-				}, () => this.view.render()).open();
-			});
 
 			blockHeader.addEventListener('contextmenu', (e) => {
 				const menu = new Menu();
 				menu.addItem(i => i.setTitle('Edit').setIcon('pencil').onClick(() =>
-					new TicketModal(this.view.app, this.view.plugin, { ticket: parent, sprintId: currentSprint?.id ?? null }, () => this.view.render()).open()
+					new TicketModal(this.view.app, this.view.plugin, { ticket: parent, sprintId: currentSprint?.id ?? null }, () => this.renderWithScroll()).open()
 				));
 				menu.addItem(i => i.setTitle('Open note').setIcon('file-text').onClick(async () =>
 					await this.view.openTicketNote(parent)
@@ -125,7 +133,7 @@ export class SubtasksPanelView {
 						sprintId: currentSprint ? currentSprint.id : null,
 						defaultType: 'subtask',
 						parentId: parent.id,
-					}, () => this.view.render()).open()
+					}, () => this.renderWithScroll()).open()
 				));
 				menu.showAtMouseEvent(e);
 			});
@@ -161,12 +169,7 @@ export class SubtasksPanelView {
 					} else {
 						this.view.collapsedSections.add(colKey);
 					}
-					const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-					const savedTop = scrollEl?.scrollTop ?? 0;
-					const savedLeft = scrollEl?.scrollLeft ?? 0;
-					this.view.render();
-					const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-					if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+					this.renderWithScroll();
 				});
 				colHead.createSpan('pf-subtasks-col-title').setText(col.label);
 				const colTickets = allChildren.filter(t => t.status === col.id);
@@ -175,12 +178,7 @@ export class SubtasksPanelView {
 				if (isColCollapsed) {
 					colEl.addEventListener('click', () => {
 						this.view.collapsedSections.delete(colKey);
-						const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						const savedTop = scrollEl?.scrollTop ?? 0;
-						const savedLeft = scrollEl?.scrollLeft ?? 0;
-						this.view.render();
-						const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+						this.renderWithScroll();
 					});
 					colEl.addEventListener('dragover', (e) => {
 						e.preventDefault();
@@ -205,12 +203,7 @@ export class SubtasksPanelView {
 						const newOrder = colTicketsNow.length > 0 ? colTicketsNow[colTicketsNow.length - 1].order + 1 : 0;
 						await store.moveTicket(droppedId, sprintId, col.id, newOrder);
 						generateTicketNote(this.view.plugin, droppedId).catch(() => {});
-						const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						const savedTop = scrollEl?.scrollTop ?? 0;
-						const savedLeft = scrollEl?.scrollLeft ?? 0;
-						this.view.render();
-						const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+						this.renderWithScroll();
 					});
 					continue;
 				}
@@ -226,7 +219,7 @@ export class SubtasksPanelView {
 						status: col.id,
 						defaultType: 'subtask',
 						parentId: parent.id,
-					}, () => this.view.render()).open();
+					}, () => this.renderWithScroll()).open();
 				});
 
 				const colBody = colEl.createDiv('pf-subtasks-col-body');
@@ -325,12 +318,7 @@ export class SubtasksPanelView {
 						dropBeforeId = null;
 						await store.moveTicket(droppedId, sprintId, col.id, newOrder);
 						generateTicketNote(this.view.plugin, droppedId).catch(() => {});
-						const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						const savedTop = scrollEl?.scrollTop ?? 0;
-						const savedLeft = scrollEl?.scrollLeft ?? 0;
-						this.view.render();
-						const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-subtasks-wrapper');
-						if (newScrollEl) { newScrollEl.scrollTop = savedTop; newScrollEl.scrollLeft = savedLeft; }
+						this.renderWithScroll();
 					}
 				});
 
@@ -372,13 +360,13 @@ export class SubtasksPanelView {
 		}
 
 		card.addEventListener('click', () => {
-			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.render()).open();
+			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.renderWithScroll()).open();
 		});
 
 		card.addEventListener('contextmenu', (e) => {
 			const menu = new Menu();
 			menu.addItem(i => i.setTitle('Edit').setIcon('pencil').onClick(() =>
-				new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.render()).open()
+				new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.renderWithScroll()).open()
 			));
 			menu.addItem(i => i.setTitle('Open note').setIcon('file-text').onClick(async () =>
 				await this.view.openTicketNote(ticket)

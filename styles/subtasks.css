@@ -59,6 +59,14 @@
 	color: var(--text-muted);
 }
 
+.pf-subtasks-status-badge {
+	font-size: 10px;
+	padding: 1px 5px;
+	border-radius: 10px;
+	border: 1px solid transparent;
+	white-space: nowrap;
+}
+
 .pf-subtasks-backlog-badge {
 	font-size: 10px;
 	padding: 1px 6px;
@@ -235,13 +243,9 @@
 	display: flex;
 	align-items: center;
 	gap: 1px;
-	opacity: 0;
-	transition: opacity 0.15s, color 0.15s, background 0.15s;
+	transition: color 0.15s, background 0.15s;
 	flex-shrink: 0;
 	line-height: 1;
-}
-.pf-subtasks-col:hover .pf-subtasks-col-add-btn {
-	opacity: 1;
 }
 .pf-subtasks-col-add-btn:hover {
 	background: var(--background-modifier-hover);

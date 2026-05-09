@@ -1,15 +1,18 @@
+import { setIcon } from 'obsidian';
 import type { CalendarView } from './CalendarView';
 import type { Ticket } from '../../types';
 import { AutoScheduleModal, ScheduleSuggestion } from '../../modals/shared/AutoScheduleModal';
 import { dateOnlyMs, hasTime, isSameDay, getMonthWeeks } from './CalendarUtils';
 
 export class CalendarSidebar {
+	private collapsed = false;
+
 	constructor(private view: CalendarView) {}
 
 	// ── Unscheduled sidebar ────────────────────────────────────────────────────
 
 	render(container: HTMLElement, tickets: Ticket[]): void {
-		const sidebar = container.createEl('div', { cls: 'pf-cal-sidebar' });
+		const sidebar = container.createEl('div', { cls: 'pf-cal-sidebar' + (this.collapsed ? ' pf-cal-sidebar-collapsed' : '') });
 
 		// Mini calendar at top of sidebar
 		const store = this.view.plugin.store;
@@ -21,6 +24,15 @@ export class CalendarSidebar {
 
 		// Sidebar header with auto-schedule button
 		const sidebarHeaderRow = sidebar.createEl('div', { cls: 'pf-cal-sidebar-header-row' });
+
+		const collapseBtn = sidebarHeaderRow.createEl('button', { cls: 'pf-cal-sidebar-collapse-btn' });
+		setIcon(collapseBtn, this.collapsed ? 'chevron-left' : 'chevron-right');
+		collapseBtn.addEventListener('click', () => {
+			this.collapsed = !this.collapsed;
+			sidebar.toggleClass('pf-cal-sidebar-collapsed', this.collapsed);
+			setIcon(collapseBtn, this.collapsed ? 'chevron-left' : 'chevron-right');
+		});
+
 		sidebarHeaderRow.createEl('div', { cls: 'pf-cal-sidebar-title', text: 'Unscheduled' });
 		if (tickets.length > 0) {
 			const schedBtn = sidebarHeaderRow.createEl('button', { cls: 'pf-btn pf-btn-sm pf-cal-autosched-btn', text: '⚡ Schedule', attr: { title: 'Auto-schedule into free time slots' } });

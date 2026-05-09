@@ -46,16 +46,16 @@ export default class ProjectFlowPlugin extends Plugin {
 		this.registerView(NOTIFICATION_VIEW_TYPE, (leaf) => new NotificationPanelView(leaf, this));
 		this.registerView(TICKET_NOTE_VIEW_TYPE, (leaf) => new TicketNoteView(leaf, this));
 
-		this.addRibbonIcon('layout-dashboard', 'ProjectFlow board', () =>
+		this.addRibbonIcon('layout-dashboard', 'ProjectFlow', () =>
 			this.activateView(BOARD_VIEW)
 		);
-		this.addRibbonIcon('calendar-days', 'ProjectFlow calendar flow', () =>
+		this.addRibbonIcon('calendar-days', 'CalendarFlow', () =>
 			this.activateView(CALENDAR_VIEW)
 		);
 
 		// Notification ribbon icon with badge
-		const bellIconEl = this.addRibbonIcon('bell', 'ProjectFlow notifications', () =>
-			this.activateView(NOTIFICATION_VIEW_TYPE)
+		const bellIconEl = this.addRibbonIcon('bell', 'NotificationFlow', () =>
+			this.activateCalendarAgenda()
 		);
 		bellIconEl.style.position = 'relative';
 		const badgeEl = bellIconEl.createEl('span', { cls: 'pf-ribbon-badge' });
@@ -212,6 +212,11 @@ export default class ProjectFlowPlugin extends Plugin {
 				leaf.view.render();
 			}
 		}
+		for (const leaf of this.app.workspace.getLeavesOfType(CALENDAR_VIEW)) {
+			if (leaf.view instanceof CalendarView) {
+				leaf.view.render();
+			}
+		}
 	}
 
 	async activateView(viewType: string): Promise<void> {
@@ -222,6 +227,16 @@ export default class ProjectFlowPlugin extends Plugin {
 			if (leaf) await leaf.setViewState({ type: viewType, active: true });
 		}
 		if (leaf) workspace.revealLeaf(leaf);
+	}
+
+	async activateCalendarAgenda(): Promise<void> {
+		await this.activateView(CALENDAR_VIEW);
+		const leaf = this.app.workspace.getLeavesOfType(CALENDAR_VIEW)[0];
+		if (leaf?.view instanceof CalendarView) {
+			const cv = leaf.view as CalendarView;
+			cv.viewMode = 'agenda';
+			cv.render();
+		}
 	}
 
 	private async syncNotesAfterUndoRedo(prev: Ticket[], next: Ticket[]): Promise<void> {
