@@ -213,9 +213,12 @@ export interface AppData {
 	hiddenBoardColumns?: Record<string, string[]>;    // projectId -> array of hidden status IDs (board view)
 	hiddenSubtaskColumns?: Record<string, string[]>; // projectId -> array of hidden status IDs (subtask view)
 	collapsedBoardColumns?: Record<string, string[]>; // projectId -> array of collapsed status IDs
+	collapsedSubtaskCols?: Record<string, string[]>;  // projectId -> array of collapsed subtask col status IDs
+	collapsedSubtaskParents?: Record<string, string[]>; // projectId -> array of collapsed parent ticket IDs
 	calendarProjectIds?: string[];  // project IDs visible in Calendar Flow; null = active project only
 	calendarCardAppearance?: Partial<CalendarViewAppearance>;
 	boardCardAppearance?: BoardCardAppearance;
+	subtaskCardAppearance?: BoardCardAppearance;
 	notificationSettings?: NotificationSettings;
 	notifications?: StoredNotification[];
 }

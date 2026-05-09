@@ -104,8 +104,15 @@ export class BoardSettingsModal extends Modal {
 		const section = container.createEl('div', { cls: 'pf-cal-settings-section' });
 		section.createEl('p', { cls: 'pf-cal-settings-section-desc', text: 'Show or hide elements on board ticket cards.' });
 
+		const getAppearance = () => this.boardView === 'subtask'
+			? this.plugin.store.getSubtaskCardAppearance()
+			: this.plugin.store.getBoardCardAppearance();
+		const saveAppearance = (a: BoardCardAppearance) => this.boardView === 'subtask'
+			? this.plugin.store.setSubtaskCardAppearance(a).catch(() => {})
+			: this.plugin.store.setBoardCardAppearance(a).catch(() => {});
+
 		for (const { key, label, desc } of APPEARANCE_TOGGLES) {
-			const appearance = this.plugin.store.getBoardCardAppearance();
+			const appearance = getAppearance();
 			const row = section.createEl('div', { cls: 'pf-cal-settings-toggle-row' });
 			const left = row.createEl('div', { cls: 'pf-cal-settings-toggle-left' });
 			left.createEl('span', { cls: 'pf-cal-settings-toggle-label', text: label });
@@ -113,10 +120,10 @@ export class BoardSettingsModal extends Modal {
 
 			const toggle = row.createEl('div', { cls: 'pf-cal-settings-toggle' + (appearance[key] ? ' active' : '') });
 			toggle.addEventListener('click', () => {
-				const current = this.plugin.store.getBoardCardAppearance();
+				const current = getAppearance();
 				const updated: BoardCardAppearance = { ...current, [key]: !current[key] };
 				toggle.toggleClass('active', updated[key]);
-				this.plugin.store.setBoardCardAppearance(updated).catch(() => {});
+				saveAppearance(updated);
 				this.onUpdate();
 			});
 		}

@@ -166,7 +166,7 @@ export class BoardSubtasksPanelView {
 	}
 
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint, parent: Ticket | undefined): void {
-		const ap = this.view.plugin.store.getBoardCardAppearance();
+		const ap = this.view.plugin.store.getSubtaskCardAppearance();
 		const showEdges = ap.priorityEdge;
 		const card = container.createEl('div', { cls: `pf-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}` });
 		card.draggable = true;

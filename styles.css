@@ -777,9 +777,9 @@
 
 /* ── Mobile button overrides ─────────────────────────────────────────────── */
 
-.is-mobile .pf-btn      { padding: 2px 10px; }
-.is-mobile .pf-btn-sm   { padding: 1px 7px; }
-.is-mobile .pf-btn-icon { padding: 1px 6px; }
+.is-mobile .pf-btn      { padding: 0px 8px; }
+.is-mobile .pf-btn-sm   { padding: 0px 6px; }
+.is-mobile .pf-btn-icon { padding: 0px 5px; }
 
 /* ── Modals ──────────────────────────────────────────────────────────────── */
 

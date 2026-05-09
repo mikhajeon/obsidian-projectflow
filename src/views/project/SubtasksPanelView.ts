@@ -97,6 +97,7 @@ export class SubtasksPanelView {
 				} else {
 					this.view.collapsedSections.add(parent.id);
 				}
+				this.persistCollapsedParents(projectId);
 				this.view.render();
 			});
 
@@ -169,6 +170,7 @@ export class SubtasksPanelView {
 					} else {
 						this.view.collapsedSections.add(colKey);
 					}
+					this.persistCollapsedCols(projectId);
 					this.renderWithScroll();
 				});
 				colHead.createSpan('pf-subtasks-col-title').setText(col.label);
@@ -326,8 +328,21 @@ export class SubtasksPanelView {
 		}
 	}
 
+	private persistCollapsedParents(projectId: string): void {
+		const ids = [...this.view.collapsedSections].filter(k => !k.startsWith('board-col-') && !k.startsWith('subtask-col-'));
+		this.view.plugin.store.setCollapsedSubtaskParents(projectId, ids).catch(() => {});
+	}
+
+	private persistCollapsedCols(projectId: string): void {
+		const PREFIX = 'subtask-col-';
+		const ids = [...this.view.collapsedSections]
+			.filter(k => k.startsWith(PREFIX))
+			.map(k => k.slice(PREFIX.length));
+		this.view.plugin.store.setCollapsedSubtaskCols(projectId, ids).catch(() => {});
+	}
+
 	private renderCard(container: HTMLElement, ticket: Ticket, sprint: Sprint | null): void {
-		const ap = this.view.plugin.store.getBoardCardAppearance();
+		const ap = this.view.plugin.store.getSubtaskCardAppearance();
 		const showEdges = ap.priorityEdge;
 		const card = container.createDiv(`pf-subtasks-card${showEdges ? ` pf-priority-border-${ticket.priority}` : ''}`);
 		card.dataset.id = ticket.id;

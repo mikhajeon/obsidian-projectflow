@@ -603,6 +603,26 @@ export class ProjectStore {
 		await this.save();
 	}
 
+	getCollapsedSubtaskCols(projectId: string): string[] {
+		return this.data.collapsedSubtaskCols?.[projectId] ?? [];
+	}
+
+	async setCollapsedSubtaskCols(projectId: string, ids: string[]): Promise<void> {
+		if (!this.data.collapsedSubtaskCols) this.data.collapsedSubtaskCols = {};
+		this.data.collapsedSubtaskCols[projectId] = ids;
+		await this.save();
+	}
+
+	getCollapsedSubtaskParents(projectId: string): string[] {
+		return this.data.collapsedSubtaskParents?.[projectId] ?? [];
+	}
+
+	async setCollapsedSubtaskParents(projectId: string, ids: string[]): Promise<void> {
+		if (!this.data.collapsedSubtaskParents) this.data.collapsedSubtaskParents = {};
+		this.data.collapsedSubtaskParents[projectId] = ids;
+		await this.save();
+	}
+
 	// ── Board column width ────────────────────────────────────────────────────
 
 	getBoardColWidth(viewKey: string): number {
@@ -650,6 +670,15 @@ export class ProjectStore {
 
 	async setBoardCardAppearance(appearance: BoardCardAppearance): Promise<void> {
 		this.data.boardCardAppearance = appearance;
+		await this.save();
+	}
+
+	getSubtaskCardAppearance(): BoardCardAppearance {
+		return { ...DEFAULT_BOARD_CARD_APPEARANCE, ...this.data.subtaskCardAppearance };
+	}
+
+	async setSubtaskCardAppearance(appearance: BoardCardAppearance): Promise<void> {
+		this.data.subtaskCardAppearance = appearance;
 		await this.save();
 	}
 

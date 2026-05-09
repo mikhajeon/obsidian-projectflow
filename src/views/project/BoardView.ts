@@ -154,6 +154,14 @@ export class BoardView extends ItemView {
 			for (const id of store.getCollapsedBoardColumns(projectId)) {
 				this.collapsedSections.add(`board-col-${id}`);
 			}
+			// Restore persisted collapsed subtask columns
+			for (const id of store.getCollapsedSubtaskCols(projectId)) {
+				this.collapsedSections.add(`subtask-col-${id}`);
+			}
+			// Restore persisted collapsed subtask parent blocks
+			for (const id of store.getCollapsedSubtaskParents(projectId)) {
+				this.collapsedSections.add(id);
+			}
 		}
 
 		if (!projectId) {
