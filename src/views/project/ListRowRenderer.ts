@@ -35,12 +35,7 @@ export class ListRowRenderer {
 		headerEl.dataset.depth = '0';
 		headerEl.dataset.isEpic = 'true';
 
-		const epicDragHandle = headerEl.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-
-		let epicDragFromHandle = false;
-		headerEl.addEventListener('mousedown', (e) => {
-			epicDragFromHandle = epicDragHandle.contains(e.target as Node) || e.target === epicDragHandle;
-		});
+		headerEl.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
 
 		this.view.addRowCheckbox(headerEl, epic.id, container, orderedIds);
 
@@ -86,13 +81,10 @@ export class ListRowRenderer {
 
 		headerEl.addEventListener('dragstart', (e) => {
 			e.stopPropagation();
-			if (!epicDragFromHandle) {
-				e.preventDefault();
-				return;
-			}
 			this.view.draggedEpicId = epic.id;
 			this.view.draggedTicketId = null;
 			headerEl.addClass('pf-dragging');
+			if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
 		});
 		headerEl.addEventListener('dragend', () => {
 			this.view.draggedEpicId = null;
@@ -145,12 +137,7 @@ export class ListRowRenderer {
 		row.dataset.parentId = '';
 		row.dataset.depth = '0';
 
-		const rogueDragHandle = row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-
-		let rogueDragFromHandle = false;
-		row.addEventListener('mousedown', (e) => {
-			rogueDragFromHandle = rogueDragHandle.contains(e.target as Node) || e.target === rogueDragHandle;
-		});
+		row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
 
 		this.view.addRowCheckbox(row, ticket.id, container, orderedIds);
 
@@ -207,10 +194,6 @@ export class ListRowRenderer {
 		}
 
 		row.addEventListener('dragstart', (e) => {
-			if (!rogueDragFromHandle) {
-				e.preventDefault();
-				return;
-			}
 			this.view.draggedTicketId = ticket.id;
 			this.view.draggedTicketType = ticket.type;
 			this.dragHandler.highlightMultiDrag(row, ticket.id, e);
@@ -303,19 +286,10 @@ export class ListRowRenderer {
 		const isCollapsed = this.view.collapsedSections.has(ticket.id);
 		const indentPx = depth * 20;
 
-		const childDragHandle = row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-
-		let childDragFromHandle = false;
-		row.addEventListener('mousedown', (e) => {
-			childDragFromHandle = childDragHandle.contains(e.target as Node) || e.target === childDragHandle;
-		});
+		row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
 
 		row.addEventListener('dragstart', (e) => {
 			e.stopPropagation();
-			if (!childDragFromHandle) {
-				e.preventDefault();
-				return;
-			}
 			this.view.draggedTicketId = ticket.id;
 			this.view.draggedTicketType = ticket.type;
 			this.view.draggedEpicId = null;
