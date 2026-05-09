@@ -313,6 +313,7 @@ export class BacklogPanelView {
 
 	private applyFilters(tickets: Ticket[]): Ticket[] {
 		return tickets
+			.filter(t => t.type !== 'epic' && t.type !== 'subtask')
 			.filter(t => this.view.filterType === 'all' || t.type === this.view.filterType)
 			.filter(t => this.view.filterPriority === 'all' || t.priority === this.view.filterPriority)
 			.filter(t => this.view.filterStatus === 'all' || t.status === this.view.filterStatus);

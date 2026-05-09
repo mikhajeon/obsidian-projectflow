@@ -29,15 +29,18 @@ export class ListRowRenderer {
 		const doneChildren = children.filter(c => c.status === 'done').length;
 
 		const headerEl = section.createEl('div', { cls: `pf-tbl-row pf-tbl-row-epic pf-draggable-row` });
-		headerEl.draggable = false;
+		headerEl.draggable = true;
 		headerEl.dataset.ticketId = epic.id;
 		headerEl.dataset.parentId = '';
 		headerEl.dataset.depth = '0';
 		headerEl.dataset.isEpic = 'true';
 
 		const epicDragHandle = headerEl.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-		epicDragHandle.addEventListener('mousedown', () => { headerEl.draggable = true; });
-		headerEl.addEventListener('dragend', () => { headerEl.draggable = false; });
+
+		let epicDragFromHandle = false;
+		headerEl.addEventListener('mousedown', (e) => {
+			epicDragFromHandle = epicDragHandle.contains(e.target as Node) || e.target === epicDragHandle;
+		});
 
 		this.view.addRowCheckbox(headerEl, epic.id, container, orderedIds);
 
@@ -83,13 +86,16 @@ export class ListRowRenderer {
 
 		headerEl.addEventListener('dragstart', (e) => {
 			e.stopPropagation();
+			if (!epicDragFromHandle) {
+				e.preventDefault();
+				return;
+			}
 			this.view.draggedEpicId = epic.id;
 			this.view.draggedTicketId = null;
 			headerEl.addClass('pf-dragging');
 		});
 		headerEl.addEventListener('dragend', () => {
 			this.view.draggedEpicId = null;
-			headerEl.draggable = false;
 			headerEl.removeClass('pf-dragging');
 		});
 
@@ -134,13 +140,17 @@ export class ListRowRenderer {
 		const row = container.createEl('div', {
 			cls: `pf-tbl-row pf-draggable-row`,
 		});
-		row.draggable = false;
+		row.draggable = true;
 		row.dataset.ticketId = ticket.id;
 		row.dataset.parentId = '';
 		row.dataset.depth = '0';
 
 		const rogueDragHandle = row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-		rogueDragHandle.addEventListener('mousedown', () => { row.draggable = true; });
+
+		let rogueDragFromHandle = false;
+		row.addEventListener('mousedown', (e) => {
+			rogueDragFromHandle = rogueDragHandle.contains(e.target as Node) || e.target === rogueDragHandle;
+		});
 
 		this.view.addRowCheckbox(row, ticket.id, container, orderedIds);
 
@@ -197,6 +207,10 @@ export class ListRowRenderer {
 		}
 
 		row.addEventListener('dragstart', (e) => {
+			if (!rogueDragFromHandle) {
+				e.preventDefault();
+				return;
+			}
 			this.view.draggedTicketId = ticket.id;
 			this.view.draggedTicketType = ticket.type;
 			this.dragHandler.highlightMultiDrag(row, ticket.id, e);
@@ -204,7 +218,6 @@ export class ListRowRenderer {
 		row.addEventListener('dragend', () => {
 			this.view.draggedTicketId = null;
 			this.view.draggedTicketType = null;
-			row.draggable = false;
 			this.dragHandler.clearDragging();
 		});
 
@@ -281,13 +294,28 @@ export class ListRowRenderer {
 		const row = container.createEl('div', {
 			cls: `pf-tbl-row pf-tbl-row-depth-${depth} pf-draggable-row`,
 		});
-		row.draggable = false;
+		row.draggable = true;
 		row.dataset.ticketId = ticket.id;
 		row.dataset.parentId = ticket.parentId ?? '';
 		row.dataset.depth = String(depth);
 
+		const subtasks = store.getChildTickets(ticket.id);
+		const isCollapsed = this.view.collapsedSections.has(ticket.id);
+		const indentPx = depth * 20;
+
+		const childDragHandle = row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
+
+		let childDragFromHandle = false;
+		row.addEventListener('mousedown', (e) => {
+			childDragFromHandle = childDragHandle.contains(e.target as Node) || e.target === childDragHandle;
+		});
+
 		row.addEventListener('dragstart', (e) => {
 			e.stopPropagation();
+			if (!childDragFromHandle) {
+				e.preventDefault();
+				return;
+			}
 			this.view.draggedTicketId = ticket.id;
 			this.view.draggedTicketType = ticket.type;
 			this.view.draggedEpicId = null;
@@ -296,16 +324,8 @@ export class ListRowRenderer {
 		row.addEventListener('dragend', () => {
 			this.view.draggedTicketId = null;
 			this.view.draggedTicketType = null;
-			row.draggable = false;
 			this.dragHandler.clearDragging();
 		});
-
-		const subtasks = store.getChildTickets(ticket.id);
-		const isCollapsed = this.view.collapsedSections.has(ticket.id);
-		const indentPx = depth * 20;
-
-		const childDragHandle = row.createEl('div', { cls: 'pf-drag-handle', text: '⠿' });
-		childDragHandle.addEventListener('mousedown', () => { row.draggable = true; });
 
 		this.view.addRowCheckbox(row, ticket.id, container, orderedIds);
 
