@@ -112,7 +112,7 @@ export class BacklogPanelView {
 					await store.reorderBacklogTicket(t.id, null, resolvedBefore);
 					generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 				}
-				this.view.renderPreservingScroll();
+				this.view.render();
 			});
 			return;
 		}
@@ -190,7 +190,7 @@ export class BacklogPanelView {
 				await store.reorderBacklogTicket(t.id, destSprintId, resolvedBefore);
 				generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 			}
-			this.view.renderPreservingScroll();
+			this.view.render();
 		});
 	}
 
