@@ -39,7 +39,7 @@ export class ListPanelView {
 
 		if (epics.length === 0 && rogueTickets.length === 0) {
 			this.view.renderEmpty(scrollArea, 'No tickets yet.', 'Create a ticket to get started.', () =>
-				new TicketModal(this.view.app, this.view.plugin, { projectId, sprintId: null }, () => this.view.render()).open()
+				new TicketModal(this.view.app, this.view.plugin, { projectId, sprintId: null }, () => this.view.renderPreservingScroll()).open()
 			);
 			return;
 		}
@@ -88,7 +88,7 @@ export class ListPanelView {
 			await this.view.plugin.store.setSortOrder('list', next);
 			const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
 			const scrollTop = scrollEl?.scrollTop ?? 0;
-			this.view.render();
+			this.view.renderPreservingScroll();
 			const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
 			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
 		});
@@ -120,7 +120,7 @@ export class ListPanelView {
 					await store.bulkArchiveTickets(ids);
 					this.view.selectedIds.clear();
 					this.view.lastSelectedId = null;
-					this.view.render();
+					this.view.renderPreservingScroll();
 				});
 				const deleteBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Delete selected' });
 				deleteBtn.addEventListener('click', async () => {
@@ -136,14 +136,14 @@ export class ListPanelView {
 						}
 						this.view.selectedIds.clear();
 						this.view.lastSelectedId = null;
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}).open();
 				});
 				const clearBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Clear' });
 				clearBtn.addEventListener('click', () => {
 					this.view.selectedIds.clear();
 					this.view.lastSelectedId = null;
-					this.view.render();
+					this.view.renderPreservingScroll();
 				});
 			}
 		}

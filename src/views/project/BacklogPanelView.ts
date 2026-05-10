@@ -62,11 +62,7 @@ export class BacklogPanelView {
 		}, this.view.sortOrder, async (next) => {
 			this.view.sortOrder = next;
 			await this.view.plugin.store.setSortOrder('backlog', next);
-			const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
-			const scrollTop = scrollEl?.scrollTop ?? 0;
-			this.view.render();
-			const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
-			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
+			this.view.renderPreservingScroll();
 		});
 
 		// ── No-sprint mode: two flat sections (Board list + Product Backlog) ─
@@ -116,11 +112,7 @@ export class BacklogPanelView {
 					await store.reorderBacklogTicket(t.id, null, resolvedBefore);
 					generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 				}
-				const scrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
-				const scrollTop = scrollEl?.scrollTop ?? 0;
-				this.view.render();
-				const newScrollEl = this.view.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
-				if (newScrollEl) newScrollEl.scrollTop = scrollTop;
+				this.view.renderPreservingScroll();
 			});
 			return;
 		}
@@ -198,11 +190,7 @@ export class BacklogPanelView {
 				await store.reorderBacklogTicket(t.id, destSprintId, resolvedBefore);
 				generateTicketNote(this.view.plugin, t.id).catch(() => { /* silent */ });
 			}
-			const scrollEl = this.view.contentEl.querySelector('.pf-tbl-container');
-			const scrollTop = scrollEl?.scrollTop ?? 0;
-			this.view.render();
-			const newScrollEl = this.view.contentEl.querySelector('.pf-tbl-container');
-			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
+			this.view.renderPreservingScroll();
 		});
 	}
 
@@ -330,7 +318,7 @@ export class BacklogPanelView {
 			await store.bulkArchiveTickets(ids);
 			this.view.selectedIds.clear();
 			this.view.lastSelectedId = null;
-			this.view.render();
+			this.view.renderPreservingScroll();
 		});
 		const deleteBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Delete selected' });
 		deleteBtn.addEventListener('click', async () => {
@@ -343,14 +331,14 @@ export class BacklogPanelView {
 				}
 				this.view.selectedIds.clear();
 				this.view.lastSelectedId = null;
-				this.view.render();
+				this.view.renderPreservingScroll();
 			}).open();
 		});
 		const clearBtn = bar.createEl('button', { cls: 'pf-btn pf-btn-sm', text: 'Clear' });
 		clearBtn.addEventListener('click', () => {
 			this.view.selectedIds.clear();
 			this.view.lastSelectedId = null;
-			this.view.render();
+			this.view.renderPreservingScroll();
 		});
 	}
 
@@ -393,7 +381,7 @@ export class BacklogPanelView {
 			} else {
 				this.view.collapsedSections.add(sectionId);
 			}
-			this.view.render();
+			this.view.renderPreservingScroll();
 		});
 
 		if (isCollapsed) return;
@@ -522,7 +510,7 @@ export class BacklogPanelView {
 					if (addToSprint.value) {
 						await store.moveTicket(ticket.id, addToSprint.value, this._todoStatusId, ticket.order);
 						await generateTicketNote(this.view.plugin, ticket.id);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}
 				});
 			}
@@ -532,14 +520,14 @@ export class BacklogPanelView {
 
 		row.addEventListener('click', (e) => {
 			if ((e.target as HTMLElement).tagName === 'SELECT' || (e.target as HTMLElement).tagName === 'OPTION') return;
-			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.render()).open();
+			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.renderPreservingScroll()).open();
 		});
 
 		row.addEventListener('contextmenu', (e) => {
 			const menu = new Menu();
 			menu.addItem(item =>
 				item.setTitle('Edit').setIcon('pencil').onClick(() =>
-					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.render()).open()
+					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: sprint?.id ?? null }, () => this.view.renderPreservingScroll()).open()
 				)
 			);
 			menu.addItem(item =>
@@ -555,7 +543,7 @@ export class BacklogPanelView {
 							sprintId: sprint?.id ?? null,
 							parentId: ticket.id,
 							defaultType: 'subtask',
-						}, () => this.view.render()).open()
+						}, () => this.view.renderPreservingScroll()).open()
 					)
 				);
 			}
@@ -565,7 +553,7 @@ export class BacklogPanelView {
 					const impacted = store.getDescendantIds(ticket.id).map(id => store.getTicket(id)?.title ?? '').filter(Boolean);
 					new ConfirmModal(this.view.app, `Archive "${ticket.title}"? It will be hidden from active views and can be restored later.`, async () => {
 						await store.archiveTicket(ticket.id);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}, 'Archive', impacted).open();
 				})
 			);
@@ -575,7 +563,7 @@ export class BacklogPanelView {
 					new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {
 						await deleteTicketNote(this.view.plugin, ticket.id);
 						await store.deleteTicket(ticket.id);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}, 'Delete', impacted).open();
 				})
 			);

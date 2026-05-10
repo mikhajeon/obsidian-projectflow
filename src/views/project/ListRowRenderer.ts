@@ -52,7 +52,7 @@ export class ListRowRenderer {
 			} else {
 				this.view.collapsedSections.add(epic.id);
 			}
-			this.view.render();
+			this.view.renderPreservingScroll();
 		});
 		nameInner.createEl('span', { cls: 'pf-type-icon pf-type-icon-epic', text: this.view.TYPE_ICONS['epic'] });
 		nameInner.createEl('span', { cls: 'pf-tbl-title pf-tbl-title-epic', text: epic.title });
@@ -76,7 +76,7 @@ export class ListRowRenderer {
 				sprintId: null,
 				parentId: epic.id,
 				defaultType: 'task',
-			}, () => this.view.render()).open();
+			}, () => this.view.renderPreservingScroll()).open();
 		});
 
 		headerEl.addEventListener('dragstart', (e) => {
@@ -94,7 +94,7 @@ export class ListRowRenderer {
 		nameCell.addEventListener('click', (e) => {
 			if ((e.target as HTMLElement).tagName === 'BUTTON') return;
 			if ((e.target as HTMLElement).classList.contains('pf-epic-toggle')) return;
-			new TicketModal(this.view.app, this.view.plugin, { ticket: epic, sprintId: null }, () => this.view.render()).open();
+			new TicketModal(this.view.app, this.view.plugin, { ticket: epic, sprintId: null }, () => this.view.renderPreservingScroll()).open();
 		});
 
 		headerEl.addEventListener('contextmenu', (e) => {
@@ -156,7 +156,7 @@ export class ListRowRenderer {
 				} else {
 					this.view.collapsedSections.add(ticket.id);
 				}
-				this.view.render();
+				this.view.renderPreservingScroll();
 			});
 		} else {
 			nameInner.createEl('span', { cls: 'pf-epic-toggle-placeholder' });
@@ -189,7 +189,7 @@ export class ListRowRenderer {
 					sprintId: null,
 					parentId: ticket.id,
 					defaultType: 'subtask',
-				}, () => this.view.render()).open();
+				}, () => this.view.renderPreservingScroll()).open();
 			});
 		}
 
@@ -205,14 +205,14 @@ export class ListRowRenderer {
 		});
 
 		nameCell.addEventListener('click', () => {
-			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.render()).open();
+			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.renderPreservingScroll()).open();
 		});
 
 		row.addEventListener('contextmenu', (e) => {
 			const menu = new Menu();
 			menu.addItem(item =>
 				item.setTitle('Edit').setIcon('pencil').onClick(() =>
-					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.render()).open()
+					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.renderPreservingScroll()).open()
 				)
 			);
 			menu.addItem(item =>
@@ -228,7 +228,7 @@ export class ListRowRenderer {
 							sprintId: ticket.sprintId ?? null,
 							parentId: ticket.id,
 							defaultType: 'subtask',
-						}, () => this.view.render()).open()
+						}, () => this.view.renderPreservingScroll()).open()
 					)
 				);
 			}
@@ -240,7 +240,7 @@ export class ListRowRenderer {
 							await store.updateTicket(ticket.id, { parentId: epic.id });
 							await generateTicketNote(this.view.plugin, ticket.id, oldPath ?? undefined);
 							await generateTicketNote(this.view.plugin, epic.id);
-							this.view.render();
+							this.view.renderPreservingScroll();
 						})
 					);
 				}
@@ -251,7 +251,7 @@ export class ListRowRenderer {
 					new ConfirmModal(this.view.app, `Delete "${ticket.title}"? This cannot be undone.`, async () => {
 						await deleteTicketNote(this.view.plugin, ticket.id);
 						await store.deleteTicket(ticket.id);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}, 'Delete', store.getDescendantIds(ticket.id).map(id => store.getTicket(id)?.title ?? '').filter(Boolean)).open();
 				})
 			);
@@ -319,7 +319,7 @@ export class ListRowRenderer {
 				} else {
 					this.view.collapsedSections.add(ticket.id);
 				}
-				this.view.render();
+				this.view.renderPreservingScroll();
 			});
 		} else {
 			nameInner.createEl('span', { cls: 'pf-epic-toggle-placeholder' });
@@ -351,21 +351,21 @@ export class ListRowRenderer {
 					sprintId: null,
 					parentId: ticket.id,
 					defaultType: 'subtask',
-				}, () => this.view.render()).open();
+				}, () => this.view.renderPreservingScroll()).open();
 			});
 		}
 
 		nameCell.addEventListener('click', (e) => {
 			if ((e.target as HTMLElement).tagName === 'BUTTON') return;
 			if ((e.target as HTMLElement).classList.contains('pf-epic-toggle')) return;
-			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.render()).open();
+			new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.renderPreservingScroll()).open();
 		});
 
 		row.addEventListener('contextmenu', (e) => {
 			const menu = new Menu();
 			menu.addItem(item =>
 				item.setTitle('Edit').setIcon('pencil').onClick(() =>
-					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.render()).open()
+					new TicketModal(this.view.app, this.view.plugin, { ticket, sprintId: ticket.sprintId ?? null }, () => this.view.renderPreservingScroll()).open()
 				)
 			);
 			menu.addItem(item =>
@@ -381,7 +381,7 @@ export class ListRowRenderer {
 							sprintId: null,
 							parentId: ticket.id,
 							defaultType: 'subtask',
-						}, () => this.view.render()).open()
+						}, () => this.view.renderPreservingScroll()).open()
 					)
 				);
 				menu.addItem(item =>
@@ -389,7 +389,7 @@ export class ListRowRenderer {
 						const oldPath = this.view.getTicketFilePath(ticket.id);
 						await store.updateTicket(ticket.id, { parentId: null });
 						await generateTicketNote(this.view.plugin, ticket.id, oldPath ?? undefined);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					})
 				);
 			}
@@ -403,7 +403,7 @@ export class ListRowRenderer {
 					new ConfirmModal(this.view.app, msg, async () => {
 						await deleteTicketNote(this.view.plugin, ticket.id);
 						await store.deleteTicket(ticket.id);
-						this.view.render();
+						this.view.renderPreservingScroll();
 					}, 'Delete', store.getDescendantIds(ticket.id).map(id => store.getTicket(id)?.title ?? '').filter(Boolean)).open();
 				})
 			);
@@ -421,7 +421,7 @@ export class ListRowRenderer {
 		const menu = new Menu();
 		menu.addItem(item =>
 			item.setTitle('Edit').setIcon('pencil').onClick(() =>
-				new TicketModal(this.view.app, this.view.plugin, { ticket: epic, sprintId: null }, () => this.view.render()).open()
+				new TicketModal(this.view.app, this.view.plugin, { ticket: epic, sprintId: null }, () => this.view.renderPreservingScroll()).open()
 			)
 		);
 		menu.addItem(item =>
@@ -436,7 +436,7 @@ export class ListRowRenderer {
 					sprintId: null,
 					parentId: epic.id,
 					defaultType: 'task',
-				}, () => this.view.render()).open()
+				}, () => this.view.renderPreservingScroll()).open()
 			)
 		);
 		menu.addSeparator();
@@ -449,7 +449,7 @@ export class ListRowRenderer {
 				new ConfirmModal(this.view.app, msg, async () => {
 					await deleteTicketNote(this.view.plugin, epic.id);
 					await store.deleteTicket(epic.id);
-					this.view.render();
+					this.view.renderPreservingScroll();
 				}, 'Delete', store.getDescendantIds(epic.id).map(id => store.getTicket(id)?.title ?? '').filter(Boolean)).open();
 			})
 		);

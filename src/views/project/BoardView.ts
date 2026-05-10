@@ -128,6 +128,16 @@ export class BoardView extends ItemView {
 		this.render();
 	}
 
+	renderPreservingScroll(): void {
+		const scrollEl = this.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+		const scrollTop = scrollEl?.scrollTop ?? 0;
+		this.render();
+		if (scrollTop > 0) {
+			const newScrollEl = this.contentEl.querySelector<HTMLElement>('.pf-tbl-container');
+			if (newScrollEl) newScrollEl.scrollTop = scrollTop;
+		}
+	}
+
 	render(): void {
 		if (this.headerBadgeEl) {
 			this.plugin.notificationManager?.removeBadge(this.headerBadgeEl);
